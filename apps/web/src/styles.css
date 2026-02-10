@@ -1,2 +1,3 @@
 @import "tailwindcss";
 @import "@hearth/config/tailwind/hearth-preset.css";
+@import "@hearth/ui/styles";
