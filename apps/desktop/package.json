@@ -1,0 +1,11 @@
+{
+  "name": "@hearth/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Desktop build requires Tauri CLI and Rust — see README.md'",
+    "check": "echo 'Desktop typecheck requires Tauri dependencies — see README.md'",
+    "clean": "rm -rf dist .turbo"
+  }
+}

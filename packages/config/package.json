@@ -1,0 +1,17 @@
+{
+  "name": "@hearth/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig/*": "./tsconfig/*.json",
+    "./tailwind": {
+      "style": "./tailwind/hearth-preset.css",
+      "default": "./tailwind/hearth-preset.css"
+    },
+    "./tailwind/hearth-preset.css": {
+      "style": "./tailwind/hearth-preset.css",
+      "default": "./tailwind/hearth-preset.css"
+    }
+  }
+}

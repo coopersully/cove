@@ -1,0 +1,22 @@
+# Default owners for everything
+* @coopersully
+
+# Apps
+/apps/api/ @coopersully
+/apps/ws/ @coopersully
+/apps/web/ @coopersully
+/apps/mobile/ @coopersully
+/apps/desktop/ @coopersully
+
+# Packages
+/packages/config/ @coopersully
+/packages/shared/ @coopersully
+/packages/gateway/ @coopersully
+/packages/db/ @coopersully
+/packages/auth/ @coopersully
+/packages/api-client/ @coopersully
+/packages/ui/ @coopersully
+
+# CI/CD & Infrastructure
+/.github/ @coopersully
+/docker-compose.yml @coopersully

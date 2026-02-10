@@ -1,0 +1,55 @@
+/*
+ * Hearth Design System — Tailwind v4 Theme Preset
+ *
+ * Brand colors, typography, spacing, and border radius
+ * from the Hearth Brand Guidelines.
+ */
+
+@theme {
+  /* ---- Spacing (4px base grid) ---- */
+  --spacing: 4px;
+
+  /* ---- Primary: Ember ---- */
+  --color-ember: #e8764b;
+  --color-ember-light: #f2956f;
+  --color-ember-dark: #c55a32;
+
+  /* ---- Warm Neutrals ---- */
+  --color-warm-white: #fdf8f4;
+  --color-linen: #f5ede6;
+  --color-sandstone: #e8ddd3;
+  --color-driftwood: #c4b5a5;
+
+  /* ---- Depth ---- */
+  --color-charcoal: #2d2926;
+  --color-warm-gray: #6b6057;
+  --color-stone: #8e8279;
+
+  /* ---- Accent ---- */
+  --color-amber: #e5a84b;
+  --color-amber-light: #f0c97a;
+  --color-soft-coral: #f0a08c;
+
+  /* ---- Semantic ---- */
+  --color-sage: #7b9e7b;
+  --color-sage-light: #a8c5a8;
+  --color-sky: #6ba3be;
+  --color-rose: #d4736e;
+
+  /* ---- Dark Mode Surfaces ---- */
+  --color-surface: #1a1715;
+  --color-card: #252220;
+  --color-elevated: #2e2a27;
+
+  /* ---- Typography ---- */
+  --font-display: "Lora", serif;
+  --font-body: "Nunito Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}

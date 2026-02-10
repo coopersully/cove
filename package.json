@@ -1,0 +1,27 @@
+{
+  "name": "hearth",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.16.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.16.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "check": "turbo run check",
+    "lint": "biome ci .",
+    "lint:fix": "biome check --write .",
+    "test": "turbo run test",
+    "dev": "turbo run dev",
+    "format": "biome format --write ."
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "turbo": "^2.8.3",
+    "typescript": "^5.8.2"
+  }
+}
