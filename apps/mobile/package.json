@@ -1,0 +1,11 @@
+{
+  "name": "@hearth/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Mobile build requires Expo CLI — see README.md'",
+    "check": "echo 'Mobile typecheck requires Expo dependencies — see README.md'",
+    "clean": "rm -rf dist .turbo"
+  }
+}

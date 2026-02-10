@@ -1,0 +1,98 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "master"
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "ignore": ["node_modules", "dist", "build", ".next", "coverage", ".turbo", ".expo", "drizzle"]
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "all": true,
+      "correctness": {
+        "all": true,
+        "noNodejsModules": "off",
+        "noUndeclaredDependencies": "off"
+      },
+      "nursery": {
+        "all": true,
+        "noProcessEnv": "off"
+      },
+      "performance": {
+        "all": true,
+        "noBarrelFile": "off",
+        "noReExportAll": "off"
+      },
+      "style": {
+        "all": true,
+        "useNamingConvention": {
+          "level": "warn",
+          "options": {
+            "strictCase": false
+          }
+        }
+      },
+      "suspicious": {
+        "all": true,
+        "noConsole": "off",
+        "noReactSpecificProps": "off"
+      },
+      "a11y": {
+        "all": true,
+        "useSemanticElements": "warn"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSpacing": true
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "overrides": [
+    {
+      "include": ["**/*.config.ts", "**/*.config.js"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "include": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsoleLog": "off"
+          }
+        }
+      }
+    }
+  ]
+}

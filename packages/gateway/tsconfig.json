@@ -1,0 +1,9 @@
+{
+  "extends": "@hearth/config/tsconfig/node",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"],
+  "references": [{ "path": "../shared" }]
+}
