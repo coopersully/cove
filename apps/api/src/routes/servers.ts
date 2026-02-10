@@ -8,7 +8,7 @@ import {
   serverDescriptionSchema,
   serverNameSchema,
 } from "@hearth/shared";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -45,54 +45,58 @@ serverRoutes.post("/", validate(createServerSchema), async (c) => {
   const ownerRoleId = generateSnowflake();
   const everyoneRoleId = generateSnowflake();
 
-  const [server] = await db
-    .insert(servers)
-    .values({
-      id: BigInt(serverId),
-      name: body.name,
-      description: body.description,
-      ownerId: BigInt(user.id),
-      isPublic: body.isPublic ?? false,
-    })
-    .returning();
+  const server = await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(servers)
+      .values({
+        id: BigInt(serverId),
+        name: body.name,
+        description: body.description,
+        ownerId: BigInt(user.id),
+        isPublic: body.isPublic ?? false,
+      })
+      .returning();
 
-  // Create default #general channel
-  await db.insert(channels).values({
-    id: BigInt(channelId),
-    serverId: BigInt(serverId),
-    name: "general",
-    type: "text",
-    position: 0,
-  });
+    if (!created) {
+      throw new AppError("INTERNAL_ERROR", "Failed to create server");
+    }
 
-  // Create default roles
-  await db.insert(roles).values([
-    {
-      id: BigInt(ownerRoleId),
+    // Create default #general channel
+    await tx.insert(channels).values({
+      id: BigInt(channelId),
       serverId: BigInt(serverId),
-      name: "Owner",
-      permissions: ALL_PERMISSIONS,
-      position: 1,
-    },
-    {
-      id: BigInt(everyoneRoleId),
-      serverId: BigInt(serverId),
-      name: "@everyone",
-      permissions: DEFAULT_EVERYONE_PERMISSIONS,
+      name: "general",
+      type: "text",
       position: 0,
-    },
-  ]);
+    });
 
-  // Add owner as member
-  await db.insert(serverMembers).values({
-    serverId: BigInt(serverId),
-    userId: BigInt(user.id),
-    role: "owner",
+    // Create default roles
+    await tx.insert(roles).values([
+      {
+        id: BigInt(ownerRoleId),
+        serverId: BigInt(serverId),
+        name: "Owner",
+        permissions: ALL_PERMISSIONS,
+        position: 1,
+      },
+      {
+        id: BigInt(everyoneRoleId),
+        serverId: BigInt(serverId),
+        name: "@everyone",
+        permissions: DEFAULT_EVERYONE_PERMISSIONS,
+        position: 0,
+      },
+    ]);
+
+    // Add owner as member
+    await tx.insert(serverMembers).values({
+      serverId: BigInt(serverId),
+      userId: BigInt(user.id),
+      role: "owner",
+    });
+
+    return created;
   });
-
-  if (!server) {
-    throw new AppError("INTERNAL_ERROR", "Failed to create server");
-  }
 
   return c.json(
     { server: { ...server, id: String(server.id), ownerId: String(server.ownerId) } },
@@ -255,29 +259,23 @@ serverRoutes.post("/:id/join", validate(joinServerSchema), async (c) => {
       throw new AppError("FORBIDDEN", "This server requires an invite code to join");
     }
 
+    // Atomically validate and increment invite uses in a single UPDATE
     const [invite] = await db
-      .select()
-      .from(inviteCodes)
-      .where(and(eq(inviteCodes.code, body.inviteCode), eq(inviteCodes.serverId, BigInt(serverId))))
-      .limit(1);
+      .update(inviteCodes)
+      .set({ uses: sql`${inviteCodes.uses} + 1` })
+      .where(
+        and(
+          eq(inviteCodes.code, body.inviteCode),
+          eq(inviteCodes.serverId, BigInt(serverId)),
+          sql`(${inviteCodes.expiresAt} IS NULL OR ${inviteCodes.expiresAt} > NOW())`,
+          sql`(${inviteCodes.maxUses} IS NULL OR ${inviteCodes.uses} < ${inviteCodes.maxUses})`,
+        ),
+      )
+      .returning();
 
     if (!invite) {
-      throw new AppError("NOT_FOUND", "Invalid invite code");
+      throw new AppError("FORBIDDEN", "Invalid, expired, or fully used invite code");
     }
-
-    if (invite.expiresAt && invite.expiresAt < new Date()) {
-      throw new AppError("FORBIDDEN", "Invite code has expired");
-    }
-
-    if (invite.maxUses !== null && invite.uses >= invite.maxUses) {
-      throw new AppError("FORBIDDEN", "Invite code has reached maximum uses");
-    }
-
-    // Increment uses
-    await db
-      .update(inviteCodes)
-      .set({ uses: invite.uses + 1 })
-      .where(eq(inviteCodes.id, invite.id));
   }
 
   await db.insert(serverMembers).values({

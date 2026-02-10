@@ -5,8 +5,10 @@ import { AppError, generateSnowflake } from "@hearth/shared";
 import { and, eq, isNull } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 
-const JWT_SECRET_RAW = process.env.JWT_SECRET ?? "hearth-dev-secret-change-in-production";
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW);
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
