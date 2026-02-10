@@ -1,0 +1,173 @@
+import crypto from "node:crypto";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  hashPassword,
+  rotateRefreshToken,
+  verifyPassword,
+} from "@hearth/auth";
+
+import { db, refreshTokens, users } from "@hearth/db";
+import {
+  AppError,
+  emailSchema,
+  generateSnowflake,
+  passwordSchema,
+  usernameSchema,
+} from "@hearth/shared";
+import { eq } from "drizzle-orm";
+import { Hono } from "hono";
+import { z } from "zod";
+
+import { validate } from "../middleware/index.js";
+
+const registerSchema = z.object({
+  username: usernameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+});
+
+const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1),
+});
+
+const refreshSchema = z.object({
+  refreshToken: z.string().min(1),
+});
+
+export const authRoutes = new Hono();
+
+// POST /auth/register
+authRoutes.post("/register", validate(registerSchema), async (c) => {
+  const body = c.get("body");
+
+  // Check uniqueness
+  const [existingUsername] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, body.username))
+    .limit(1);
+
+  if (existingUsername) {
+    throw new AppError("CONFLICT", "Username already taken");
+  }
+
+  const [existingEmail] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, body.email))
+    .limit(1);
+
+  if (existingEmail) {
+    throw new AppError("CONFLICT", "Email already in use");
+  }
+
+  const passwordHash = await hashPassword(body.password);
+  const id = generateSnowflake();
+
+  const [user] = await db
+    .insert(users)
+    .values({
+      id: BigInt(id),
+      username: body.username,
+      email: body.email,
+      passwordHash,
+    })
+    .returning({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      email: users.email,
+      avatarUrl: users.avatarUrl,
+      status: users.status,
+      createdAt: users.createdAt,
+    });
+
+  if (!user) {
+    throw new AppError("INTERNAL_ERROR", "Failed to create user");
+  }
+
+  const accessToken = await generateAccessToken(id, body.username);
+  const { token: refreshToken } = await generateRefreshToken(id);
+
+  return c.json(
+    {
+      user: { ...user, id: String(user.id) },
+      accessToken,
+      refreshToken,
+    },
+    201,
+  );
+});
+
+// POST /auth/login
+authRoutes.post("/login", validate(loginSchema), async (c) => {
+  const body = c.get("body");
+
+  const [user] = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
+
+  if (!user) {
+    throw new AppError("UNAUTHORIZED", "Invalid email or password");
+  }
+
+  const valid = await verifyPassword(user.passwordHash, body.password);
+  if (!valid) {
+    throw new AppError("UNAUTHORIZED", "Invalid email or password");
+  }
+
+  const userId = String(user.id);
+  const accessToken = await generateAccessToken(userId, user.username);
+  const { token: refreshToken } = await generateRefreshToken(userId);
+
+  return c.json({
+    user: {
+      id: userId,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      status: user.status,
+      createdAt: user.createdAt,
+    },
+    accessToken,
+    refreshToken,
+  });
+});
+
+// POST /auth/refresh
+authRoutes.post("/refresh", validate(refreshSchema), async (c) => {
+  const body = c.get("body");
+
+  const tokenHash = crypto.createHash("sha256").update(body.refreshToken).digest("hex");
+
+  const [existing] = await db
+    .select({ userId: refreshTokens.userId })
+    .from(refreshTokens)
+    .where(eq(refreshTokens.tokenHash, tokenHash))
+    .limit(1);
+
+  if (!existing) {
+    throw new AppError("UNAUTHORIZED", "Invalid refresh token");
+  }
+
+  const userId = String(existing.userId);
+  const { token: newRefreshToken } = await rotateRefreshToken(body.refreshToken, userId);
+
+  const [user] = await db
+    .select({ username: users.username })
+    .from(users)
+    .where(eq(users.id, existing.userId))
+    .limit(1);
+
+  if (!user) {
+    throw new AppError("UNAUTHORIZED", "User not found");
+  }
+
+  const accessToken = await generateAccessToken(userId, user.username);
+
+  return c.json({
+    accessToken,
+    refreshToken: newRefreshToken,
+  });
+});

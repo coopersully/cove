@@ -15,7 +15,9 @@
     "@hearth/db": "workspace:*",
     "@hearth/shared": "workspace:*",
     "@hono/node-server": "^1.14.0",
-    "hono": "^4.11.9"
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.11.9",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@hearth/config": "workspace:*",
