@@ -1,3 +1,5 @@
+name: hearth
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -10,7 +12,7 @@ services:
       POSTGRES_PASSWORD: hearth
       POSTGRES_DB: hearth
     volumes:
-      - hearth-postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hearth -d hearth"]
       interval: 10s
@@ -18,13 +20,13 @@ services:
       retries: 5
 
   redis:
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.25.5
     container_name: hearth-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
-      - hearth-redis-data:/data
+      - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -32,5 +34,5 @@ services:
       retries: 5
 
 volumes:
-  hearth-postgres-data:
-  hearth-redis-data:
+  postgres-data:
+  redis-data:

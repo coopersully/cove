@@ -1,21 +1,42 @@
+import { Flame } from "lucide-react";
 import type { JSX } from "react";
-import { Route, Routes } from "react-router";
-
-function Home(): JSX.Element {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-warm-white">
-      <div className="text-center">
-        <h1 className="font-display font-semibold text-4xl text-charcoal">Hearth</h1>
-        <p className="mt-2 font-body text-warm-gray">The place people gather.</p>
-      </div>
-    </div>
-  );
-}
+import { Navigate, Route, Routes } from "react-router";
+import { AuthGuard } from "./components/auth/auth-guard.js";
+import { AppLayout } from "./components/layout/app-layout.js";
+import { ServerView } from "./components/server/server-view.js";
+import { LoginPage } from "./pages/login.js";
+import { RegisterPage } from "./pages/register.js";
 
 export function App(): JSX.Element {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<AuthGuard />}>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Navigate to="/servers" replace={true} />} />
+          <Route path="/servers" element={<ServerListPlaceholder />} />
+          <Route path="/servers/:serverId" element={<ServerView />} />
+          <Route path="/servers/:serverId/channels/:channelId" element={<ServerView />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace={true} />} />
     </Routes>
+  );
+}
+
+function ServerListPlaceholder(): JSX.Element {
+  return (
+    <div className="flex flex-1 items-center justify-center text-muted-foreground">
+      <div className="animate-fade-up-in text-center">
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-ember/10">
+          <Flame className="size-8 text-ember" />
+        </div>
+        <h2 className="font-display font-semibold text-foreground text-xl">Welcome to Hearth</h2>
+        <p className="mt-2 max-w-xs font-body text-sm">
+          Select a server or create a new one to get started.
+        </p>
+      </div>
+    </div>
   );
 }

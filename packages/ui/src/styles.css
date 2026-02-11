@@ -1,2 +1,72 @@
-@import "tailwindcss";
-@import "@hearth/config/tailwind/hearth-preset.css";
+@layer base {
+  :root {
+    --background: var(--color-warm-white);
+    --foreground: var(--color-charcoal);
+    --card: var(--color-linen);
+    --card-foreground: var(--color-charcoal);
+    --popover: var(--color-linen);
+    --popover-foreground: var(--color-charcoal);
+    --primary: var(--color-ember);
+    --primary-foreground: var(--color-warm-white);
+    --secondary: var(--color-sandstone);
+    --secondary-foreground: var(--color-charcoal);
+    --muted: var(--color-driftwood);
+    --muted-foreground: var(--color-warm-gray);
+    --accent: var(--color-amber);
+    --accent-foreground: var(--color-charcoal);
+    --destructive: var(--color-rose);
+    --destructive-foreground: var(--color-warm-white);
+    --border: var(--color-sandstone);
+    --input: var(--color-sandstone);
+    --ring: var(--color-ember);
+    --radius: var(--radius-md);
+    --chart-1: var(--color-ember);
+    --chart-2: var(--color-sage);
+    --chart-3: var(--color-sky);
+    --chart-4: var(--color-amber);
+    --chart-5: var(--color-soft-coral);
+    --sidebar: var(--color-warm-white);
+    --sidebar-foreground: var(--color-charcoal);
+    --sidebar-primary: var(--color-ember);
+    --sidebar-primary-foreground: var(--color-warm-white);
+    --sidebar-accent: var(--color-sandstone);
+    --sidebar-accent-foreground: var(--color-charcoal);
+    --sidebar-border: var(--color-sandstone);
+    --sidebar-ring: var(--color-ember);
+  }
+
+  .dark {
+    --background: var(--color-surface);
+    --foreground: var(--color-linen);
+    --card: var(--color-card);
+    --card-foreground: var(--color-linen);
+    --popover: var(--color-card);
+    --popover-foreground: var(--color-linen);
+    --primary: var(--color-ember);
+    --primary-foreground: var(--color-warm-white);
+    --secondary: var(--color-elevated);
+    --secondary-foreground: var(--color-linen);
+    --muted: var(--color-warm-gray);
+    --muted-foreground: var(--color-driftwood);
+    --accent: var(--color-amber);
+    --accent-foreground: var(--color-warm-white);
+    --destructive: var(--color-rose);
+    --destructive-foreground: var(--color-warm-white);
+    --border: var(--color-elevated);
+    --input: var(--color-elevated);
+    --ring: var(--color-ember);
+    --chart-1: var(--color-ember);
+    --chart-2: var(--color-sage-light);
+    --chart-3: var(--color-sky);
+    --chart-4: var(--color-amber-light);
+    --chart-5: var(--color-soft-coral);
+    --sidebar: var(--color-surface);
+    --sidebar-foreground: var(--color-linen);
+    --sidebar-primary: var(--color-ember);
+    --sidebar-primary-foreground: var(--color-warm-white);
+    --sidebar-accent: var(--color-elevated);
+    --sidebar-accent-foreground: var(--color-linen);
+    --sidebar-border: var(--color-elevated);
+    --sidebar-ring: var(--color-ember);
+  }
+}
