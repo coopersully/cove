@@ -1,4 +1,4 @@
-import { Button, cn, Textarea } from "@hearth/ui";
+import { Button, Textarea, cn } from "@hearth/ui";
 import { SendHorizontal } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
@@ -61,7 +61,7 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
           placeholder="Send a message..."
           rows={1}
           maxLength={4000}
-          className="min-h-0 max-h-24 flex-1 resize-none border-0 bg-transparent p-0 text-foreground text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
+          className="max-h-24 min-h-0 flex-1 resize-none border-0 bg-transparent p-0 text-foreground text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
         />
         <Button
           size="icon-sm"

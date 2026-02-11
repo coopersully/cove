@@ -107,7 +107,7 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
       <div ref={loadMoreRef} className="shrink-0 px-4 py-2">
         {isFetchingNextPage && (
           <div className="flex justify-center">
-            <div className="animate-hearth-ember size-4 rounded-full bg-ember/80" />
+            <div className="size-4 animate-hearth-ember rounded-full bg-ember/80" />
           </div>
         )}
         {!hasNextPage && allMessages.length > 0 && (
@@ -118,9 +118,7 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
             <p className="font-display font-semibold text-foreground text-sm">
               The beginning of the conversation
             </p>
-            <p className="mt-1 text-muted-foreground text-xs">
-              This is where it all started.
-            </p>
+            <p className="mt-1 text-muted-foreground text-xs">This is where it all started.</p>
           </div>
         )}
       </div>
@@ -142,9 +140,7 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
             <Flame className="size-6 text-ember" />
           </div>
           <div className="text-center">
-            <p className="font-display font-semibold text-foreground text-sm">
-              No messages yet
-            </p>
+            <p className="font-display font-semibold text-foreground text-sm">No messages yet</p>
             <p className="mt-1 text-sm">Start the conversation!</p>
           </div>
         </div>

@@ -1,5 +1,13 @@
 import type { Server } from "@hearth/api-client";
-import { Avatar, AvatarFallback, AvatarImage, cn, Tooltip, TooltipContent, TooltipTrigger } from "@hearth/ui";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  cn,
+} from "@hearth/ui";
 import type { JSX } from "react";
 import { Link, useParams } from "react-router";
 

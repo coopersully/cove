@@ -10,7 +10,10 @@ interface Requirement {
 
 function getRequirements(password: string): Requirement[] {
   return [
-    { label: `At least ${String(MIN_PASSWORD_LENGTH)} characters`, met: password.length >= MIN_PASSWORD_LENGTH },
+    {
+      label: `At least ${String(MIN_PASSWORD_LENGTH)} characters`,
+      met: password.length >= MIN_PASSWORD_LENGTH,
+    },
     { label: "Contains a lowercase letter", met: /[a-z]/.test(password) },
     { label: "Contains an uppercase letter", met: /[A-Z]/.test(password) },
     { label: "Contains a number", met: /\d/.test(password) },
@@ -31,11 +34,7 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps): J
   const allMet = metCount === requirements.length;
 
   return (
-    <div
-      className="animate-fade-up-in space-y-2"
-      role="status"
-      aria-label="Password requirements"
-    >
+    <div className="animate-fade-up-in space-y-2" role="status" aria-label="Password requirements">
       {/* Progress bar */}
       <div className="flex gap-1">
         {requirements.map((req) => (
@@ -43,11 +42,7 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps): J
             key={req.label}
             className={cn(
               "h-1 flex-1 rounded-full transition-all duration-500",
-              req.met
-                ? allMet
-                  ? "bg-emerald-500"
-                  : "bg-amber-500"
-                : "bg-muted",
+              req.met ? (allMet ? "bg-emerald-500" : "bg-amber-500") : "bg-muted",
             )}
           />
         ))}
@@ -56,10 +51,7 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps): J
       {/* Requirements checklist */}
       <ul className="space-y-1">
         {requirements.map((req) => (
-          <li
-            key={req.label}
-            className="flex items-center gap-2 text-xs"
-          >
+          <li key={req.label} className="flex items-center gap-2 text-xs">
             <span
               className={cn(
                 "flex items-center justify-center transition-all duration-300",

@@ -30,16 +30,17 @@ export function UserSection(): JSX.Element {
     <div className="flex items-center gap-2 border-border border-t bg-card/50 px-3 py-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>
-          <button className="flex flex-1 items-center gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-secondary/50">
+          <button
+            type="button"
+            className="flex flex-1 items-center gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-secondary/50"
+          >
             <Avatar className="size-8 shrink-0">
               <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
-              <AvatarFallback className="bg-ember/15 text-ember text-xs">
-                {initials}
-              </AvatarFallback>
+              <AvatarFallback className="bg-ember/15 text-ember text-xs">{initials}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-foreground text-xs">{displayName}</p>
-              <p className="truncate text-muted-foreground text-[10px]">@{user?.username}</p>
+              <p className="truncate text-[10px] text-muted-foreground">@{user?.username}</p>
             </div>
           </button>
         </DropdownMenuTrigger>

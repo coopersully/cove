@@ -64,7 +64,9 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="font-semibold text-foreground text-sm">{displayName}</span>
-          <span className="text-muted-foreground text-xs">{formatTimestamp(message.createdAt)}</span>
+          <span className="text-muted-foreground text-xs">
+            {formatTimestamp(message.createdAt)}
+          </span>
           {message.editedAt && <span className="text-muted-foreground text-xs">(edited)</span>}
         </div>
         <p className="break-words text-foreground/90 text-sm">{message.content}</p>

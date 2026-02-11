@@ -1,5 +1,4 @@
 import {
-  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -7,6 +6,7 @@ import {
   DropdownMenuTrigger,
   ScrollArea,
   Separator,
+  cn,
 } from "@hearth/ui";
 import { ChevronDown, LogOut, Settings } from "lucide-react";
 import type { JSX } from "react";
@@ -46,7 +46,10 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
       {/* Server header with dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>
-          <button className="flex h-12 w-full items-center justify-between border-border border-b px-4 transition-colors hover:bg-secondary/30">
+          <button
+            type="button"
+            className="flex h-12 w-full items-center justify-between border-border border-b px-4 transition-colors hover:bg-secondary/30"
+          >
             <h2 className="truncate font-display font-semibold text-foreground text-sm">
               {server?.name ?? "Loading..."}
             </h2>
@@ -71,23 +74,19 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
           {/* Text Channels */}
           <div className="flex items-center justify-between px-1 pb-1">
             <button
+              type="button"
               className="flex items-center gap-0.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide transition-colors hover:text-foreground"
               onClick={() => setTextCollapsed(!textCollapsed)}
             >
               <ChevronDown
-                className={cn(
-                  "size-3 transition-transform",
-                  textCollapsed && "-rotate-90",
-                )}
+                className={cn("size-3 transition-transform", textCollapsed && "-rotate-90")}
               />
               Text Channels
             </button>
             {isOwner && <CreateChannelDialog serverId={serverId} />}
           </div>
           {!textCollapsed &&
-            textChannels.map((channel) => (
-              <ChannelItem key={channel.id} channel={channel} />
-            ))}
+            textChannels.map((channel) => <ChannelItem key={channel.id} channel={channel} />)}
 
           {/* Voice Channels */}
           {voiceChannels.length > 0 && (
@@ -95,22 +94,18 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
               <Separator className="my-2" />
               <div className="flex items-center justify-between px-1 pb-1">
                 <button
+                  type="button"
                   className="flex items-center gap-0.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide transition-colors hover:text-foreground"
                   onClick={() => setVoiceCollapsed(!voiceCollapsed)}
                 >
                   <ChevronDown
-                    className={cn(
-                      "size-3 transition-transform",
-                      voiceCollapsed && "-rotate-90",
-                    )}
+                    className={cn("size-3 transition-transform", voiceCollapsed && "-rotate-90")}
                   />
                   Voice Channels
                 </button>
               </div>
               {!voiceCollapsed &&
-                voiceChannels.map((channel) => (
-                  <ChannelItem key={channel.id} channel={channel} />
-                ))}
+                voiceChannels.map((channel) => <ChannelItem key={channel.id} channel={channel} />)}
             </>
           )}
         </div>

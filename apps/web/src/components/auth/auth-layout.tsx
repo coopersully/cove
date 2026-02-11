@@ -48,12 +48,12 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
 
         {/* Brand content */}
         <div className="relative z-10 flex flex-col items-center px-12 text-center">
-          <h1 className="animate-brand-enter font-display font-bold text-6xl tracking-[0.14em] text-warm-white">
+          <h1 className="animate-brand-enter font-bold font-display text-6xl text-warm-white tracking-[0.14em]">
             Hearth
           </h1>
           <Separator className="mx-auto mt-6 w-12 bg-ember/40" />
           <p
-            className="animate-fade-up-in mt-6 max-w-xs font-body text-lg leading-relaxed text-driftwood"
+            className="mt-6 max-w-xs animate-fade-up-in font-body text-driftwood text-lg leading-relaxed"
             style={{ animationDelay: "0.3s" }}
           >
             The place people gather.
@@ -74,8 +74,8 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
       >
         {/* Mobile-only brand header */}
         <div className="mb-10 text-center lg:hidden">
-          <h1 className="font-display font-bold text-3xl tracking-wide text-foreground">Hearth</h1>
-          <p className="mt-1 font-body text-sm text-muted-foreground">The place people gather.</p>
+          <h1 className="font-bold font-display text-3xl text-foreground tracking-wide">Hearth</h1>
+          <p className="mt-1 font-body text-muted-foreground text-sm">The place people gather.</p>
         </div>
 
         {children}

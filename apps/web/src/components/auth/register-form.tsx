@@ -16,10 +16,7 @@ import type { ChangeEvent, FormEvent, JSX } from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuthStore } from "../../stores/auth.js";
-import {
-  PasswordRequirements,
-  arePasswordRequirementsMet,
-} from "./password-requirements.js";
+import { PasswordRequirements, arePasswordRequirementsMet } from "./password-requirements.js";
 
 export function RegisterForm(): JSX.Element {
   const navigate = useNavigate();
@@ -35,9 +32,7 @@ export function RegisterForm(): JSX.Element {
 
   const passwordsMatch = password === confirmPassword;
   const canSubmit =
-    arePasswordRequirementsMet(password) &&
-    confirmPassword.length > 0 &&
-    passwordsMatch;
+    arePasswordRequirementsMet(password) && confirmPassword.length > 0 && passwordsMatch;
 
   const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
@@ -70,18 +65,13 @@ export function RegisterForm(): JSX.Element {
   };
 
   return (
-    <Card className="animate-fade-up-in w-full max-w-sm">
+    <Card className="w-full max-w-sm animate-fade-up-in">
       <CardHeader>
         <CardTitle className="font-display text-2xl">Create an account</CardTitle>
-        <CardDescription>
-          Join Hearth and start the conversation
-        </CardDescription>
+        <CardDescription>Join Hearth and start the conversation</CardDescription>
       </CardHeader>
       <CardContent>
-        <form
-          id="register-form"
-          onSubmit={(e: FormEvent) => void handleSubmit(e)}
-        >
+        <form id="register-form" onSubmit={(e: FormEvent) => void handleSubmit(e)}>
           <div className="flex flex-col gap-6">
             {error && (
               <div className="flex items-start gap-2 rounded-md border border-destructive/20 border-l-[3px] border-l-destructive bg-destructive/10 px-3 py-2.5 text-destructive text-sm">
@@ -162,11 +152,8 @@ export function RegisterForm(): JSX.Element {
           )}
         </Button>
         <div className="text-muted-foreground text-sm">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-primary underline-offset-4 hover:underline"
-          >
+          Already have an account?
+          <Link to="/login" className="text-primary underline-offset-4 hover:underline">
             Sign in
           </Link>
         </div>

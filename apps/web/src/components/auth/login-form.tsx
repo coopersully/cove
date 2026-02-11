@@ -46,18 +46,13 @@ export function LoginForm(): JSX.Element {
   };
 
   return (
-    <Card className="animate-fade-up-in w-full max-w-sm">
+    <Card className="w-full max-w-sm animate-fade-up-in">
       <CardHeader>
         <CardTitle className="font-display text-2xl">Welcome back</CardTitle>
-        <CardDescription>
-          Sign in to your Hearth account
-        </CardDescription>
+        <CardDescription>Sign in to your Hearth account</CardDescription>
       </CardHeader>
       <CardContent>
-        <form
-          id="login-form"
-          onSubmit={(e: FormEvent) => void handleSubmit(e)}
-        >
+        <form id="login-form" onSubmit={(e: FormEvent) => void handleSubmit(e)}>
           <div className="flex flex-col gap-6">
             {error && (
               <div className="flex items-start gap-2 rounded-md border border-destructive/20 border-l-[3px] border-l-destructive bg-destructive/10 px-3 py-2.5 text-destructive text-sm">
@@ -90,12 +85,7 @@ export function LoginForm(): JSX.Element {
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button
-          type="submit"
-          form="login-form"
-          disabled={isLoading}
-          className="w-full"
-        >
+        <Button type="submit" form="login-form" disabled={isLoading} className="w-full">
           {isLoading ? (
             <span className="flex items-center gap-2">
               <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
@@ -106,11 +96,8 @@ export function LoginForm(): JSX.Element {
           )}
         </Button>
         <div className="text-muted-foreground text-sm">
-          Don&apos;t have an account?{" "}
-          <Link
-            to="/register"
-            className="text-primary underline-offset-4 hover:underline"
-          >
+          Don&apos;t have an account?
+          <Link to="/register" className="text-primary underline-offset-4 hover:underline">
             Sign up
           </Link>
         </div>
