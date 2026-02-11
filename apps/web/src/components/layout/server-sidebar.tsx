@@ -9,7 +9,7 @@ export function ServerSidebar(): JSX.Element {
   const servers = data?.servers ?? [];
 
   return (
-    <div className="flex w-[72px] flex-col items-center gap-2 bg-surface py-3">
+    <div className="flex w-[72px] flex-col items-center gap-2 bg-linen py-3 dark:bg-[#13110f]">
       <ScrollArea className="flex-1">
         <div className="flex flex-col items-center gap-2 px-3">
           {servers.map((server) => (
@@ -17,7 +17,7 @@ export function ServerSidebar(): JSX.Element {
           ))}
         </div>
       </ScrollArea>
-      <Separator className="mx-auto w-8 bg-elevated" />
+      <Separator className="mx-auto w-8 bg-secondary" />
       <CreateServerDialog />
     </div>
   );

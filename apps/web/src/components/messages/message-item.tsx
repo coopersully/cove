@@ -41,33 +41,33 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
 
   if (!showAuthor) {
     return (
-      <div className="group flex gap-4 py-0.5 pr-4 pl-[68px] hover:bg-elevated/30">
-        <span className="invisible text-driftwood text-xs group-hover:visible">
+      <div className="group flex gap-4 py-0.5 pr-4 pl-[68px] hover:bg-secondary/30">
+        <span className="invisible text-muted-foreground text-xs group-hover:visible">
           {new Date(message.createdAt).toLocaleTimeString(undefined, {
             hour: "2-digit",
             minute: "2-digit",
           })}
         </span>
-        <p className="break-words text-linen/90 text-sm">{message.content}</p>
+        <p className="break-words text-foreground/90 text-sm">{message.content}</p>
       </div>
     );
   }
 
   return (
-    <div className="group flex gap-3 py-1 pr-4 pl-4 hover:bg-elevated/30">
+    <div className="group flex gap-3 py-1 pr-4 pl-4 hover:bg-secondary/30">
       <Avatar className="mt-0.5 size-10 shrink-0">
         <AvatarImage src={message.author.avatarUrl ?? undefined} alt={displayName} />
-        <AvatarFallback className="bg-ember/20 text-ember text-xs">
+        <AvatarFallback className="bg-primary/20 text-primary text-xs">
           {getInitials(displayName)}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-linen text-sm">{displayName}</span>
-          <span className="text-driftwood text-xs">{formatTimestamp(message.createdAt)}</span>
-          {message.editedAt && <span className="text-driftwood text-xs">(edited)</span>}
+          <span className="font-semibold text-foreground text-sm">{displayName}</span>
+          <span className="text-muted-foreground text-xs">{formatTimestamp(message.createdAt)}</span>
+          {message.editedAt && <span className="text-muted-foreground text-xs">(edited)</span>}
         </div>
-        <p className="break-words text-linen/90 text-sm">{message.content}</p>
+        <p className="break-words text-foreground/90 text-sm">{message.content}</p>
       </div>
     </div>
   );

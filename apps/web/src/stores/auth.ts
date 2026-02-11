@@ -40,6 +40,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
       user: response.user,
+      isInitialized: true,
     });
   },
 
@@ -50,6 +51,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
       user: response.user,
+      isInitialized: true,
     });
   },
 

@@ -13,7 +13,7 @@
     "lint": "biome ci .",
     "lint:fix": "biome check --write .",
     "test": "turbo run test",
-    "dev": "turbo run dev",
+    "dev": "pnpm --filter @hearth/api dev & pnpm --filter @hearth/ws dev & pnpm --filter @hearth/web dev & wait",
     "format": "biome format --write ."
   },
   "pnpm": {

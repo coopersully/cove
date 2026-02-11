@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 
 import { errorHandler } from "./middleware/index.js";
 import {
@@ -12,6 +13,7 @@ import {
 export const app = new Hono();
 
 app.onError(errorHandler);
+app.use(cors());
 
 app.get("/health", (c) => {
   return c.json({

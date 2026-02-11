@@ -6,9 +6,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   Input,
   Label,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "@hearth/ui";
 import { Plus } from "lucide-react";
 import type { ChangeEvent, FormEvent, JSX } from "react";
@@ -37,15 +39,22 @@ export function CreateServerDialog(): JSX.Element {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild={true}>
-        <button
-          type="button"
-          className="flex size-12 items-center justify-center rounded-full bg-elevated text-sage transition-all hover:rounded-2xl hover:bg-sage hover:text-warm-white"
-          title="Create Server"
-        >
-          <Plus className="size-5" />
-        </button>
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild={true}>
+          <Button
+            variant="outline"
+            size="icon-lg"
+            onClick={() => setOpen(true)}
+            className="rounded-full"
+            aria-label="Create server"
+          >
+            <Plus />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          Create Server
+        </TooltipContent>
+      </Tooltip>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create a server</DialogTitle>

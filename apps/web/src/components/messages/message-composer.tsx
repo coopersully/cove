@@ -1,4 +1,4 @@
-import { Button } from "@hearth/ui";
+import { Button, cn, Textarea } from "@hearth/ui";
 import { SendHorizontal } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
@@ -45,10 +45,12 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
   };
 
+  const hasContent = content.trim().length > 0;
+
   return (
-    <div className="border-elevated border-t px-4 py-3">
-      <div className="flex items-end gap-2 rounded-lg bg-elevated px-3 py-2">
-        <textarea
+    <div className="relative z-10 border-border border-t px-4 py-3">
+      <div className="flex items-end gap-2 rounded-xl bg-secondary px-3 py-2 ring-1 ring-transparent transition-all focus-within:ring-ember/30">
+        <Textarea
           ref={textareaRef}
           value={content}
           onChange={(e) => {
@@ -59,14 +61,19 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
           placeholder="Send a message..."
           rows={1}
           maxLength={4000}
-          className="max-h-24 flex-1 resize-none bg-transparent text-linen text-sm placeholder:text-driftwood focus:outline-none"
+          className="min-h-0 max-h-24 flex-1 resize-none border-0 bg-transparent p-0 text-foreground text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
         />
         <Button
           size="icon-sm"
           variant="ghost"
           onClick={handleSend}
-          disabled={!content.trim() || sendMessage.isPending}
-          className="shrink-0 text-driftwood hover:text-ember"
+          disabled={!hasContent || sendMessage.isPending}
+          className={cn(
+            "shrink-0 rounded-full transition-all",
+            hasContent
+              ? "bg-ember text-warm-white hover:bg-ember-dark"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
           <SendHorizontal className="size-4" />
         </Button>

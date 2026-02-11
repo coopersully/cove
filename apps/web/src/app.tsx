@@ -1,3 +1,4 @@
+import { Flame } from "lucide-react";
 import type { JSX } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { AuthGuard } from "./components/auth/auth-guard.js";
@@ -19,16 +20,22 @@ export function App(): JSX.Element {
           <Route path="/servers/:serverId/channels/:channelId" element={<ServerView />} />
         </Route>
       </Route>
+      <Route path="*" element={<Navigate to="/" replace={true} />} />
     </Routes>
   );
 }
 
 function ServerListPlaceholder(): JSX.Element {
   return (
-    <div className="flex flex-1 items-center justify-center text-driftwood">
-      <div className="text-center">
-        <h2 className="font-display font-semibold text-linen text-xl">Welcome to Hearth</h2>
-        <p className="mt-2 text-sm">Select a server or create a new one to get started.</p>
+    <div className="flex flex-1 items-center justify-center text-muted-foreground">
+      <div className="animate-fade-up-in text-center">
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-ember/10">
+          <Flame className="size-8 text-ember" />
+        </div>
+        <h2 className="font-display font-semibold text-foreground text-xl">Welcome to Hearth</h2>
+        <p className="mt-2 max-w-xs font-body text-sm">
+          Select a server or create a new one to get started.
+        </p>
       </div>
     </div>
   );

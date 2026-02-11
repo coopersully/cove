@@ -41,6 +41,22 @@ export {
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.js";
 export { Input } from "./components/ui/input.js";
+export {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+  InputGroupText,
+  InputGroupTextarea,
+} from "./components/ui/input-group.js";
+export { PasswordInput } from "./components/ui/password-input.js";
 export { Label } from "./components/ui/label.js";
 export { ScrollArea, ScrollBar } from "./components/ui/scroll-area.js";
 export { Separator } from "./components/ui/separator.js";
+export {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./components/ui/tooltip.js";
+export { Textarea } from "./components/ui/textarea.js";

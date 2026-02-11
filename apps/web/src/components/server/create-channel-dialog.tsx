@@ -37,13 +37,14 @@ export function CreateChannelDialog({ serverId }: CreateChannelDialogProps): JSX
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild={true}>
-        <button
-          type="button"
-          className="rounded p-0.5 text-driftwood transition-colors hover:text-linen"
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          className="text-muted-foreground hover:text-foreground"
           title="Create Channel"
         >
           <Plus className="size-4" />
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -20,6 +20,19 @@
     --input: var(--color-sandstone);
     --ring: var(--color-ember);
     --radius: var(--radius-md);
+    --chart-1: var(--color-ember);
+    --chart-2: var(--color-sage);
+    --chart-3: var(--color-sky);
+    --chart-4: var(--color-amber);
+    --chart-5: var(--color-soft-coral);
+    --sidebar: var(--color-warm-white);
+    --sidebar-foreground: var(--color-charcoal);
+    --sidebar-primary: var(--color-ember);
+    --sidebar-primary-foreground: var(--color-warm-white);
+    --sidebar-accent: var(--color-sandstone);
+    --sidebar-accent-foreground: var(--color-charcoal);
+    --sidebar-border: var(--color-sandstone);
+    --sidebar-ring: var(--color-ember);
   }
 
   .dark {
@@ -42,5 +55,18 @@
     --border: var(--color-elevated);
     --input: var(--color-elevated);
     --ring: var(--color-ember);
+    --chart-1: var(--color-ember);
+    --chart-2: var(--color-sage-light);
+    --chart-3: var(--color-sky);
+    --chart-4: var(--color-amber-light);
+    --chart-5: var(--color-soft-coral);
+    --sidebar: var(--color-surface);
+    --sidebar-foreground: var(--color-linen);
+    --sidebar-primary: var(--color-ember);
+    --sidebar-primary-foreground: var(--color-warm-white);
+    --sidebar-accent: var(--color-elevated);
+    --sidebar-accent-foreground: var(--color-linen);
+    --sidebar-border: var(--color-elevated);
+    --sidebar-ring: var(--color-ember);
   }
 }

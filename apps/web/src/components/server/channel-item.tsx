@@ -18,8 +18,8 @@ export function ChannelItem({ channel }: ChannelItemProps): JSX.Element {
       className={cn(
         "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
         isActive
-          ? "bg-elevated text-linen"
-          : "text-driftwood hover:bg-elevated/50 hover:text-linen",
+          ? "bg-secondary font-medium text-foreground"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
       )}
     >
       {channel.type === "text" ? (

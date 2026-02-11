@@ -1,4 +1,5 @@
 import type { Message } from "@hearth/api-client";
+import { Flame } from "lucide-react";
 import type { JSX } from "react";
 import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
@@ -21,6 +22,29 @@ function shouldShowAuthor(current: Message, previous: Message | undefined): bool
   const previousTime = new Date(previous.createdAt).getTime();
   const fiveMinutes = 5 * 60 * 1000;
   return currentTime - previousTime > fiveMinutes;
+}
+
+function MessageSkeleton({ showAuthor }: { readonly showAuthor: boolean }): JSX.Element {
+  if (!showAuthor) {
+    return (
+      <div className="flex gap-4 py-0.5 pr-4 pl-[68px]">
+        <div className="skeleton h-3 w-3/4 rounded" />
+      </div>
+    );
+  }
+  return (
+    <div className="flex gap-3 py-2 pr-4 pl-4">
+      <div className="skeleton mt-0.5 size-10 shrink-0 rounded-full" />
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="skeleton h-3 w-24 rounded" />
+          <div className="skeleton h-2 w-12 rounded" />
+        </div>
+        <div className="skeleton h-3 w-5/6 rounded" />
+        <div className="skeleton h-3 w-2/3 rounded" />
+      </div>
+    </div>
+  );
 }
 
 export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
@@ -56,33 +80,48 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
 
   if (status === "pending") {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="size-6 animate-spin rounded-full border-2 border-ember border-t-transparent" />
+      <div className="relative z-10 flex flex-1 flex-col gap-1 py-4">
+        <MessageSkeleton showAuthor={true} />
+        <MessageSkeleton showAuthor={false} />
+        <MessageSkeleton showAuthor={false} />
+        <MessageSkeleton showAuthor={true} />
+        <MessageSkeleton showAuthor={false} />
+        <MessageSkeleton showAuthor={true} />
+        <MessageSkeleton showAuthor={false} />
+        <MessageSkeleton showAuthor={false} />
       </div>
     );
   }
 
   if (status === "error") {
     return (
-      <div className="flex flex-1 items-center justify-center text-rose">
+      <div className="relative z-10 flex flex-1 items-center justify-center text-destructive">
         Failed to load messages
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto">
+    <div className="relative z-10 flex flex-1 flex-col overflow-y-auto">
       {/* Load more sentinel */}
       <div ref={loadMoreRef} className="shrink-0 px-4 py-2">
         {isFetchingNextPage && (
           <div className="flex justify-center">
-            <div className="size-4 animate-spin rounded-full border-2 border-ember border-t-transparent" />
+            <div className="animate-hearth-ember size-4 rounded-full bg-ember/80" />
           </div>
         )}
         {!hasNextPage && allMessages.length > 0 && (
-          <p className="text-center text-driftwood text-xs">
-            This is the beginning of the conversation
-          </p>
+          <div className="py-6 text-center">
+            <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-ember/10">
+              <Flame className="size-5 text-ember" />
+            </div>
+            <p className="font-display font-semibold text-foreground text-sm">
+              The beginning of the conversation
+            </p>
+            <p className="mt-1 text-muted-foreground text-xs">
+              This is where it all started.
+            </p>
+          </div>
         )}
       </div>
 
@@ -98,8 +137,16 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
       </div>
 
       {allMessages.length === 0 && (
-        <div className="flex flex-1 items-center justify-center text-driftwood">
-          <p>No messages yet. Start the conversation!</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+          <div className="flex size-12 items-center justify-center rounded-full bg-ember/10">
+            <Flame className="size-6 text-ember" />
+          </div>
+          <div className="text-center">
+            <p className="font-display font-semibold text-foreground text-sm">
+              No messages yet
+            </p>
+            <p className="mt-1 text-sm">Start the conversation!</p>
+          </div>
         </div>
       )}
 

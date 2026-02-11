@@ -14,10 +14,13 @@ export function AuthGuard(): JSX.Element {
 
   if (!isInitialized) {
     return (
-      <div className="flex h-screen items-center justify-center bg-warm-white">
+      <div className="flex h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mx-auto size-8 animate-spin rounded-full border-4 border-ember border-t-transparent" />
-          <p className="mt-4 font-body text-warm-gray">Loading...</p>
+          <div className="animate-hearth-ember mx-auto size-10 rounded-full bg-ember/80" />
+          <p className="mt-6 font-display font-semibold text-foreground text-lg tracking-wide">
+            Hearth
+          </p>
+          <p className="mt-1 font-body text-muted-foreground text-sm">Loading...</p>
         </div>
       </div>
     );

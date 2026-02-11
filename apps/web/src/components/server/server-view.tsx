@@ -22,14 +22,20 @@ export function ServerView(): JSX.Element {
     }
   }, [channelId, data, serverId, navigate]);
 
+  const currentChannel = data?.channels.find((c) => c.id === channelId);
+
   return (
     <>
       <ChannelList serverId={serverId} />
       {channelId ? (
-        <ChannelView channelId={channelId} />
+        <ChannelView
+          key={channelId}
+          channelId={channelId}
+          channelName={currentChannel?.name}
+        />
       ) : (
-        <div className="flex flex-1 items-center justify-center text-driftwood">
-          <p>Select a channel to start chatting</p>
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">
+          <p className="font-body text-sm">Select a channel to start chatting</p>
         </div>
       )}
     </>
