@@ -11,7 +11,7 @@ import {
   Separator,
   cn,
 } from "@hearth/ui";
-import { ChevronDown, Hash, LogOut, Plus, Settings, Trash2, Volume2 } from "lucide-react";
+import { ChevronDown, Hash, LogOut, Settings, Trash2, Volume2 } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
@@ -162,7 +162,11 @@ export function MobileChannelPicker({
       {/* Server management dialogs */}
       {server && isOwner && (
         <>
-          <ServerSettingsDialog server={server} open={settingsOpen} onOpenChange={setSettingsOpen} />
+          <ServerSettingsDialog
+            server={server}
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+          />
           <DeleteServerDialog server={server} open={deleteOpen} onOpenChange={setDeleteOpen} />
         </>
       )}

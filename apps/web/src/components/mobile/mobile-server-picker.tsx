@@ -9,7 +9,7 @@ import {
   Separator,
   cn,
 } from "@hearth/ui";
-import { ArrowDownToLine, Plus } from "lucide-react";
+import { ArrowDownToLine } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
