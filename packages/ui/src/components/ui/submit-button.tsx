@@ -1,8 +1,8 @@
-import type { JSX } from "react";
+import type { ComponentProps, JSX } from "react";
 
 import { Button } from "./button.js";
 
-interface SubmitButtonProps extends React.ComponentProps<typeof Button> {
+interface SubmitButtonProps extends ComponentProps<typeof Button> {
   readonly pending?: boolean;
   readonly pendingLabel?: string;
 }

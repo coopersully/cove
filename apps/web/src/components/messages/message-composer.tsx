@@ -9,7 +9,7 @@ interface MessageComposerProps {
   readonly channelId: string;
 }
 
-const MARKDOWN_PATTERN = /[*_~`\[#>]|\d+\./;
+const MARKDOWN_PATTERN = /[*_~`[#>]|\d+\./;
 
 export function MessageComposer({ channelId }: MessageComposerProps): JSX.Element {
   const [content, setContent] = useState("");

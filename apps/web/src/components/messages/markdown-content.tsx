@@ -1,4 +1,4 @@
-import { memo, type JSX } from "react";
+import { type JSX, memo } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -14,7 +14,7 @@ export const MarkdownContent = memo(function MarkdownContent({
   return (
     <Markdown
       remarkPlugins={remarkPlugins}
-      skipHtml
+      skipHtml={true}
       components={{
         p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
         strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
@@ -33,16 +33,10 @@ export const MarkdownContent = memo(function MarkdownContent({
         code: ({ className, children }) => {
           const isBlock = className?.startsWith("language-");
           if (isBlock) {
-            return (
-              <code className="text-[0.8125rem]">
-                {children}
-              </code>
-            );
+            return <code className="text-[0.8125rem]">{children}</code>;
           }
           return (
-            <code className="rounded bg-secondary px-1.5 py-0.5 text-[0.8125rem]">
-              {children}
-            </code>
+            <code className="rounded bg-secondary px-1.5 py-0.5 text-[0.8125rem]">{children}</code>
           );
         },
         pre: ({ children }) => (
