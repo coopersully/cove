@@ -36,7 +36,7 @@ export function UserSection(): JSX.Element {
           >
             <Avatar className="size-8 shrink-0">
               <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
-              <AvatarFallback className="bg-ember/15 text-ember text-xs">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">{initials}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-foreground text-xs">{displayName}</p>
@@ -52,12 +52,12 @@ export function UserSection(): JSX.Element {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setTheme(nextTheme)}>
+          <DropdownMenuItem onSelect={() => setTheme(nextTheme)}>
             <ThemeIcon className="size-4" />
             <span>Theme: {themeLabel}</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={logout}>
+          <DropdownMenuItem variant="destructive" onSelect={logout}>
             <LogOut className="size-4" />
             <span>Sign out</span>
           </DropdownMenuItem>

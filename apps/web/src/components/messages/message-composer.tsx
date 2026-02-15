@@ -49,7 +49,7 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
 
   return (
     <div className="relative z-10 border-border border-t px-4 py-3">
-      <div className="flex items-end gap-2 rounded-xl bg-secondary px-3 py-2 ring-1 ring-transparent transition-all focus-within:ring-ember/30">
+      <div className="flex items-end gap-2 rounded-xl bg-secondary px-3 py-2 ring-1 ring-transparent transition-all focus-within:ring-primary/30">
         <Textarea
           ref={textareaRef}
           value={content}
@@ -71,7 +71,7 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
           className={cn(
             "shrink-0 rounded-full transition-all",
             hasContent
-              ? "bg-ember text-warm-white hover:bg-ember-dark"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
               : "text-muted-foreground hover:text-foreground",
           )}
         >

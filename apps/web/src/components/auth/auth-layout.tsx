@@ -15,9 +15,9 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 80% 60% at 30% 50%, rgba(232,118,75,0.35) 0%, transparent 70%), " +
-              "radial-gradient(ellipse 60% 80% at 70% 60%, rgba(229,168,75,0.25) 0%, transparent 65%), " +
-              "radial-gradient(ellipse 50% 50% at 50% 40%, rgba(240,160,140,0.15) 0%, transparent 60%)",
+              "radial-gradient(ellipse 80% 60% at 30% 50%, rgba(250,250,247,0.08) 0%, transparent 70%), " +
+              "radial-gradient(ellipse 60% 80% at 70% 60%, rgba(242,240,235,0.06) 0%, transparent 65%), " +
+              "radial-gradient(ellipse 50% 50% at 50% 40%, rgba(226,223,216,0.04) 0%, transparent 60%)",
           }}
         />
         {/* Animated glow center */}
@@ -25,7 +25,7 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 45% 55%, rgba(232,118,75,0.3) 0%, transparent 50%)",
+              "radial-gradient(circle at 45% 55%, rgba(250,250,247,0.06) 0%, transparent 50%)",
             animation: "hearth-glow 6s ease-in-out infinite",
           }}
         />
@@ -34,7 +34,7 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 60% 35%, rgba(229,168,75,0.2) 0%, transparent 40%)",
+              "radial-gradient(circle at 60% 35%, rgba(226,223,216,0.05) 0%, transparent 40%)",
             animation: "hearth-drift 10s ease-in-out infinite",
           }}
         />
@@ -51,7 +51,7 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
           <h1 className="animate-brand-enter font-bold font-display text-6xl text-warm-white tracking-[0.14em]">
             Hearth
           </h1>
-          <Separator className="mx-auto mt-6 w-12 bg-ember/40" />
+          <Separator className="mx-auto mt-6 w-12 bg-warm-white/25" />
           <p
             className="mt-6 max-w-xs animate-fade-up-in font-body text-driftwood text-lg leading-relaxed"
             style={{ animationDelay: "0.3s" }}
@@ -61,16 +61,12 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
         </div>
 
         {/* Bottom decorative line */}
-        <div className="absolute right-0 bottom-0 left-0 h-px bg-gradient-to-r from-transparent via-ember/30 to-transparent" />
+        <div className="absolute right-0 bottom-0 left-0 h-px bg-gradient-to-r from-transparent via-warm-white/15 to-transparent" />
       </div>
 
-      {/* Form panel with warm gradient bleed */}
+      {/* Form panel */}
       <div
-        className="relative flex w-full flex-col items-center justify-center overflow-hidden px-6 py-12 lg:w-1/2"
-        style={{
-          background:
-            "radial-gradient(ellipse at 0% 50%, rgba(232,118,75,0.04) 0%, transparent 60%), var(--background)",
-        }}
+        className="relative flex w-full flex-col items-center justify-center overflow-hidden bg-background px-6 py-12 lg:w-1/2"
       >
         {/* Mobile-only brand header */}
         <div className="mb-10 text-center lg:hidden">

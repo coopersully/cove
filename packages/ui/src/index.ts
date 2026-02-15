@@ -1,5 +1,19 @@
 export { cn } from "./lib/utils.js";
 
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogOverlay,
+  AlertDialogPortal,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./components/ui/alert-dialog.js";
 export { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar.js";
 export { Button, buttonVariants } from "./components/ui/button.js";
 export {
@@ -60,3 +74,20 @@ export {
   TooltipTrigger,
 } from "./components/ui/tooltip.js";
 export { Textarea } from "./components/ui/textarea.js";
+export {
+  ContextMenu,
+  ContextMenuCheckboxItem,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuPortal,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "./components/ui/context-menu.js";

@@ -22,7 +22,7 @@ export function ChannelView({ channelId, channelName }: ChannelViewProps): JSX.E
       <div
         className="pointer-events-none absolute right-0 bottom-0 left-0 h-32"
         style={{
-          background: "linear-gradient(to top, rgba(232,118,75,0.03) 0%, transparent 100%)",
+          background: "linear-gradient(to top, rgba(28,25,23,0.02) 0%, transparent 100%)",
         }}
       />
 

@@ -1,4 +1,8 @@
-import type { CreateMessageRequest, MessageListResponse } from "@hearth/api-client";
+import type {
+  CreateMessageRequest,
+  MessageListResponse,
+  UpdateMessageRequest,
+} from "@hearth/api-client";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
@@ -72,6 +76,105 @@ export function useSendMessage(channelId: string) {
               };
             }
             return { ...old, pages: newPages };
+          },
+        );
+      }
+
+      return { previous };
+    },
+    onError: (_err, _data, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["channels", channelId, "messages"], context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["channels", channelId, "messages"],
+      });
+    },
+  });
+}
+
+export function useUpdateMessage(channelId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ messageId, data }: { messageId: string; data: UpdateMessageRequest }) =>
+      api.messages.update(messageId, data),
+    onMutate: async ({ messageId, data }) => {
+      await queryClient.cancelQueries({
+        queryKey: ["channels", channelId, "messages"],
+      });
+
+      const previous = queryClient.getQueryData<InfiniteData<MessageListResponse>>([
+        "channels",
+        channelId,
+        "messages",
+      ]);
+
+      if (previous) {
+        queryClient.setQueryData<InfiniteData<MessageListResponse>>(
+          ["channels", channelId, "messages"],
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                messages: page.messages.map((msg) =>
+                  msg.id === messageId
+                    ? { ...msg, content: data.content, editedAt: new Date().toISOString() }
+                    : msg,
+                ),
+              })),
+            };
+          },
+        );
+      }
+
+      return { previous };
+    },
+    onError: (_err, _data, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["channels", channelId, "messages"], context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["channels", channelId, "messages"],
+      });
+    },
+  });
+}
+
+export function useDeleteMessage(channelId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (messageId: string) => api.messages.delete(messageId),
+    onMutate: async (messageId) => {
+      await queryClient.cancelQueries({
+        queryKey: ["channels", channelId, "messages"],
+      });
+
+      const previous = queryClient.getQueryData<InfiniteData<MessageListResponse>>([
+        "channels",
+        channelId,
+        "messages",
+      ]);
+
+      if (previous) {
+        queryClient.setQueryData<InfiniteData<MessageListResponse>>(
+          ["channels", channelId, "messages"],
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                messages: page.messages.filter((msg) => msg.id !== messageId),
+              })),
+            };
           },
         );
       }

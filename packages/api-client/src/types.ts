@@ -72,6 +72,15 @@ export interface UpdateProfileRequest {
   readonly status?: string;
 }
 
+export interface ForgotPasswordRequest {
+  readonly email: string;
+}
+
+export interface ResetPasswordRequest {
+  readonly token: string;
+  readonly password: string;
+}
+
 export interface CreateServerRequest {
   readonly name: string;
   readonly description?: string | undefined;

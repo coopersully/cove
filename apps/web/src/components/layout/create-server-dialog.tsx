@@ -41,15 +41,14 @@ export function CreateServerDialog(): JSX.Element {
     <Dialog open={open} onOpenChange={setOpen}>
       <Tooltip>
         <TooltipTrigger asChild={true}>
-          <Button
-            variant="outline"
-            size="icon-lg"
+          <button
+            type="button"
             onClick={() => setOpen(true)}
-            className="rounded-full"
+            className="group relative flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
             aria-label="Create server"
           >
-            <Plus />
-          </Button>
+            <Plus className="size-5" />
+          </button>
         </TooltipTrigger>
         <TooltipContent side="right" sideOffset={8}>
           Create Server
