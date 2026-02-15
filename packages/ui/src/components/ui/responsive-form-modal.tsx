@@ -57,20 +57,22 @@ export function ResponsiveFormModal<T extends FieldValues>({
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (!next) {
+      if (next) {
+        form.reset(defaultValues);
+      } else {
         form.reset();
-        setServerError(null);
       }
+      setServerError(null);
       onOpenChange(next);
     },
-    [form, onOpenChange],
+    [form, onOpenChange, defaultValues],
   );
 
   const handleSubmit = form.handleSubmit(async (data) => {
     setServerError(null);
     try {
       await onSubmit(data);
-      form.reset();
+      form.reset(data as DefaultValues<T>);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setServerError(err.message);

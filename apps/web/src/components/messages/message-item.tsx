@@ -147,17 +147,15 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
         className="min-h-[2.5rem] resize-none text-sm"
         rows={1}
       />
-      <div className="mt-1 flex items-center gap-1 text-muted-foreground text-xs">
-        <span>
-          Escape to
-          <button type="button" onClick={cancelEditing} className="text-foreground hover:underline">
-            cancel
-          </button>
-          · Enter to
-          <button type="button" onClick={saveEdit} className="text-foreground hover:underline">
-            save
-          </button>
-        </span>
+      <div className="mt-1 text-muted-foreground text-xs">
+        Escape to{" "}
+        <button type="button" onClick={cancelEditing} className="text-foreground hover:underline">
+          cancel
+        </button>{" "}
+        · Enter to{" "}
+        <button type="button" onClick={saveEdit} className="text-foreground hover:underline">
+          save
+        </button>
       </div>
     </div>
   ) : (
