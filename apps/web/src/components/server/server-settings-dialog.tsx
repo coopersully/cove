@@ -1,16 +1,7 @@
 import type { Server } from "@hearth/api-client";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-} from "@hearth/ui";
-import type { FormEvent, JSX } from "react";
-import { useState } from "react";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
+import { serverSettingsSchema } from "@hearth/shared";
+import type { JSX } from "react";
 import { useUpdateServer } from "../../hooks/use-servers.js";
 
 interface ServerSettingsDialogProps {
@@ -24,63 +15,58 @@ export function ServerSettingsDialog({
   open,
   onOpenChange,
 }: ServerSettingsDialogProps): JSX.Element {
-  const [name, setName] = useState(server.name);
-  const [description, setDescription] = useState(server.description ?? "");
   const updateServer = useUpdateServer(server.id);
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      return;
-    }
-
-    updateServer.mutate(
-      {
-        name: trimmedName,
-        description: description.trim() || null,
-      },
-      { onSuccess: () => onOpenChange(false) },
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Server Settings</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="server-name">Server name</Label>
-            <Input
-              id="server-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-              placeholder="My Server"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="server-description">Description</Label>
-            <Input
-              id="server-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={1024}
-              placeholder="What is this server about?"
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!name.trim() || updateServer.isPending}>
-              {updateServer.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <ResponsiveFormModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Server Settings"
+      schema={serverSettingsSchema}
+      defaultValues={{
+        name: server.name,
+        description: server.description ?? "",
+      }}
+      onSubmit={async (data) => {
+        await updateServer.mutateAsync({
+          name: data.name.trim(),
+          description: data.description?.trim() || null,
+        });
+        onOpenChange(false);
+      }}
+      submitLabel="Save Changes"
+      pendingLabel="Saving..."
+    >
+      {(form) => (
+        <>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Server name</FormLabel>
+                <FormControl>
+                  <Input placeholder="My Server" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Input placeholder="What is this server about?" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      )}
+    </ResponsiveFormModal>
   );
 }

@@ -1,16 +1,6 @@
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-} from "@hearth/ui";
-import type { FormEvent, JSX } from "react";
-import { useState } from "react";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
+import { joinServerSchema } from "@hearth/shared";
+import type { JSX } from "react";
 import { useNavigate } from "react-router";
 import { useJoinServer } from "../../hooks/use-servers.js";
 
@@ -20,56 +10,40 @@ interface JoinServerDialogProps {
 }
 
 export function JoinServerDialog({ open, onOpenChange }: JoinServerDialogProps): JSX.Element {
-  const [serverId, setServerId] = useState("");
   const joinServer = useJoinServer();
   const navigate = useNavigate();
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const trimmed = serverId.trim();
-    if (!trimmed) {
-      return;
-    }
-
-    joinServer.mutate(
-      { serverId: trimmed },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-          setServerId("");
-          void navigate(`/servers/${trimmed}`);
-        },
-      },
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Join a Server</DialogTitle>
-          <DialogDescription>Enter a server ID or invite code to join a server.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="server-id">Server ID</Label>
-            <Input
-              id="server-id"
-              value={serverId}
-              onChange={(e) => setServerId(e.target.value)}
-              placeholder="Enter server ID"
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!serverId.trim() || joinServer.isPending}>
-              {joinServer.isPending ? "Joining..." : "Join Server"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <ResponsiveFormModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Join a Server"
+      description="Enter a server ID or invite code to join a server."
+      schema={joinServerSchema}
+      defaultValues={{ serverId: "" }}
+      onSubmit={async (data) => {
+        await joinServer.mutateAsync({ serverId: data.serverId });
+        onOpenChange(false);
+        void navigate(`/servers/${data.serverId}`);
+      }}
+      submitLabel="Join Server"
+      pendingLabel="Joining..."
+    >
+      {(form) => (
+        <FormField
+          control={form.control}
+          name="serverId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Server ID</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter server ID" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+    </ResponsiveFormModal>
   );
 }

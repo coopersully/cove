@@ -1,16 +1,7 @@
 import type { Channel } from "@hearth/api-client";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-} from "@hearth/ui";
-import type { FormEvent, JSX } from "react";
-import { useState } from "react";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
+import { editChannelSchema } from "@hearth/shared";
+import type { JSX } from "react";
 import { useUpdateChannel } from "../../hooks/use-channels.js";
 
 interface EditChannelDialogProps {
@@ -24,66 +15,62 @@ export function EditChannelDialog({
   open,
   onOpenChange,
 }: EditChannelDialogProps): JSX.Element {
-  const [name, setName] = useState(channel.name);
-  const [topic, setTopic] = useState(channel.topic ?? "");
   const updateChannel = useUpdateChannel(channel.serverId);
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const trimmedName = name.trim().toLowerCase().replace(/\s+/g, "-");
-    if (!trimmedName) {
-      return;
-    }
-
-    updateChannel.mutate(
-      {
-        channelId: channel.id,
-        data: {
-          name: trimmedName,
-          topic: topic.trim() || null,
-        },
-      },
-      { onSuccess: () => onOpenChange(false) },
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Channel</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="channel-name">Channel name</Label>
-            <Input
-              id="channel-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-              placeholder="channel-name"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="channel-topic">Topic</Label>
-            <Input
-              id="channel-topic"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              maxLength={1024}
-              placeholder="What is this channel about?"
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!name.trim() || updateChannel.isPending}>
-              {updateChannel.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <ResponsiveFormModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Edit Channel"
+      schema={editChannelSchema}
+      defaultValues={{
+        name: channel.name,
+        topic: channel.topic ?? "",
+      }}
+      onSubmit={async (data) => {
+        const trimmedName = data.name.trim().toLowerCase().replace(/\s+/g, "-");
+        await updateChannel.mutateAsync({
+          channelId: channel.id,
+          data: {
+            name: trimmedName,
+            topic: data.topic?.trim() || null,
+          },
+        });
+        onOpenChange(false);
+      }}
+      submitLabel="Save Changes"
+      pendingLabel="Saving..."
+    >
+      {(form) => (
+        <>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Channel name</FormLabel>
+                <FormControl>
+                  <Input placeholder="channel-name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="topic"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Topic</FormLabel>
+                <FormControl>
+                  <Input placeholder="What is this channel about?" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      )}
+    </ResponsiveFormModal>
   );
 }

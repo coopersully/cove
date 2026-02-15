@@ -1,17 +1,16 @@
 import {
   Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
   Input,
-  Label,
+  ResponsiveFormModal,
 } from "@hearth/ui";
+import { createChannelSchema } from "@hearth/shared";
 import { Plus } from "lucide-react";
-import type { ChangeEvent, FormEvent, JSX } from "react";
+import type { JSX } from "react";
 import { useState } from "react";
 import { useCreateChannel } from "../../hooks/use-channels.js";
 
@@ -21,55 +20,52 @@ interface CreateChannelDialogProps {
 
 export function CreateChannelDialog({ serverId }: CreateChannelDialogProps): JSX.Element {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
   const createChannel = useCreateChannel(serverId);
 
-  const handleSubmit = async (e: FormEvent): Promise<void> => {
-    e.preventDefault();
-    await createChannel.mutateAsync({
-      name: name.toLowerCase().replaceAll(" ", "-"),
-      type: "text",
-    });
-    setName("");
-    setOpen(false);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild={true}>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          className="text-muted-foreground hover:text-foreground"
-          title="Create Channel"
-        >
-          <Plus className="size-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create a channel</DialogTitle>
-          <DialogDescription>Channels are where conversations happen.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={(e: FormEvent) => void handleSubmit(e)} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="channel-name">Channel name</Label>
-            <Input
-              id="channel-name"
-              value={name}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-              placeholder="general"
-              maxLength={100}
-              required={true}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="submit" disabled={createChannel.isPending || !name.trim()}>
-              {createChannel.isPending ? "Creating..." : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        className="text-muted-foreground hover:text-foreground"
+        title="Create Channel"
+        onClick={() => setOpen(true)}
+      >
+        <Plus className="size-4" />
+      </Button>
+      <ResponsiveFormModal
+        open={open}
+        onOpenChange={setOpen}
+        title="Create a channel"
+        description="Channels are where conversations happen."
+        schema={createChannelSchema}
+        defaultValues={{ name: "", type: "text" as const }}
+        onSubmit={async (data) => {
+          await createChannel.mutateAsync({
+            name: data.name.toLowerCase().replaceAll(" ", "-"),
+            type: data.type,
+          });
+          setOpen(false);
+        }}
+        submitLabel="Create"
+        pendingLabel="Creating..."
+      >
+        {(form) => (
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Channel name</FormLabel>
+                <FormControl>
+                  <Input placeholder="general" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </ResponsiveFormModal>
+    </>
   );
 }
