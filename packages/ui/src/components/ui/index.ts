@@ -1,6 +1,3 @@
-export { cn } from "./lib/index.js";
-export { useMediaQuery } from "./hooks/index.js";
-
 export {
   AlertDialog,
   AlertDialogAction,
@@ -14,11 +11,10 @@ export {
   AlertDialogPortal,
   AlertDialogTitle,
   AlertDialogTrigger,
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Button,
-  buttonVariants,
+} from "./alert-dialog.js";
+export { Avatar, AvatarFallback, AvatarImage } from "./avatar.js";
+export { Button, buttonVariants } from "./button.js";
+export {
   Card,
   CardAction,
   CardContent,
@@ -26,6 +22,8 @@ export {
   CardFooter,
   CardHeader,
   CardTitle,
+} from "./card.js";
+export {
   ContextMenu,
   ContextMenuCheckboxItem,
   ContextMenuContent,
@@ -41,6 +39,8 @@ export {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
   ContextMenuTrigger,
+} from "./context-menu.js";
+export {
   Dialog,
   DialogClose,
   DialogContent,
@@ -51,6 +51,8 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
+} from "./dialog.js";
+export {
   Drawer,
   DrawerClose,
   DrawerContent,
@@ -61,6 +63,8 @@ export {
   DrawerPortal,
   DrawerTitle,
   DrawerTrigger,
+} from "./drawer.js";
+export {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -76,28 +80,33 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
+} from "./dropdown-menu.js";
+export {
   Form,
-  FormAlert,
   FormControl,
   FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-  Input,
+  useFormField,
+} from "./form.js";
+export { FormAlert } from "./form-alert.js";
+export { Input } from "./input.js";
+export {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
   InputGroupText,
   InputGroupTextarea,
-  Label,
-  PasswordInput,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  ResponsiveConfirmModal,
-  ResponsiveFormModal,
+} from "./input-group.js";
+export { Label } from "./label.js";
+export { PasswordInput } from "./password-input.js";
+export { Popover, PopoverContent, PopoverTrigger } from "./popover.js";
+export { ResponsiveConfirmModal } from "./responsive-confirm-modal.js";
+export { ResponsiveFormModal } from "./responsive-form-modal.js";
+export {
   ResponsiveModal,
   ResponsiveModalClose,
   ResponsiveModalContent,
@@ -106,14 +115,14 @@ export {
   ResponsiveModalHeader,
   ResponsiveModalTitle,
   ResponsiveModalTrigger,
-  ScrollArea,
-  ScrollBar,
-  Separator,
-  SubmitButton,
-  Textarea,
+} from "./responsive-modal.js";
+export { ScrollArea, ScrollBar } from "./scroll-area.js";
+export { Separator } from "./separator.js";
+export { SubmitButton } from "./submit-button.js";
+export { Textarea } from "./textarea.js";
+export {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-  useFormField,
-} from "./components/index.js";
+} from "./tooltip.js";
