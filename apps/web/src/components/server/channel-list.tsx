@@ -14,7 +14,6 @@ import { useState } from "react";
 import { useChannels } from "../../hooks/use-channels.js";
 import { useServer } from "../../hooks/use-servers.js";
 import { useAuthStore } from "../../stores/auth.js";
-import { UserSection } from "../layout/user-section.js";
 import { ChannelItem } from "./channel-item.js";
 import { CreateChannelDialog } from "./create-channel-dialog.js";
 import { DeleteServerDialog } from "./delete-server-dialog.js";
@@ -130,9 +129,6 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
           )}
         </div>
       </ScrollArea>
-
-      {/* User section */}
-      <UserSection />
 
       {/* Server management dialogs */}
       {server && isOwner && (

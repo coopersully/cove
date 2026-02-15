@@ -90,8 +90,10 @@ export function ResponsiveFormModal<T extends FieldValues>({
         </ResponsiveModalHeader>
         <Form {...form}>
           <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
-            <FormAlert message={serverError} />
-            {children(form)}
+            <div className="flex flex-col gap-4 px-4 md:px-0">
+              <FormAlert message={serverError} />
+              {children(form)}
+            </div>
             <ResponsiveModalFooter>
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancel

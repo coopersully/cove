@@ -176,15 +176,15 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
 
   if (!showAuthor) {
     return (
-      <div className="group relative flex gap-4 py-0.5 pr-4 pl-[68px] hover:bg-secondary/30">
+      <div className="group relative py-0.5 pr-4 pl-[68px] hover:bg-secondary/30">
         {actionBar}
-        <span className="invisible text-muted-foreground text-xs group-hover:visible">
+        <span className="absolute left-0 flex h-5 w-[68px] items-center justify-center text-muted-foreground text-xs opacity-0 group-hover:opacity-100">
           {new Date(message.createdAt).toLocaleTimeString(undefined, {
             hour: "2-digit",
             minute: "2-digit",
           })}
         </span>
-        <div className="min-w-0 flex-1">{contentOrEditor}</div>
+        <div className="min-w-0">{contentOrEditor}</div>
         {deleteDialog}
       </div>
     );
