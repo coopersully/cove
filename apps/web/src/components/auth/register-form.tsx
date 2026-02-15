@@ -1,57 +1,50 @@
 import { ApiError } from "@hearth/api-client";
+import { registerSchema } from "@hearth/shared";
 import {
-  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  Form,
+  FormAlert,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
   Input,
-  Label,
   PasswordInput,
+  SubmitButton,
 } from "@hearth/ui";
-import { AlertTriangle } from "lucide-react";
-import type { ChangeEvent, FormEvent, JSX } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { JSX } from "react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
+import type { z } from "zod";
 import { useAuthStore } from "../../stores/auth.js";
-import { PasswordRequirements, arePasswordRequirementsMet } from "./password-requirements.js";
+import { PasswordRequirements } from "./password-requirements.js";
 
 export function RegisterForm(): JSX.Element {
   const navigate = useNavigate();
   const register = useAuthStore((s) => s.register);
-
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPasswords, setShowPasswords] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
 
-  const passwordsMatch = password === confirmPassword;
-  const canSubmit =
-    arePasswordRequirementsMet(password) && confirmPassword.length > 0 && passwordsMatch;
+  const form = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
+    mode: "onChange",
+  });
 
-  const handleSubmit = async (e: FormEvent): Promise<void> => {
-    e.preventDefault();
+  const password = form.watch("password");
+
+  async function onSubmit(data: z.infer<typeof registerSchema>) {
     setError(null);
-
-    if (!passwordsMatch) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (!arePasswordRequirementsMet(password)) {
-      setError("Password does not meet requirements");
-      return;
-    }
-
-    setIsLoading(true);
-
     try {
-      await register(username, email, password);
+      await register(data.username, data.email, data.password);
       void navigate("/");
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -59,10 +52,8 @@ export function RegisterForm(): JSX.Element {
       } else {
         setError("An unexpected error occurred");
       }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }
 
   return (
     <Card className="w-full max-w-sm animate-fade-up-in">
@@ -71,86 +62,85 @@ export function RegisterForm(): JSX.Element {
         <CardDescription>Join Hearth and start the conversation</CardDescription>
       </CardHeader>
       <CardContent>
-        <form id="register-form" onSubmit={(e: FormEvent) => void handleSubmit(e)}>
-          <div className="flex flex-col gap-6">
-            {error && (
-              <div className="flex items-start gap-2 rounded-md border border-destructive/20 border-l-[3px] border-l-destructive bg-destructive/10 px-3 py-2.5 text-destructive text-sm">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="johndoe"
-                value={username}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-                minLength={3}
-                maxLength={32}
-                required={true}
-                autoFocus={true}
+        <Form {...form}>
+          <form id="register-form" onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}>
+            <div className="flex flex-col gap-6">
+              <FormAlert message={error} />
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="johndoe" autoFocus={true} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <PasswordInput
+                        {...field}
+                        visible={showPasswords}
+                        onVisibleChange={setShowPasswords}
+                      />
+                    </FormControl>
+                    <PasswordRequirements password={password} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <PasswordInput
+                        {...field}
+                        visible={showPasswords}
+                        onVisibleChange={setShowPasswords}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                required={true}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <PasswordInput
-                id="password"
-                required={true}
-                value={password}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                visible={showPasswords}
-                onVisibleChange={setShowPasswords}
-              />
-              <PasswordRequirements password={password} />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <PasswordInput
-                id="confirm-password"
-                required={true}
-                value={confirmPassword}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
-                visible={showPasswords}
-                onVisibleChange={setShowPasswords}
-              />
-              {confirmPassword && !passwordsMatch && (
-                <p className="animate-fade-up-in text-destructive text-xs">
-                  Passwords do not match
-                </p>
-              )}
-            </div>
-          </div>
-        </form>
+          </form>
+        </Form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button
-          type="submit"
+        <SubmitButton
           form="register-form"
-          disabled={isLoading || !canSubmit}
+          pending={form.formState.isSubmitting}
+          disabled={!form.formState.isValid}
+          pendingLabel="Creating account..."
           className="w-full"
         >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              Creating account...
-            </span>
-          ) : (
-            "Create account"
-          )}
-        </Button>
+          Create account
+        </SubmitButton>
         <div className="text-muted-foreground text-sm">
           Already have an account?
           <Link to="/login" className="text-primary underline-offset-4 hover:underline">

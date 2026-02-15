@@ -1,34 +1,46 @@
 import { ApiError } from "@hearth/api-client";
+import { forgotPasswordSchema } from "@hearth/shared";
 import {
-  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  Form,
+  FormAlert,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
   Input,
-  Label,
+  SubmitButton,
 } from "@hearth/ui";
-import { AlertTriangle, CheckCircle, Mail } from "lucide-react";
-import type { ChangeEvent, FormEvent, JSX } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckCircle, Mail } from "lucide-react";
+import type { JSX } from "react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Link } from "react-router";
+import type { z } from "zod";
 import { api } from "../../lib/api.js";
 
 export function ForgotPasswordForm(): JSX.Element {
-  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
-  const handleSubmit = async (e: FormEvent): Promise<void> => {
-    e.preventDefault();
+  const form = useForm<z.infer<typeof forgotPasswordSchema>>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
+
+  async function onSubmit(data: z.infer<typeof forgotPasswordSchema>) {
     setError(null);
-    setIsLoading(true);
-
     try {
-      await api.auth.forgotPassword({ email });
+      await api.auth.forgotPassword({ email: data.email });
+      setSubmittedEmail(data.email);
       setSubmitted(true);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -36,10 +48,8 @@ export function ForgotPasswordForm(): JSX.Element {
       } else {
         setError("An unexpected error occurred");
       }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }
 
   if (submitted) {
     return (
@@ -50,8 +60,8 @@ export function ForgotPasswordForm(): JSX.Element {
           </div>
           <CardTitle className="font-display text-2xl">Check your email</CardTitle>
           <CardDescription>
-            If an account exists for <strong>{email}</strong>, we&apos;ve sent a password reset
-            link.
+            If an account exists for <strong>{submittedEmail}</strong>, we&apos;ve sent a password
+            reset link.
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex-col gap-2">
@@ -75,40 +85,41 @@ export function ForgotPasswordForm(): JSX.Element {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form id="forgot-password-form" onSubmit={(e: FormEvent) => void handleSubmit(e)}>
-          <div className="flex flex-col gap-6">
-            {error && (
-              <div className="flex items-start gap-2 rounded-md border border-destructive/20 border-l-[3px] border-l-destructive bg-destructive/10 px-3 py-2.5 text-destructive text-sm">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                required={true}
-                autoFocus={true}
+        <Form {...form}>
+          <form id="forgot-password-form" onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}>
+            <div className="flex flex-col gap-6">
+              <FormAlert message={error} />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        autoFocus={true}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
-        </form>
+          </form>
+        </Form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button type="submit" form="forgot-password-form" disabled={isLoading} className="w-full">
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              Sending...
-            </span>
-          ) : (
-            "Send reset link"
-          )}
-        </Button>
+        <SubmitButton
+          form="forgot-password-form"
+          pending={form.formState.isSubmitting}
+          pendingLabel="Sending..."
+          className="w-full"
+        >
+          Send reset link
+        </SubmitButton>
         <Link
           to="/login"
           className="text-muted-foreground text-sm underline-offset-4 hover:underline"
