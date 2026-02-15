@@ -5,8 +5,8 @@ import { getUserAvatarUrl } from "../lib/avatar.js";
 interface UserAvatarProps {
   readonly user: {
     id: string;
-    avatarUrl?: string | null;
-    displayName?: string | null;
+    avatarUrl?: string | null | undefined;
+    displayName?: string | null | undefined;
     username: string;
   };
   readonly size?: "sm" | "default" | "lg" | "xl";
