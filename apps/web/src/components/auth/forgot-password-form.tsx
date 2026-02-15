@@ -50,7 +50,8 @@ export function ForgotPasswordForm(): JSX.Element {
           </div>
           <CardTitle className="font-display text-2xl">Check your email</CardTitle>
           <CardDescription>
-            If an account exists for <strong>{email}</strong>, we&apos;ve sent a password reset link.
+            If an account exists for <strong>{email}</strong>, we&apos;ve sent a password reset
+            link.
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex-col gap-2">
@@ -68,7 +69,7 @@ export function ForgotPasswordForm(): JSX.Element {
         <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-primary/10">
           <Mail className="size-6 text-primary" />
         </div>
-        <CardTitle className="font-display text-center text-2xl">Forgot password?</CardTitle>
+        <CardTitle className="text-center font-display text-2xl">Forgot password?</CardTitle>
         <CardDescription className="text-center">
           Enter your email and we&apos;ll send you a reset link.
         </CardDescription>
@@ -98,12 +99,7 @@ export function ForgotPasswordForm(): JSX.Element {
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button
-          type="submit"
-          form="forgot-password-form"
-          disabled={isLoading}
-          className="w-full"
-        >
+        <Button type="submit" form="forgot-password-form" disabled={isLoading} className="w-full">
           {isLoading ? (
             <span className="flex items-center gap-2">
               <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
@@ -113,7 +109,10 @@ export function ForgotPasswordForm(): JSX.Element {
             "Send reset link"
           )}
         </Button>
-        <Link to="/login" className="text-muted-foreground text-sm underline-offset-4 hover:underline">
+        <Link
+          to="/login"
+          className="text-muted-foreground text-sm underline-offset-4 hover:underline"
+        >
           Back to sign in
         </Link>
       </CardFooter>

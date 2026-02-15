@@ -27,7 +27,8 @@ export function createAuthResource(http: HttpClient): AuthResource {
     login: (data) => http.post<AuthResponse>("/auth/login", data),
     refresh: (data) => http.post<TokenResponse>("/auth/refresh", data),
     forgotPassword: (data) => http.post<SuccessResponse>("/auth/forgot-password", data),
-    validateResetToken: (data) => http.post<ValidateResetTokenResponse>("/auth/validate-reset-token", data),
+    validateResetToken: (data) =>
+      http.post<ValidateResetTokenResponse>("/auth/validate-reset-token", data),
     resetPassword: (data) => http.post<SuccessResponse>("/auth/reset-password", data),
   };
 }

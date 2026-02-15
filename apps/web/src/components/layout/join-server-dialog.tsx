@@ -9,7 +9,7 @@ import {
   Input,
   Label,
 } from "@hearth/ui";
-import type { JSX } from "react";
+import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useJoinServer } from "../../hooks/use-servers.js";
@@ -24,10 +24,12 @@ export function JoinServerDialog({ open, onOpenChange }: JoinServerDialogProps):
   const joinServer = useJoinServer();
   const navigate = useNavigate();
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmed = serverId.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
 
     joinServer.mutate(
       { serverId: trimmed },

@@ -14,7 +14,7 @@ import {
   Textarea,
 } from "@hearth/ui";
 import { Pencil, Trash2 } from "lucide-react";
-import type { JSX } from "react";
+import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useDeleteMessage, useUpdateMessage } from "../../hooks/use-messages.js";
@@ -92,7 +92,7 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
     );
   }
 
-  function handleEditKeyDown(e: React.KeyboardEvent) {
+  function handleEditKeyDown(e: KeyboardEvent) {
     if (e.key === "Escape") {
       cancelEditing();
     } else if (e.key === "Enter" && !e.shiftKey) {
@@ -108,7 +108,7 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
   }
 
   const actionBar = isOwn && !editing && (
-    <div className="absolute -top-3 right-2 hidden rounded-md border bg-card shadow-sm group-hover:flex">
+    <div className="-top-3 absolute right-2 hidden rounded-md border bg-card shadow-sm group-hover:flex">
       <button
         type="button"
         onClick={startEditing}
@@ -157,13 +157,13 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
         className="min-h-[2.5rem] resize-none text-sm"
         rows={1}
       />
-      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+      <div className="mt-1 flex items-center gap-1 text-muted-foreground text-xs">
         <span>
-          Escape to{" "}
+          Escape to
           <button type="button" onClick={cancelEditing} className="text-foreground hover:underline">
             cancel
           </button>
-          {" · "}Enter to{" "}
+          · Enter to
           <button type="button" onClick={saveEdit} className="text-foreground hover:underline">
             save
           </button>

@@ -42,8 +42,8 @@ export function LeaveServerDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Leave Server</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to leave <strong>{server.name}</strong>? You will need an invite to
-            rejoin.
+            Are you sure you want to leave <strong>{server.name}</strong>? You will need an invite
+            to rejoin.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

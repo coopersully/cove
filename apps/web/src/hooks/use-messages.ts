@@ -116,7 +116,9 @@ export function useUpdateMessage(channelId: string) {
         queryClient.setQueryData<InfiniteData<MessageListResponse>>(
           ["channels", channelId, "messages"],
           (old) => {
-            if (!old) return old;
+            if (!old) {
+              return old;
+            }
             return {
               ...old,
               pages: old.pages.map((page) => ({
@@ -167,7 +169,9 @@ export function useDeleteMessage(channelId: string) {
         queryClient.setQueryData<InfiniteData<MessageListResponse>>(
           ["channels", channelId, "messages"],
           (old) => {
-            if (!old) return old;
+            if (!old) {
+              return old;
+            }
             return {
               ...old,
               pages: old.pages.map((page) => ({

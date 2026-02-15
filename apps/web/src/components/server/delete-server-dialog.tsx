@@ -34,7 +34,9 @@ export function DeleteServerDialog({
   const canDelete = confirmation === server.name;
 
   function handleDelete() {
-    if (!canDelete) return;
+    if (!canDelete) {
+      return;
+    }
     deleteServer.mutate(server.id, {
       onSuccess: () => {
         onOpenChange(false);
@@ -45,7 +47,15 @@ export function DeleteServerDialog({
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setConfirmation(""); }}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) {
+          setConfirmation("");
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Server</AlertDialogTitle>

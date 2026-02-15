@@ -9,7 +9,7 @@ import {
   Input,
   Label,
 } from "@hearth/ui";
-import type { JSX } from "react";
+import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 import { useUpdateChannel } from "../../hooks/use-channels.js";
 
@@ -28,10 +28,12 @@ export function EditChannelDialog({
   const [topic, setTopic] = useState(channel.topic ?? "");
   const updateChannel = useUpdateChannel(channel.serverId);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmedName = name.trim().toLowerCase().replace(/\s+/g, "-");
-    if (!trimmedName) return;
+    if (!trimmedName) {
+      return;
+    }
 
     updateChannel.mutate(
       {

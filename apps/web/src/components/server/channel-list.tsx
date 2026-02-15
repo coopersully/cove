@@ -137,7 +137,11 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
       {/* Server management dialogs */}
       {server && isOwner && (
         <>
-          <ServerSettingsDialog server={server} open={settingsOpen} onOpenChange={setSettingsOpen} />
+          <ServerSettingsDialog
+            server={server}
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+          />
           <DeleteServerDialog server={server} open={deleteOpen} onOpenChange={setDeleteOpen} />
         </>
       )}

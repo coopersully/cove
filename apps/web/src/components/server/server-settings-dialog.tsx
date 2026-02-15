@@ -9,7 +9,7 @@ import {
   Input,
   Label,
 } from "@hearth/ui";
-import type { JSX } from "react";
+import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 import { useUpdateServer } from "../../hooks/use-servers.js";
 
@@ -28,10 +28,12 @@ export function ServerSettingsDialog({
   const [description, setDescription] = useState(server.description ?? "");
   const updateServer = useUpdateServer(server.id);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmedName = name.trim();
-    if (!trimmedName) return;
+    if (!trimmedName) {
+      return;
+    }
 
     updateServer.mutate(
       {

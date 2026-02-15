@@ -65,9 +65,7 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
       </div>
 
       {/* Form panel */}
-      <div
-        className="relative flex w-full flex-col items-center justify-center overflow-hidden bg-background px-6 py-12 lg:w-1/2"
-      >
+      <div className="relative flex w-full flex-col items-center justify-center overflow-hidden bg-background px-6 py-12 lg:w-1/2">
         {/* Mobile-only brand header */}
         <div className="mb-10 text-center lg:hidden">
           <h1 className="font-bold font-display text-3xl text-foreground tracking-wide">Hearth</h1>

@@ -36,7 +36,9 @@ export function UserSection(): JSX.Element {
           >
             <Avatar className="size-8 shrink-0">
               <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                {initials}
+              </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-foreground text-xs">{displayName}</p>

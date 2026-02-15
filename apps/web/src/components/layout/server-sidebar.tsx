@@ -32,7 +32,7 @@ export function ServerSidebar(): JSX.Element {
 
   return (
     <aside className="flex w-[72px] flex-col items-center bg-linen dark:bg-surface">
-      <ScrollArea className="flex-1 w-full">
+      <ScrollArea className="w-full flex-1">
         <nav className="flex flex-col items-center gap-2 px-3 py-3">
           {servers.map((server) => (
             <ServerIcon key={server.id} server={server} />

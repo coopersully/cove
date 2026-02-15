@@ -7,8 +7,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  PasswordInput,
   Label,
+  PasswordInput,
 } from "@hearth/ui";
 import { AlertTriangle, CheckCircle, KeyRound } from "lucide-react";
 import type { ChangeEvent, FormEvent, JSX } from "react";
@@ -31,7 +31,9 @@ export function ResetPasswordForm(): JSX.Element {
   const [validating, setValidating] = useState(!!token);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
 
     api.auth.validateResetToken({ token }).then(
       (res) => {
@@ -71,12 +73,13 @@ export function ResetPasswordForm(): JSX.Element {
             <AlertTriangle className="size-6 text-destructive" />
           </div>
           <CardTitle className="font-display text-2xl">Invalid link</CardTitle>
-          <CardDescription>
-            This password reset link is invalid or has expired.
-          </CardDescription>
+          <CardDescription>This password reset link is invalid or has expired.</CardDescription>
         </CardHeader>
         <CardFooter className="flex-col gap-2">
-          <Link to="/forgot-password" className="text-primary text-sm underline-offset-4 hover:underline">
+          <Link
+            to="/forgot-password"
+            className="text-primary text-sm underline-offset-4 hover:underline"
+          >
             Request a new reset link
           </Link>
         </CardFooter>
@@ -141,10 +144,8 @@ export function ResetPasswordForm(): JSX.Element {
         <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-primary/10">
           <KeyRound className="size-6 text-primary" />
         </div>
-        <CardTitle className="font-display text-center text-2xl">Reset password</CardTitle>
-        <CardDescription className="text-center">
-          Enter your new password below.
-        </CardDescription>
+        <CardTitle className="text-center font-display text-2xl">Reset password</CardTitle>
+        <CardDescription className="text-center">Enter your new password below.</CardDescription>
       </CardHeader>
       <CardContent>
         <form id="reset-password-form" onSubmit={(e: FormEvent) => void handleSubmit(e)}>

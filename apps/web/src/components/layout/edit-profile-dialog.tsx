@@ -8,7 +8,7 @@ import {
   Input,
   Label,
 } from "@hearth/ui";
-import type { JSX } from "react";
+import type { FormEvent, JSX } from "react";
 import { useState } from "react";
 import { useUpdateProfile } from "../../hooks/use-users.js";
 import { useAuthStore } from "../../stores/auth.js";
@@ -24,7 +24,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
   const [status, setStatus] = useState(user?.status ?? "");
   const updateProfile = useUpdateProfile();
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmedName = displayName.trim();
     const trimmedStatus = status.trim();

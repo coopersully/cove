@@ -29,12 +29,7 @@ export async function validatePasswordResetToken(token: string): Promise<boolean
   const [existing] = await db
     .select({ expiresAt: passwordResetTokens.expiresAt })
     .from(passwordResetTokens)
-    .where(
-      and(
-        eq(passwordResetTokens.tokenHash, tokenHash),
-        isNull(passwordResetTokens.usedAt),
-      ),
-    )
+    .where(and(eq(passwordResetTokens.tokenHash, tokenHash), isNull(passwordResetTokens.usedAt)))
     .limit(1);
 
   if (!existing || existing.expiresAt < new Date()) {
@@ -48,14 +43,13 @@ export async function consumePasswordResetToken(token: string): Promise<string> 
   const tokenHash = hashToken(token);
 
   const [existing] = await db
-    .select({ id: passwordResetTokens.id, userId: passwordResetTokens.userId, expiresAt: passwordResetTokens.expiresAt })
+    .select({
+      id: passwordResetTokens.id,
+      userId: passwordResetTokens.userId,
+      expiresAt: passwordResetTokens.expiresAt,
+    })
     .from(passwordResetTokens)
-    .where(
-      and(
-        eq(passwordResetTokens.tokenHash, tokenHash),
-        isNull(passwordResetTokens.usedAt),
-      ),
-    )
+    .where(and(eq(passwordResetTokens.tokenHash, tokenHash), isNull(passwordResetTokens.usedAt)))
     .limit(1);
 
   if (!existing) {
@@ -79,10 +73,5 @@ export async function revokeAllRefreshTokens(userId: string): Promise<void> {
   await db
     .update(refreshTokens)
     .set({ revokedAt: new Date() })
-    .where(
-      and(
-        eq(refreshTokens.userId, BigInt(userId)),
-        isNull(refreshTokens.revokedAt),
-      ),
-    );
+    .where(and(eq(refreshTokens.userId, BigInt(userId)), isNull(refreshTokens.revokedAt)));
 }

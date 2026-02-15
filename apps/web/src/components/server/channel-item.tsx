@@ -1,11 +1,11 @@
 import type { Channel } from "@hearth/api-client";
 import {
-  cn,
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
+  cn,
 } from "@hearth/ui";
 import { Hash, Pencil, Trash2, Volume2 } from "lucide-react";
 import type { JSX } from "react";
