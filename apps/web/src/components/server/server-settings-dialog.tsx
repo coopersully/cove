@@ -1,6 +1,14 @@
 import type { Server } from "@hearth/api-client";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
 import { serverSettingsSchema } from "@hearth/shared";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  ResponsiveFormModal,
+} from "@hearth/ui";
 import type { JSX } from "react";
 import { useUpdateServer } from "../../hooks/use-servers.js";
 

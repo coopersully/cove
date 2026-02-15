@@ -1,5 +1,13 @@
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
 import { joinServerSchema } from "@hearth/shared";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  ResponsiveFormModal,
+} from "@hearth/ui";
 import type { JSX } from "react";
 import { useNavigate } from "react-router";
 import { useJoinServer } from "../../hooks/use-servers.js";

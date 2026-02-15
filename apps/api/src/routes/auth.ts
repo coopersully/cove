@@ -205,7 +205,7 @@ authRoutes.post("/forgot-password", validate(forgotPasswordSchema), async (c) =>
     const userId = String(user.id);
     const token = await generatePasswordResetToken(userId);
 
-    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
+    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
     // Fire-and-forget: don't block the response or leak errors

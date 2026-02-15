@@ -1,6 +1,14 @@
 import type { Channel } from "@hearth/api-client";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
 import { editChannelSchema } from "@hearth/shared";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  ResponsiveFormModal,
+} from "@hearth/ui";
 import type { JSX } from "react";
 import { useUpdateChannel } from "../../hooks/use-channels.js";
 

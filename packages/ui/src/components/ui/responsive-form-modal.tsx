@@ -9,8 +9,8 @@ import type { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "./button.js";
-import { Form } from "./form.js";
 import { FormAlert } from "./form-alert.js";
+import { Form } from "./form.js";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -86,9 +86,7 @@ export function ResponsiveFormModal<T extends FieldValues>({
       <ResponsiveModalContent>
         <ResponsiveModalHeader>
           <ResponsiveModalTitle>{title}</ResponsiveModalTitle>
-          {description && (
-            <ResponsiveModalDescription>{description}</ResponsiveModalDescription>
-          )}
+          {description && <ResponsiveModalDescription>{description}</ResponsiveModalDescription>}
         </ResponsiveModalHeader>
         <Form {...form}>
           <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">

@@ -14,6 +14,6 @@ const tokenProvider: TokenProvider = {
 };
 
 export const api = createApiClient({
-  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:3000",
+  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:4100",
   tokenProvider,
 });

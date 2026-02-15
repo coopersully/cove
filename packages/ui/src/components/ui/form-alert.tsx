@@ -9,7 +9,11 @@ interface FormAlertProps {
   readonly className?: string;
 }
 
-export function FormAlert({ message, variant = "error", className }: FormAlertProps): JSX.Element | null {
+export function FormAlert({
+  message,
+  variant = "error",
+  className,
+}: FormAlertProps): JSX.Element | null {
   if (!message) {
     return null;
   }

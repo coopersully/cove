@@ -1,5 +1,16 @@
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal, Tooltip, TooltipContent, TooltipTrigger } from "@hearth/ui";
 import { createServerSchema } from "@hearth/shared";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+  ResponsiveFormModal,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@hearth/ui";
 import { Plus } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";

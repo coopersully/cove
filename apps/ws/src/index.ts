@@ -1,6 +1,6 @@
 import { GatewayOpcodes } from "@hearth/gateway";
 
-const port = Number(process.env.WS_PORT) || 4000;
+const port = Number(process.env.WS_PORT) || 4101;
 const opcodeCount = Object.keys(GatewayOpcodes).length;
 
 console.info(

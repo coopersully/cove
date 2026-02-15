@@ -4,6 +4,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@source "../../../packages/ui/src";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -50,29 +52,6 @@
 }
 
 /* ---- Auth page animations ---- */
-@keyframes hearth-glow {
-  0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
-}
-
-@keyframes hearth-drift {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  33% {
-    transform: translate(12px, -8px);
-  }
-  66% {
-    transform: translate(-8px, 6px);
-  }
-}
-
 @keyframes fade-up-in {
   from {
     opacity: 0;

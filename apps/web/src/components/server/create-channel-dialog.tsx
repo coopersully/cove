@@ -1,3 +1,4 @@
+import { createChannelSchema } from "@hearth/shared";
 import {
   Button,
   FormControl,
@@ -8,7 +9,6 @@ import {
   Input,
   ResponsiveFormModal,
 } from "@hearth/ui";
-import { createChannelSchema } from "@hearth/shared";
 import { Plus } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
