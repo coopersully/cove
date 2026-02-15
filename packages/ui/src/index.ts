@@ -97,6 +97,7 @@ export {
   TooltipProvider,
   TooltipTrigger,
 } from "./components/ui/tooltip.js";
+export { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover.js";
 export { Textarea } from "./components/ui/textarea.js";
 export {
   ContextMenu,

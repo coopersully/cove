@@ -64,6 +64,7 @@ export function useSendMessage(channelId: string) {
                 username: user.username,
                 displayName: user.displayName,
                 avatarUrl: user.avatarUrl,
+                statusEmoji: user.statusEmoji,
               },
             };
 

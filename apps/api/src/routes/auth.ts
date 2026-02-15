@@ -121,6 +121,9 @@ authRoutes.post("/register", validate(registerSchema), async (c) => {
       email: users.email,
       avatarUrl: users.avatarUrl,
       status: users.status,
+      bio: users.bio,
+      pronouns: users.pronouns,
+      statusEmoji: users.statusEmoji,
       createdAt: users.createdAt,
     });
 
@@ -168,6 +171,9 @@ authRoutes.post("/login", validate(loginSchema), async (c) => {
       email: user.email,
       avatarUrl: user.avatarUrl,
       status: user.status,
+      bio: user.bio,
+      pronouns: user.pronouns,
+      statusEmoji: user.statusEmoji,
       createdAt: user.createdAt,
     },
     accessToken,

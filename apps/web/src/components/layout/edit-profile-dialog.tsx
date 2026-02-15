@@ -1,12 +1,14 @@
 import { editProfileSchema } from "@cove/shared";
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
   Input,
   ResponsiveFormModal,
+  Textarea,
 } from "@cove/ui";
 import type { JSX } from "react";
 import { useUpdateProfile } from "../../hooks/use-users.js";
@@ -30,14 +32,19 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       defaultValues={{
         displayName: user?.displayName ?? "",
         status: user?.status ?? "",
+        statusEmoji: user?.statusEmoji ?? "",
+        pronouns: user?.pronouns ?? "",
+        bio: user?.bio ?? "",
       }}
       onSubmit={async (data) => {
-        const trimmedName = data.displayName?.trim();
-        const trimmedStatus = data.status?.trim();
-        await updateProfile.mutateAsync({
-          displayName: trimmedName || null,
-          status: trimmedStatus || null,
-        });
+        const trimmed = {
+          displayName: data.displayName?.trim() || null,
+          status: data.status?.trim() || null,
+          statusEmoji: data.statusEmoji?.trim() || null,
+          pronouns: data.pronouns?.trim() || null,
+          bio: data.bio?.trim() || null,
+        };
+        await updateProfile.mutateAsync(trimmed);
         onOpenChange(false);
       }}
       submitLabel="Save Changes"
@@ -58,15 +65,64 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               </FormItem>
             )}
           />
+          <div className="flex gap-3">
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Status</FormLabel>
+                  <FormControl>
+                    <Input placeholder="What are you up to?" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="statusEmoji"
+              render={({ field }) => (
+                <FormItem className="w-20">
+                  <FormLabel>Emoji</FormLabel>
+                  <FormControl>
+                    <Input placeholder="😊" className="text-center" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           <FormField
             control={form.control}
-            name="status"
+            name="pronouns"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel>Pronouns</FormLabel>
                 <FormControl>
-                  <Input placeholder="What are you up to?" {...field} />
+                  <Input placeholder="e.g. they/them" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="bio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bio</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Tell people about yourself"
+                    className="min-h-[80px] resize-none"
+                    maxLength={280}
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  {field.value?.length ?? 0}/280 · Supports markdown
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

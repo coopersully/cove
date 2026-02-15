@@ -21,6 +21,9 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   avatarUrl: text("avatar_url"),
   status: varchar({ length: 128 }),
+  bio: varchar({ length: 280 }),
+  pronouns: varchar({ length: 30 }),
+  statusEmoji: varchar("status_emoji", { length: 8 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

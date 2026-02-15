@@ -1,15 +1,18 @@
 import { z } from "zod";
 
 import {
+  bioSchema,
   channelNameSchema,
   channelTopicSchema,
   channelTypeSchema,
   displayNameSchema,
   emailSchema,
   passwordSchema,
+  pronounsSchema,
   serverDescriptionSchema,
   serverNameSchema,
   snowflakeSchema,
+  statusEmojiSchema,
   statusSchema,
   usernameSchema,
 } from "./validators.js";
@@ -80,4 +83,7 @@ export const editChannelSchema = z.object({
 export const editProfileSchema = z.object({
   displayName: displayNameSchema.optional(),
   status: statusSchema.optional(),
+  bio: bioSchema.optional(),
+  pronouns: pronounsSchema.optional(),
+  statusEmoji: statusEmojiSchema.optional(),
 });

@@ -7,6 +7,7 @@ import { useParams } from "react-router";
 import { useDeleteMessage, useUpdateMessage } from "../../hooks/use-messages.js";
 import { getUserAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
+import { ProfileCard } from "../layout/profile-card.js";
 import { MarkdownContent } from "./markdown-content.js";
 
 interface MessageItemProps {
@@ -184,15 +185,26 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
   return (
     <div className="group relative flex gap-3 py-1 pr-4 pl-4 transition-colors hover:bg-secondary/50">
       {actionBar}
-      <Avatar className="mt-0.5 size-10 shrink-0">
-        <AvatarImage src={message.author.avatarUrl ?? getUserAvatarUrl(message.author.id)} alt={displayName} />
-        <AvatarFallback className="bg-primary/20 text-primary text-xs">
-          {getInitials(displayName)}
-        </AvatarFallback>
-      </Avatar>
+      <ProfileCard userId={message.author.id}>
+        <button type="button" className="mt-0.5 shrink-0 cursor-pointer">
+          <Avatar className="size-10">
+            <AvatarImage src={message.author.avatarUrl ?? getUserAvatarUrl(message.author.id)} alt={displayName} />
+            <AvatarFallback className="bg-primary/20 text-primary text-xs">
+              {getInitials(displayName)}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </ProfileCard>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-foreground text-sm">{displayName}</span>
+          <ProfileCard userId={message.author.id}>
+            <button type="button" className="cursor-pointer font-semibold text-foreground text-sm hover:underline">
+              {displayName}
+            </button>
+          </ProfileCard>
+          {message.author.statusEmoji && (
+            <span className="text-sm" role="img">{message.author.statusEmoji}</span>
+          )}
           <span className="text-muted-foreground text-xs">
             {formatTimestamp(message.createdAt)}
           </span>

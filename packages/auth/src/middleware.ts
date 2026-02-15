@@ -12,6 +12,9 @@ export interface AuthUser {
   email: string;
   avatarUrl: string | null;
   status: string | null;
+  bio: string | null;
+  pronouns: string | null;
+  statusEmoji: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +43,9 @@ export function requireAuth(): MiddlewareHandler<AuthEnv> {
         email: users.email,
         avatarUrl: users.avatarUrl,
         status: users.status,
+        bio: users.bio,
+        pronouns: users.pronouns,
+        statusEmoji: users.statusEmoji,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })

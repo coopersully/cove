@@ -1,14 +1,17 @@
 import { z } from "zod";
 
 import {
+  MAX_BIO_LENGTH,
   MAX_CHANNEL_NAME_LENGTH,
   MAX_CHANNEL_TOPIC_LENGTH,
   MAX_DISPLAY_NAME_LENGTH,
   MAX_EMAIL_LENGTH,
   MAX_MESSAGE_LENGTH,
   MAX_MESSAGE_LIMIT,
+  MAX_PRONOUNS_LENGTH,
   MAX_SERVER_DESCRIPTION_LENGTH,
   MAX_SERVER_NAME_LENGTH,
+  MAX_STATUS_EMOJI_LENGTH,
   MAX_STATUS_LENGTH,
   MAX_USERNAME_LENGTH,
   MIN_PASSWORD_LENGTH,
@@ -45,6 +48,21 @@ export const displayNameSchema = z
 export const statusSchema = z
   .string()
   .max(MAX_STATUS_LENGTH, `Status must be at most ${String(MAX_STATUS_LENGTH)} characters`);
+
+export const bioSchema = z
+  .string()
+  .max(MAX_BIO_LENGTH, `Bio must be at most ${String(MAX_BIO_LENGTH)} characters`);
+
+export const pronounsSchema = z
+  .string()
+  .max(MAX_PRONOUNS_LENGTH, `Pronouns must be at most ${String(MAX_PRONOUNS_LENGTH)} characters`);
+
+export const statusEmojiSchema = z
+  .string()
+  .max(
+    MAX_STATUS_EMOJI_LENGTH,
+    `Status emoji must be at most ${String(MAX_STATUS_EMOJI_LENGTH)} characters`,
+  );
 
 export const serverNameSchema = z
   .string()

@@ -15,6 +15,13 @@
       "when": 1771122038441,
       "tag": "0001_steep_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771181050455,
+      "tag": "0002_mute_silverclaw",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,9 @@ export const MAX_CHANNEL_TOPIC_LENGTH = 1024 as const;
 export const MAX_MESSAGE_LENGTH = 4000 as const;
 
 export const MAX_STATUS_LENGTH = 128 as const;
+export const MAX_BIO_LENGTH = 280 as const;
+export const MAX_PRONOUNS_LENGTH = 30 as const;
+export const MAX_STATUS_EMOJI_LENGTH = 8 as const;
 
 export const DEFAULT_MESSAGE_LIMIT = 50 as const;
 export const MAX_MESSAGE_LIMIT = 100 as const;
