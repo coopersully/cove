@@ -23,6 +23,27 @@ export async function generatePasswordResetToken(userId: string): Promise<string
   return token;
 }
 
+export async function validatePasswordResetToken(token: string): Promise<boolean> {
+  const tokenHash = hashToken(token);
+
+  const [existing] = await db
+    .select({ expiresAt: passwordResetTokens.expiresAt })
+    .from(passwordResetTokens)
+    .where(
+      and(
+        eq(passwordResetTokens.tokenHash, tokenHash),
+        isNull(passwordResetTokens.usedAt),
+      ),
+    )
+    .limit(1);
+
+  if (!existing || existing.expiresAt < new Date()) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function consumePasswordResetToken(token: string): Promise<string> {
   const tokenHash = hashToken(token);
 

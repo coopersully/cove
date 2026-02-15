@@ -5,6 +5,7 @@ export {
   consumePasswordResetToken,
   generatePasswordResetToken,
   revokeAllRefreshTokens,
+  validatePasswordResetToken,
 } from "./password-reset.js";
 export {
   generateAccessToken,

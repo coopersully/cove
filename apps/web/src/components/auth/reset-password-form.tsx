@@ -12,7 +12,7 @@ import {
 } from "@hearth/ui";
 import { AlertTriangle, CheckCircle, KeyRound } from "lucide-react";
 import type { ChangeEvent, FormEvent, JSX } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { api } from "../../lib/api.js";
 import { PasswordRequirements, arePasswordRequirementsMet } from "./password-requirements.js";
@@ -27,12 +27,43 @@ export function ResetPasswordForm(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  const [validating, setValidating] = useState(!!token);
+
+  useEffect(() => {
+    if (!token) return;
+
+    api.auth.validateResetToken({ token }).then(
+      (res) => {
+        setTokenValid(res.valid);
+        setValidating(false);
+      },
+      () => {
+        setTokenValid(false);
+        setValidating(false);
+      },
+    );
+  }, [token]);
 
   const passwordsMatch = password === confirmPassword;
   const canSubmit =
     arePasswordRequirementsMet(password) && confirmPassword.length > 0 && passwordsMatch;
 
-  if (!token) {
+  if (validating) {
+    return (
+      <Card className="w-full max-w-sm animate-fade-up-in">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-primary/10">
+            <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+          <CardTitle className="font-display text-2xl">Verifying link</CardTitle>
+          <CardDescription>Checking your password reset link...</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  if (!token || tokenValid === false) {
     return (
       <Card className="w-full max-w-sm animate-fade-up-in">
         <CardHeader className="text-center">

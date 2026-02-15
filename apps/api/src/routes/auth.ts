@@ -7,6 +7,7 @@ import {
   hashPassword,
   revokeAllRefreshTokens,
   rotateRefreshToken,
+  validatePasswordResetToken,
   verifyPassword,
 } from "@hearth/auth";
 
@@ -42,6 +43,10 @@ const refreshSchema = z.object({
 
 const forgotPasswordSchema = z.object({
   email: emailSchema,
+});
+
+const validateResetTokenSchema = z.object({
+  token: z.string().min(1),
 });
 
 const resetPasswordSchema = z.object({
@@ -210,6 +215,13 @@ authRoutes.post("/forgot-password", validate(forgotPasswordSchema), async (c) =>
   }
 
   return c.json({ success: true as const });
+});
+
+// POST /auth/validate-reset-token
+authRoutes.post("/validate-reset-token", validate(validateResetTokenSchema), async (c) => {
+  const body = c.get("body");
+  const valid = await validatePasswordResetToken(body.token);
+  return c.json({ valid });
 });
 
 // POST /auth/reset-password
