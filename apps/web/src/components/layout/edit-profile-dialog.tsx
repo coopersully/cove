@@ -1,5 +1,9 @@
 import { editProfileSchema } from "@cove/shared";
 import {
+  EmojiPicker,
+  EmojiPickerContent,
+  EmojiPickerFooter,
+  EmojiPickerSearch,
   FormControl,
   FormDescription,
   FormField,
@@ -7,16 +11,66 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   ResponsiveFormModal,
   Textarea,
 } from "@cove/ui";
+import { SmilePlus, X } from "lucide-react";
 import type { JSX } from "react";
+import { useState } from "react";
 import { useUpdateProfile } from "../../hooks/use-users.js";
 import { useAuthStore } from "../../stores/auth.js";
 
 interface EditProfileDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
+}
+
+function StatusEmojiPicker({
+  value,
+  onChange,
+}: { readonly value: string; readonly onChange: (value: string) => void }): JSX.Element {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="flex size-9 items-center justify-center rounded-md border bg-background text-lg transition-colors hover:bg-accent"
+          >
+            {value || <SmilePlus className="size-4 text-muted-foreground" />}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-fit p-0" align="start">
+          <EmojiPicker
+            className="h-[342px]"
+            onEmojiSelect={({ emoji }) => {
+              onChange(emoji);
+              setPickerOpen(false);
+            }}
+          >
+            <EmojiPickerSearch />
+            <EmojiPickerContent />
+            <EmojiPickerFooter />
+          </EmojiPicker>
+        </PopoverContent>
+      </Popover>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="flex size-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          aria-label="Clear emoji"
+        >
+          <X className="size-3" />
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps): JSX.Element {
@@ -68,25 +122,23 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
           <div className="flex gap-3">
             <FormField
               control={form.control}
-              name="status"
+              name="statusEmoji"
               render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <Input placeholder="What are you up to?" {...field} />
-                  </FormControl>
+                <FormItem className="shrink-0">
+                  <FormLabel>Emoji</FormLabel>
+                  <StatusEmojiPicker value={field.value ?? ""} onChange={field.onChange} />
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="statusEmoji"
+              name="status"
               render={({ field }) => (
-                <FormItem className="w-20">
-                  <FormLabel>Emoji</FormLabel>
+                <FormItem className="flex-1">
+                  <FormLabel>Status</FormLabel>
                   <FormControl>
-                    <Input placeholder="😊" className="text-center" {...field} />
+                    <Input placeholder="What are you up to?" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

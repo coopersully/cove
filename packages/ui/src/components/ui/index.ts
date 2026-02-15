@@ -65,6 +65,12 @@ export {
   DrawerTrigger,
 } from "./drawer.js";
 export {
+  EmojiPicker,
+  EmojiPickerContent,
+  EmojiPickerFooter,
+  EmojiPickerSearch,
+} from "./emoji-picker.js";
+export {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,

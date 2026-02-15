@@ -31,11 +31,11 @@ export function useMessages(channelId: string) {
 
 export function useSendMessage(channelId: string) {
   const queryClient = useQueryClient();
-  const user = useAuthStore.getState().user;
 
   return useMutation({
     mutationFn: (data: CreateMessageRequest) => api.messages.create(channelId, data),
     onMutate: async (data) => {
+      const user = useAuthStore.getState().user;
       await queryClient.cancelQueries({
         queryKey: ["channels", channelId, "messages"],
       });

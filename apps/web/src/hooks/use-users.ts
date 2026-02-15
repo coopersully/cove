@@ -1,6 +1,7 @@
 import type { UpdateProfileRequest } from "@cove/api-client";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
+import { propagateUserUpdate } from "../lib/query.js";
 import { useAuthStore } from "../stores/auth.js";
 
 export function useUpdateProfile() {
@@ -10,6 +11,7 @@ export function useUpdateProfile() {
     mutationFn: (data: UpdateProfileRequest) => api.users.updateMe(data),
     onSuccess: (response) => {
       setUser(response.user);
+      propagateUserUpdate(response.user);
     },
   });
 }
