@@ -22,6 +22,7 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { useUpdateProfile } from "../../hooks/use-users.js";
 import { useAuthStore } from "../../stores/auth.js";
+import { UserAvatar } from "../user-avatar.js";
 
 interface EditProfileDialogProps {
   readonly open: boolean;
@@ -85,6 +86,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       schema={editProfileSchema}
       defaultValues={{
         displayName: user?.displayName ?? "",
+        avatarUrl: user?.avatarUrl ?? "",
         status: user?.status ?? "",
         statusEmoji: user?.statusEmoji ?? "",
         pronouns: user?.pronouns ?? "",
@@ -93,6 +95,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       onSubmit={async (data) => {
         const trimmed = {
           displayName: data.displayName?.trim() || null,
+          avatarUrl: data.avatarUrl?.trim() || null,
           status: data.status?.trim() || null,
           statusEmoji: data.statusEmoji?.trim() || null,
           pronouns: data.pronouns?.trim() || null,
@@ -106,6 +109,33 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     >
       {(form) => (
         <>
+          <FormField
+            control={form.control}
+            name="avatarUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Avatar</FormLabel>
+                <div className="flex items-center gap-3">
+                  <UserAvatar
+                    user={{
+                      id: user?.id ?? "",
+                      avatarUrl: field.value || null,
+                      displayName: user?.displayName,
+                      username: user?.username ?? "",
+                    }}
+                    size="xl"
+                  />
+                  <div className="flex-1">
+                    <FormControl>
+                      <Input placeholder="https://example.com/avatar.png" {...field} />
+                    </FormControl>
+                    <FormDescription>Paste an image URL</FormDescription>
+                  </div>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="displayName"

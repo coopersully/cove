@@ -64,6 +64,7 @@ export const joinServerSchema = z.object({
 export const serverSettingsSchema = z.object({
   name: serverNameSchema,
   description: serverDescriptionSchema.optional(),
+  iconUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 // ── Channel Schemas ─────────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ export const editChannelSchema = z.object({
 
 export const editProfileSchema = z.object({
   displayName: displayNameSchema.optional(),
+  avatarUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   status: statusSchema.optional(),
   bio: bioSchema.optional(),
   pronouns: pronounsSchema.optional(),
