@@ -36,7 +36,10 @@ export function UserSection(): JSX.Element {
             className="flex flex-1 items-center gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-sidebar-accent/50"
           >
             <Avatar className="size-8 shrink-0">
-              <AvatarImage src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")} alt={displayName} />
+              <AvatarImage
+                src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")}
+                alt={displayName}
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {initials}
               </AvatarFallback>

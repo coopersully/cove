@@ -47,7 +47,10 @@ export function MobileServerPicker({ open, onOpenChange }: MobileServerPickerPro
                     )}
                   >
                     <Avatar className="size-9 shrink-0">
-                      <AvatarImage src={server.iconUrl ?? getServerAvatarUrl(server.id)} alt={server.name} />
+                      <AvatarImage
+                        src={server.iconUrl ?? getServerAvatarUrl(server.id)}
+                        alt={server.name}
+                      />
                       <AvatarFallback
                         className={cn(
                           "text-xs font-semibold",

@@ -104,7 +104,10 @@ function MobileUserButton(): JSX.Element {
             aria-label="User menu"
           >
             <Avatar className="size-7">
-              <AvatarImage src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")} alt={displayName} />
+              <AvatarImage
+                src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")}
+                alt={displayName}
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {initials}
               </AvatarFallback>

@@ -16,10 +16,9 @@ export function ServerView(): JSX.Element {
   const server = serverData?.server;
   const currentChannel = channelData?.channels.find((c) => c.id === channelId);
 
-  const titleParts = [
-    currentChannel ? `#${currentChannel.name}` : undefined,
-    server?.name,
-  ].filter(Boolean);
+  const titleParts = [currentChannel ? `#${currentChannel.name}` : undefined, server?.name].filter(
+    Boolean,
+  );
   useDocumentTitle(titleParts.length > 0 ? titleParts.join(" | ") : undefined);
 
   // Auto-redirect to first text channel if none selected

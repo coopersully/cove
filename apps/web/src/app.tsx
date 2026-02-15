@@ -1,10 +1,10 @@
 import type { JSX } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { AuthGuard } from "./components/auth/auth-guard.js";
-import { Logo } from "./components/logo.js";
-import { useDocumentTitle } from "./hooks/use-document-title.js";
 import { AppLayout } from "./components/layout/app-layout.js";
+import { Logo } from "./components/logo.js";
 import { ServerView } from "./components/server/server-view.js";
+import { useDocumentTitle } from "./hooks/use-document-title.js";
 import { ForgotPasswordPage } from "./pages/forgot-password.js";
 import { LoginPage } from "./pages/login.js";
 import { RegisterPage } from "./pages/register.js";

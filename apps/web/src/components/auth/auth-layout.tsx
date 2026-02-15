@@ -15,9 +15,7 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
       {/* Brand header */}
       <div className="mb-8 flex animate-brand-enter items-center gap-2.5 text-charcoal dark:text-warm-white">
         <Logo className="size-8" />
-        <span className="font-display font-semibold text-2xl leading-none">
-          Cove
-        </span>
+        <span className="font-display font-semibold text-2xl leading-none">Cove</span>
       </div>
 
       {!(isChecking || isReachable) && (

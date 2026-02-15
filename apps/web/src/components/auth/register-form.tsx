@@ -85,8 +85,7 @@ export function RegisterForm(): JSX.Element {
                           const value = e.target.value;
                           if (!usernameSchema.safeParse(value).success) return;
                           try {
-                            const { available } =
-                              await api.auth.checkUsernameAvailability(value);
+                            const { available } = await api.auth.checkUsernameAvailability(value);
                             if (!available) {
                               form.setError("username", {
                                 type: "manual",

@@ -89,7 +89,10 @@ function UserButton(): JSX.Element {
             aria-label="User menu"
           >
             <Avatar className="size-10">
-              <AvatarImage src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")} alt={displayName} />
+              <AvatarImage
+                src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")}
+                alt={displayName}
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {initials}
               </AvatarFallback>
