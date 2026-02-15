@@ -36,14 +36,36 @@ export function MobileLayout(): JSX.Element {
 
   return (
     <div
-      className="flex h-dvh flex-col bg-background text-foreground"
+      className="relative flex h-dvh flex-col bg-background text-foreground"
       style={{
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
+      {/* Top edge blur */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32"
+        style={{
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          maskImage: "linear-gradient(to bottom, black 35%, transparent)",
+          WebkitMaskImage: "linear-gradient(to bottom, black 35%, transparent)",
+        }}
+      />
+
+      {/* Bottom edge blur */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32"
+        style={{
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          maskImage: "linear-gradient(to top, black 35%, transparent)",
+          WebkitMaskImage: "linear-gradient(to top, black 35%, transparent)",
+        }}
+      />
+
       {/* Top pill */}
-      <div className="shrink-0 px-3 pt-2">
+      <div className="relative z-20 shrink-0 px-3 pt-2">
         <MobileTopBar
           server={server}
           channelName={currentChannel?.name}
@@ -94,7 +116,7 @@ export function MobileLayout(): JSX.Element {
 
       {/* Bottom pill */}
       {channelId && (
-        <div className="shrink-0 px-3 pb-2">
+        <div className="relative z-20 shrink-0 px-3 pb-2">
           <div className="[&>div]:border-0 [&>div]:p-0 [&>div>div]:rounded-2xl [&>div>div]:shadow-sm [&>div>div]:ring-1 [&>div>div]:ring-border/40">
             <MessageComposer channelId={channelId} />
           </div>

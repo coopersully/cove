@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useDeleteMessage, useUpdateMessage } from "../../hooks/use-messages.js";
 import { useAuthStore } from "../../stores/auth.js";
+import { MarkdownContent } from "./markdown-content.js";
 
 interface MessageItemProps {
   readonly message: Message;
@@ -158,7 +159,9 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
       </div>
     </div>
   ) : (
-    <p className="break-words text-foreground/90 text-sm">{message.content}</p>
+    <div className="break-words text-foreground/90 text-sm">
+      <MarkdownContent content={message.content} />
+    </div>
   );
 
   if (!showAuthor) {
