@@ -8,9 +8,9 @@ import { z } from "zod";
 import { validate } from "../middleware/index.js";
 
 const updateProfileSchema = z.object({
-  displayName: displayNameSchema.optional(),
-  avatarUrl: z.string().url().optional(),
-  status: statusSchema.optional(),
+  displayName: displayNameSchema.nullable().optional(),
+  avatarUrl: z.string().url().nullable().optional(),
+  status: statusSchema.nullable().optional(),
 });
 
 export const userRoutes = new Hono();

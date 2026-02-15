@@ -10,7 +10,7 @@ interface ChannelViewProps {
 
 export function ChannelView({ channelId, channelName }: ChannelViewProps): JSX.Element {
   return (
-    <div className="relative flex flex-1 animate-fade-in flex-col">
+    <div className="relative flex flex-1 animate-fade-in flex-col bg-background">
       {/* Subtle grain overlay for warmth */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.015]"

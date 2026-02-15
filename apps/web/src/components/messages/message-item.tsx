@@ -166,7 +166,7 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
 
   if (!showAuthor) {
     return (
-      <div className="group relative py-0.5 pr-4 pl-[68px] hover:bg-secondary/30">
+      <div className="group relative py-0.5 pr-4 pl-[68px] transition-colors hover:bg-secondary/50">
         {actionBar}
         <span className="absolute left-0 flex h-5 w-[68px] items-center justify-center text-muted-foreground text-xs opacity-0 group-hover:opacity-100">
           {new Date(message.createdAt).toLocaleTimeString(undefined, {
@@ -181,7 +181,7 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
   }
 
   return (
-    <div className="group relative flex gap-3 py-1 pr-4 pl-4 hover:bg-secondary/30">
+    <div className="group relative flex gap-3 py-1 pr-4 pl-4 transition-colors hover:bg-secondary/50">
       {actionBar}
       <Avatar className="mt-0.5 size-10 shrink-0">
         <AvatarImage src={message.author.avatarUrl ?? undefined} alt={displayName} />

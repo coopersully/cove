@@ -35,8 +35,8 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
         const trimmedName = data.displayName?.trim();
         const trimmedStatus = data.status?.trim();
         await updateProfile.mutateAsync({
-          ...(trimmedName ? { displayName: trimmedName } : {}),
-          ...(trimmedStatus ? { status: trimmedStatus } : {}),
+          displayName: trimmedName || null,
+          status: trimmedStatus || null,
         });
         onOpenChange(false);
       }}

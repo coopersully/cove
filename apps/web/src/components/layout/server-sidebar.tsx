@@ -31,7 +31,7 @@ export function ServerSidebar(): JSX.Element {
   const [joinOpen, setJoinOpen] = useState(false);
 
   return (
-    <aside className="flex w-[72px] flex-col items-center bg-linen dark:bg-surface">
+    <aside className="flex w-[72px] flex-col items-center bg-secondary">
       <ScrollArea className="w-full flex-1">
         <nav className="flex flex-col items-center gap-2 px-3 py-3">
           {servers.map((server) => (

@@ -67,9 +67,9 @@ export interface RefreshRequest {
 }
 
 export interface UpdateProfileRequest {
-  readonly displayName?: string;
-  readonly avatarUrl?: string;
-  readonly status?: string;
+  readonly displayName?: string | null;
+  readonly avatarUrl?: string | null;
+  readonly status?: string | null;
 }
 
 export interface ForgotPasswordRequest {
