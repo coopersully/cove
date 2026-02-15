@@ -1,4 +1,4 @@
-import { ApiError } from "@hearth/api-client";
+import { ApiError, NetworkError } from "@hearth/api-client";
 import { forgotPasswordSchema } from "@hearth/shared";
 import {
   Card,
@@ -43,7 +43,9 @@ export function ForgotPasswordForm(): JSX.Element {
       setSubmittedEmail(data.email);
       setSubmitted(true);
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
+      if (err instanceof NetworkError) {
+        setError(err.message);
+      } else if (err instanceof ApiError) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");

@@ -1,7 +1,8 @@
-import { Flame } from "lucide-react";
 import type { JSX } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { AuthGuard } from "./components/auth/auth-guard.js";
+import { Logo } from "./components/logo.js";
+import { useDocumentTitle } from "./hooks/use-document-title.js";
 import { AppLayout } from "./components/layout/app-layout.js";
 import { ServerView } from "./components/server/server-view.js";
 import { ForgotPasswordPage } from "./pages/forgot-password.js";
@@ -30,11 +31,12 @@ export function App(): JSX.Element {
 }
 
 function ServerListPlaceholder(): JSX.Element {
+  useDocumentTitle("Servers");
   return (
     <div className="flex flex-1 items-center justify-center text-muted-foreground">
       <div className="animate-fade-up-in text-center">
         <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
-          <Flame className="size-8 text-primary" />
+          <Logo className="size-8 text-primary" />
         </div>
         <h2 className="font-display font-semibold text-foreground text-xl">Welcome to Hearth</h2>
         <p className="mt-2 max-w-xs font-body text-sm">

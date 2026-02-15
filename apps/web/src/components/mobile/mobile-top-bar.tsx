@@ -10,12 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@hearth/ui";
-import { ChevronDown, Flame, Hash, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
+import { ChevronDown, Hash, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 import { EditProfileDialog } from "../layout/edit-profile-dialog.js";
+import { Logo } from "../logo.js";
 
 interface MobileTopBarProps {
   readonly server: Server | undefined;
@@ -47,7 +48,7 @@ export function MobileTopBar({
           </Avatar>
         ) : (
           <div className="flex size-7 items-center justify-center rounded-full bg-primary/10">
-            <Flame className="size-3.5 text-primary" />
+            <Logo className="size-3.5 text-primary" />
           </div>
         )}
         <ChevronDown className="size-3 text-muted-foreground" />

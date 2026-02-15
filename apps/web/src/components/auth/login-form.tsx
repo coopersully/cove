@@ -1,4 +1,4 @@
-import { ApiError } from "@hearth/api-client";
+import { ApiError, NetworkError } from "@hearth/api-client";
 import { loginSchema } from "@hearth/shared";
 import {
   Card,
@@ -42,7 +42,9 @@ export function LoginForm(): JSX.Element {
       await login(data.email, data.password);
       void navigate("/");
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
+      if (err instanceof NetworkError) {
+        setError(err.message);
+      } else if (err instanceof ApiError) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");
@@ -114,7 +116,7 @@ export function LoginForm(): JSX.Element {
           Sign in
         </SubmitButton>
         <div className="text-muted-foreground text-sm">
-          Don&apos;t have an account?
+          Don&apos;t have an account?{" "}
           <Link to="/register" className="text-primary underline-offset-4 hover:underline">
             Sign up
           </Link>

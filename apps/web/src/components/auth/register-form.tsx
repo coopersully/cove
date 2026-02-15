@@ -1,4 +1,4 @@
-import { ApiError } from "@hearth/api-client";
+import { ApiError, NetworkError } from "@hearth/api-client";
 import { registerSchema } from "@hearth/shared";
 import {
   Card,
@@ -47,7 +47,9 @@ export function RegisterForm(): JSX.Element {
       await register(data.username, data.email, data.password);
       void navigate("/");
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
+      if (err instanceof NetworkError) {
+        setError(err.message);
+      } else if (err instanceof ApiError) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");
@@ -142,7 +144,7 @@ export function RegisterForm(): JSX.Element {
           Create account
         </SubmitButton>
         <div className="text-muted-foreground text-sm">
-          Already have an account?
+          Already have an account?{" "}
           <Link to="/login" className="text-primary underline-offset-4 hover:underline">
             Sign in
           </Link>

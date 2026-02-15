@@ -24,6 +24,14 @@ export class ApiError extends Error {
   }
 }
 
+export class NetworkError extends Error {
+  constructor(cause?: unknown) {
+    super("Unable to connect to the server. Please check your connection or try again later.");
+    this.name = "NetworkError";
+    this.cause = cause;
+  }
+}
+
 export class HttpClient {
   private readonly baseUrl: string;
   private readonly tokenProvider: TokenProvider | undefined;
@@ -84,7 +92,12 @@ export class HttpClient {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
 
-    const response = await fetch(url, { ...init, headers });
+    let response: Response;
+    try {
+      response = await fetch(url, { ...init, headers });
+    } catch (error) {
+      throw new NetworkError(error);
+    }
 
     if (response.status === 401 && !isRetry && this.tokenProvider) {
       const refreshed = await this.tryRefresh();
