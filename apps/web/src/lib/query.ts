@@ -35,7 +35,9 @@ export function propagateUserUpdate(user: User): void {
         pages: old.pages.map((page) => ({
           ...page,
           messages: page.messages.map((msg) =>
-            msg.author.id === user.id ? { ...msg, author: { ...msg.author, ...authorFields } } : msg,
+            msg.author.id === user.id
+              ? { ...msg, author: { ...msg.author, ...authorFields } }
+              : msg,
           ),
         })),
       };
