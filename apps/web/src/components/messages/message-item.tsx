@@ -1,10 +1,11 @@
-import type { Message } from "@hearth/api-client";
-import { Avatar, AvatarFallback, AvatarImage, ResponsiveConfirmModal, Textarea } from "@hearth/ui";
+import type { Message } from "@cove/api-client";
+import { Avatar, AvatarFallback, AvatarImage, ResponsiveConfirmModal, Textarea } from "@cove/ui";
 import { Pencil, Trash2 } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useDeleteMessage, useUpdateMessage } from "../../hooks/use-messages.js";
+import { getUserAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { MarkdownContent } from "./markdown-content.js";
 
@@ -184,7 +185,7 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
     <div className="group relative flex gap-3 py-1 pr-4 pl-4 transition-colors hover:bg-secondary/50">
       {actionBar}
       <Avatar className="mt-0.5 size-10 shrink-0">
-        <AvatarImage src={message.author.avatarUrl ?? undefined} alt={displayName} />
+        <AvatarImage src={message.author.avatarUrl ?? getUserAvatarUrl(message.author.id)} alt={displayName} />
         <AvatarFallback className="bg-primary/20 text-primary text-xs">
           {getInitials(displayName)}
         </AvatarFallback>

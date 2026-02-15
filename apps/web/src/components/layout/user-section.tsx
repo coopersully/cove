@@ -8,9 +8,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { LogOut, Monitor, Moon, Sun } from "lucide-react";
 import type { JSX } from "react";
+import { getUserAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 
@@ -35,7 +36,7 @@ export function UserSection(): JSX.Element {
             className="flex flex-1 items-center gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-secondary/50"
           >
             <Avatar className="size-8 shrink-0">
-              <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
+              <AvatarImage src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")} alt={displayName} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {initials}
               </AvatarFallback>

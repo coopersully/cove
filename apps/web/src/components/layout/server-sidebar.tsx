@@ -13,11 +13,12 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ArrowDownToLine, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { useServers } from "../../hooks/use-servers.js";
+import { getUserAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 import { CreateServerDialog } from "./create-server-dialog.js";
@@ -88,7 +89,7 @@ function UserButton(): JSX.Element {
             aria-label="User menu"
           >
             <Avatar className="size-10">
-              <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
+              <AvatarImage src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")} alt={displayName} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {initials}
               </AvatarFallback>

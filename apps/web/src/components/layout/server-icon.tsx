@@ -1,4 +1,4 @@
-import type { Server } from "@hearth/api-client";
+import type { Server } from "@cove/api-client";
 import {
   Avatar,
   AvatarFallback,
@@ -7,9 +7,10 @@ import {
   TooltipContent,
   TooltipTrigger,
   cn,
-} from "@hearth/ui";
+} from "@cove/ui";
 import type { JSX } from "react";
 import { Link, useParams } from "react-router";
+import { getServerAvatarUrl } from "../../lib/avatar.js";
 
 interface ServerIconProps {
   readonly server: Server;
@@ -32,7 +33,7 @@ export function ServerIcon({ server }: ServerIconProps): JSX.Element {
           )}
         >
           <Avatar className="size-full rounded-[inherit]">
-            <AvatarImage src={server.iconUrl ?? undefined} alt={server.name} />
+            <AvatarImage src={server.iconUrl ?? getServerAvatarUrl(server.id)} alt={server.name} />
             <AvatarFallback className="rounded-[inherit] bg-transparent font-semibold text-sm">
               {server.name.charAt(0).toUpperCase()}
             </AvatarFallback>

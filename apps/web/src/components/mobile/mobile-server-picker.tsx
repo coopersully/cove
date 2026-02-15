@@ -8,12 +8,13 @@ import {
   DrawerTitle,
   Separator,
   cn,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ArrowDownToLine } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useServers } from "../../hooks/use-servers.js";
+import { getServerAvatarUrl } from "../../lib/avatar.js";
 import { CreateServerDialog } from "../layout/create-server-dialog.js";
 import { JoinServerDialog } from "../layout/join-server-dialog.js";
 
@@ -46,7 +47,7 @@ export function MobileServerPicker({ open, onOpenChange }: MobileServerPickerPro
                     )}
                   >
                     <Avatar className="size-9 shrink-0">
-                      <AvatarImage src={server.iconUrl ?? undefined} alt={server.name} />
+                      <AvatarImage src={server.iconUrl ?? getServerAvatarUrl(server.id)} alt={server.name} />
                       <AvatarFallback
                         className={cn(
                           "text-xs font-semibold",

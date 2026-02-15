@@ -1,4 +1,4 @@
-import type { Server } from "@hearth/api-client";
+import type { Server } from "@cove/api-client";
 import {
   Avatar,
   AvatarFallback,
@@ -9,10 +9,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ChevronDown, Hash, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
+import { getServerAvatarUrl, getUserAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 import { EditProfileDialog } from "../layout/edit-profile-dialog.js";
@@ -41,7 +42,7 @@ export function MobileTopBar({
       >
         {server ? (
           <Avatar className="size-7">
-            <AvatarImage src={server.iconUrl ?? undefined} alt={server.name} />
+            <AvatarImage src={server.iconUrl ?? getServerAvatarUrl(server.id)} alt={server.name} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {server.name.charAt(0).toUpperCase()}
             </AvatarFallback>
@@ -103,7 +104,7 @@ function MobileUserButton(): JSX.Element {
             aria-label="User menu"
           >
             <Avatar className="size-7">
-              <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
+              <AvatarImage src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")} alt={displayName} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {initials}
               </AvatarFallback>
