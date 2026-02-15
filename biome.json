@@ -42,7 +42,8 @@
       },
       "nursery": {
         "all": true,
-        "noProcessEnv": "off"
+        "noProcessEnv": "off",
+        "useImportRestrictions": "off"
       },
       "performance": {
         "all": true,

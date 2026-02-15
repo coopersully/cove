@@ -1,5 +1,5 @@
-import { MIN_PASSWORD_LENGTH } from "@hearth/shared";
-import { cn } from "@hearth/ui";
+import { MIN_PASSWORD_LENGTH } from "@cove/shared";
+import { cn } from "@cove/ui";
 import { Check, Circle } from "lucide-react";
 import type { JSX } from "react";
 

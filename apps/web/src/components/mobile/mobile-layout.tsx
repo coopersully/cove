@@ -1,9 +1,10 @@
-import { Flame } from "lucide-react";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useChannels } from "../../hooks/use-channels.js";
+import { useDocumentTitle } from "../../hooks/use-document-title.js";
 import { useServer } from "../../hooks/use-servers.js";
+import { Logo } from "../logo.js";
 import { MessageComposer } from "../messages/message-composer.js";
 import { MessageFeed } from "../messages/message-feed.js";
 import { MobileChannelPicker } from "./mobile-channel-picker.js";
@@ -21,6 +22,11 @@ export function MobileLayout(): JSX.Element {
 
   const server = serverData?.server;
   const currentChannel = channelData?.channels.find((c) => c.id === channelId);
+
+  const titleParts = [currentChannel ? `#${currentChannel.name}` : undefined, server?.name].filter(
+    Boolean,
+  );
+  useDocumentTitle(titleParts.length > 0 ? titleParts.join(" | ") : undefined);
 
   // Auto-redirect to first text channel (mirrors ServerView logic)
   useEffect(() => {
@@ -100,11 +106,11 @@ export function MobileLayout(): JSX.Element {
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
             <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
-              <Flame className="size-8 text-primary" />
+              <Logo className="size-8 text-primary" />
             </div>
             <div className="text-center">
               <h2 className="font-display font-semibold text-foreground text-xl">
-                Welcome to Hearth
+                Welcome to Cove
               </h2>
               <p className="mt-2 max-w-xs font-body text-sm">
                 Select a server or create a new one to get started.

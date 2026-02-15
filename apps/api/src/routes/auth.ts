@@ -9,16 +9,16 @@ import {
   rotateRefreshToken,
   validatePasswordResetToken,
   verifyPassword,
-} from "@hearth/auth";
+} from "@cove/auth";
 
-import { db, refreshTokens, users } from "@hearth/db";
+import { db, refreshTokens, users } from "@cove/db";
 import {
   AppError,
   emailSchema,
   generateSnowflake,
   passwordSchema,
   usernameSchema,
-} from "@hearth/shared";
+} from "@cove/shared";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -55,6 +55,28 @@ const resetPasswordSchema = z.object({
 });
 
 export const authRoutes = new Hono();
+
+// GET /auth/check-availability
+authRoutes.get("/check-availability", async (c) => {
+  const username = c.req.query("username");
+
+  if (!username) {
+    throw new AppError("VALIDATION_ERROR", "Username query parameter is required");
+  }
+
+  const parsed = usernameSchema.safeParse(username);
+  if (!parsed.success) {
+    throw new AppError("VALIDATION_ERROR", parsed.error.issues[0]?.message ?? "Invalid username");
+  }
+
+  const [existing] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, parsed.data))
+    .limit(1);
+
+  return c.json({ available: !existing });
+});
 
 // POST /auth/register
 authRoutes.post("/register", validate(registerSchema), async (c) => {
@@ -99,6 +121,9 @@ authRoutes.post("/register", validate(registerSchema), async (c) => {
       email: users.email,
       avatarUrl: users.avatarUrl,
       status: users.status,
+      bio: users.bio,
+      pronouns: users.pronouns,
+      statusEmoji: users.statusEmoji,
       createdAt: users.createdAt,
     });
 
@@ -146,6 +171,9 @@ authRoutes.post("/login", validate(loginSchema), async (c) => {
       email: user.email,
       avatarUrl: user.avatarUrl,
       status: user.status,
+      bio: user.bio,
+      pronouns: user.pronouns,
+      statusEmoji: user.statusEmoji,
       createdAt: user.createdAt,
     },
     accessToken,

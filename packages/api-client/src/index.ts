@@ -1,4 +1,4 @@
-export { ApiError, HttpClient } from "./http.js";
+export { ApiError, HttpClient, NetworkError } from "./http.js";
 export type { HttpClientConfig, TokenProvider } from "./http.js";
 
 export { createAuthResource } from "./resources/auth.js";

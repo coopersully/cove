@@ -1,4 +1,4 @@
-import type { Snowflake } from "@hearth/shared";
+import type { Snowflake } from "@cove/shared";
 
 // ── Entity types ──────────────────────────────────────
 
@@ -9,6 +9,9 @@ export interface User {
   readonly email: string;
   readonly avatarUrl: string | null;
   readonly status: string | null;
+  readonly bio: string | null;
+  readonly pronouns: string | null;
+  readonly statusEmoji: string | null;
   readonly createdAt: string;
   readonly updatedAt?: string;
 }
@@ -38,6 +41,7 @@ export interface MessageAuthor {
   readonly username: string;
   readonly displayName: string | null;
   readonly avatarUrl: string | null;
+  readonly statusEmoji: string | null;
 }
 
 export interface Message {
@@ -70,6 +74,9 @@ export interface UpdateProfileRequest {
   readonly displayName?: string | null;
   readonly avatarUrl?: string | null;
   readonly status?: string | null;
+  readonly bio?: string | null;
+  readonly pronouns?: string | null;
+  readonly statusEmoji?: string | null;
 }
 
 export interface ForgotPasswordRequest {
@@ -144,6 +151,10 @@ export interface UserResponse {
   readonly user: User;
 }
 
+export interface UserProfileResponse {
+  readonly user: Omit<User, "email">;
+}
+
 export interface ServerResponse {
   readonly server: Server;
 }
@@ -174,6 +185,10 @@ export interface ValidateResetTokenResponse {
 
 export interface SuccessResponse {
   readonly success: true;
+}
+
+export interface CheckAvailabilityResponse {
+  readonly available: boolean;
 }
 
 export interface ApiErrorResponse {

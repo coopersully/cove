@@ -1,4 +1,4 @@
-import { Button, Textarea } from "@hearth/ui";
+import { Button, Textarea } from "@cove/ui";
 import { ArrowUp, Eye, EyeOff } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useMemo, useRef, useState } from "react";

@@ -1,17 +1,17 @@
 {
-  "name": "@hearth/config",
+  "name": "@cove/config",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
     "./tsconfig/*": "./tsconfig/*.json",
     "./tailwind": {
-      "style": "./tailwind/hearth-preset.css",
-      "default": "./tailwind/hearth-preset.css"
+      "style": "./tailwind/cove-preset.css",
+      "default": "./tailwind/cove-preset.css"
     },
-    "./tailwind/hearth-preset.css": {
-      "style": "./tailwind/hearth-preset.css",
-      "default": "./tailwind/hearth-preset.css"
+    "./tailwind/cove-preset.css": {
+      "style": "./tailwind/cove-preset.css",
+      "default": "./tailwind/cove-preset.css"
     }
   }
 }

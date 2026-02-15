@@ -57,20 +57,22 @@ export function ResponsiveFormModal<T extends FieldValues>({
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (!next) {
+      if (next) {
+        form.reset(defaultValues);
+      } else {
         form.reset();
-        setServerError(null);
       }
+      setServerError(null);
       onOpenChange(next);
     },
-    [form, onOpenChange],
+    [form, onOpenChange, defaultValues],
   );
 
   const handleSubmit = form.handleSubmit(async (data) => {
     setServerError(null);
     try {
       await onSubmit(data);
-      form.reset();
+      form.reset(data as DefaultValues<T>);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setServerError(err.message);
@@ -86,7 +88,9 @@ export function ResponsiveFormModal<T extends FieldValues>({
       <ResponsiveModalContent>
         <ResponsiveModalHeader>
           <ResponsiveModalTitle>{title}</ResponsiveModalTitle>
-          {description && <ResponsiveModalDescription>{description}</ResponsiveModalDescription>}
+          <ResponsiveModalDescription className={description ? undefined : "sr-only"}>
+            {description || title}
+          </ResponsiveModalDescription>
         </ResponsiveModalHeader>
         <Form {...form}>
           <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">

@@ -1,9 +1,9 @@
-import type { Message } from "@hearth/api-client";
-import { Flame } from "lucide-react";
+import type { Message } from "@cove/api-client";
 import type { JSX } from "react";
 import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import { useMessages } from "../../hooks/use-messages.js";
+import { Logo } from "../logo.js";
 import { MessageItem } from "./message-item.js";
 
 interface MessageFeedProps {
@@ -107,13 +107,13 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
       <div ref={loadMoreRef} className="shrink-0 px-4 py-2">
         {isFetchingNextPage && (
           <div className="flex justify-center">
-            <div className="size-4 animate-hearth-ember rounded-full bg-primary/80" />
+            <div className="size-4 animate-cove-ember rounded-full bg-primary/80" />
           </div>
         )}
         {!hasNextPage && allMessages.length > 0 && (
           <div className="py-6 text-center">
             <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10">
-              <Flame className="size-5 text-primary" />
+              <Logo className="size-5 text-primary" />
             </div>
             <p className="font-display font-semibold text-foreground text-sm">
               The beginning of the conversation
@@ -137,7 +137,7 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
       {allMessages.length === 0 && (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
           <div className="flex size-12 items-center justify-center rounded-full bg-primary/10">
-            <Flame className="size-6 text-primary" />
+            <Logo className="size-6 text-primary" />
           </div>
           <div className="text-center">
             <p className="font-display font-semibold text-foreground text-sm">No messages yet</p>

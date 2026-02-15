@@ -1,6 +1,6 @@
-# Contributing to Hearth
+# Contributing to Cove
 
-Thank you for your interest in contributing to Hearth! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to Cove! This document provides guidelines and information for contributors.
 
 ## Development Setup
 
@@ -107,10 +107,10 @@ See the [Architecture](README.md#architecture) section in the README for an over
 
 ## Getting Help
 
-- Open a [Discussion](https://github.com/coopersully/hearth/discussions) for questions
-- Check existing [Issues](https://github.com/coopersully/hearth/issues) before filing a new one
+- Open a [Discussion](https://github.com/coopersully/cove/discussions) for questions
+- Check existing [Issues](https://github.com/coopersully/cove/issues) before filing a new one
 - Join our community channels (coming soon)
 
 ## License
 
-By contributing to Hearth, you agree that your contributions will be licensed under the [AGPL-3.0 License](LICENSE).
+By contributing to Cove, you agree that your contributions will be licensed under the [AGPL-3.0 License](LICENSE).

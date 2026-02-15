@@ -1,4 +1,4 @@
-import { joinServerSchema } from "@hearth/shared";
+import { joinServerSchema } from "@cove/shared";
 import {
   FormControl,
   FormField,
@@ -7,7 +7,7 @@ import {
   FormMessage,
   Input,
   ResponsiveFormModal,
-} from "@hearth/ui";
+} from "@cove/ui";
 import type { JSX } from "react";
 import { useNavigate } from "react-router";
 import { useJoinServer } from "../../hooks/use-servers.js";

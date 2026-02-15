@@ -1,6 +1,13 @@
-import { getUser, requireAuth } from "@hearth/auth";
-import { db, users } from "@hearth/db";
-import { AppError, displayNameSchema, statusSchema } from "@hearth/shared";
+import { getUser, requireAuth } from "@cove/auth";
+import { db, users } from "@cove/db";
+import {
+  AppError,
+  bioSchema,
+  displayNameSchema,
+  pronounsSchema,
+  statusEmojiSchema,
+  statusSchema,
+} from "@cove/shared";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -11,6 +18,9 @@ const updateProfileSchema = z.object({
   displayName: displayNameSchema.nullable().optional(),
   avatarUrl: z.string().url().nullable().optional(),
   status: statusSchema.nullable().optional(),
+  bio: bioSchema.nullable().optional(),
+  pronouns: pronounsSchema.nullable().optional(),
+  statusEmoji: statusEmojiSchema.nullable().optional(),
 });
 
 export const userRoutes = new Hono();
@@ -42,6 +52,9 @@ userRoutes.patch("/me", validate(updateProfileSchema), async (c) => {
       email: users.email,
       avatarUrl: users.avatarUrl,
       status: users.status,
+      bio: users.bio,
+      pronouns: users.pronouns,
+      statusEmoji: users.statusEmoji,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
     });
@@ -51,4 +64,31 @@ userRoutes.patch("/me", validate(updateProfileSchema), async (c) => {
   }
 
   return c.json({ user: { ...updated, id: String(updated.id) } });
+});
+
+// GET /users/:userId
+userRoutes.get("/:userId", async (c) => {
+  const userId = c.req.param("userId");
+
+  const [user] = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      avatarUrl: users.avatarUrl,
+      status: users.status,
+      bio: users.bio,
+      pronouns: users.pronouns,
+      statusEmoji: users.statusEmoji,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .where(eq(users.id, BigInt(userId)))
+    .limit(1);
+
+  if (!user) {
+    throw new AppError("NOT_FOUND", "User not found");
+  }
+
+  return c.json({ user: { ...user, id: String(user.id) } });
 });

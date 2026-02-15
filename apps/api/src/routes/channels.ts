@@ -1,5 +1,5 @@
-import { getUser, requireAuth } from "@hearth/auth";
-import { channels, db, serverMembers, servers } from "@hearth/db";
+import { getUser, requireAuth } from "@cove/auth";
+import { channels, db, serverMembers, servers } from "@cove/db";
 import {
   AppError,
   Permissions,
@@ -8,7 +8,7 @@ import {
   channelTypeSchema,
   generateSnowflake,
   hasPermission,
-} from "@hearth/shared";
+} from "@cove/shared";
 import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";

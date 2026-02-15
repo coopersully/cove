@@ -18,7 +18,7 @@ app.use(cors());
 app.get("/health", (c) => {
   return c.json({
     status: "ok",
-    service: "hearth-api",
+    service: "cove-api",
     timestamp: new Date().toISOString(),
   });
 });

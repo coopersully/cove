@@ -1,5 +1,5 @@
-import type { Server } from "@hearth/api-client";
-import { ResponsiveConfirmModal } from "@hearth/ui";
+import type { Server } from "@cove/api-client";
+import { ResponsiveConfirmModal } from "@cove/ui";
 import type { JSX } from "react";
 import { useNavigate } from "react-router";
 import { useLeaveServer } from "../../hooks/use-servers.js";

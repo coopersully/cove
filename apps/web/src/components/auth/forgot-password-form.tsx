@@ -1,5 +1,5 @@
-import { ApiError } from "@hearth/api-client";
-import { forgotPasswordSchema } from "@hearth/shared";
+import { ApiError, NetworkError } from "@cove/api-client";
+import { forgotPasswordSchema } from "@cove/shared";
 import {
   Card,
   CardContent,
@@ -16,7 +16,7 @@ import {
   FormMessage,
   Input,
   SubmitButton,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle, Mail } from "lucide-react";
 import type { JSX } from "react";
@@ -43,7 +43,9 @@ export function ForgotPasswordForm(): JSX.Element {
       setSubmittedEmail(data.email);
       setSubmitted(true);
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
+      if (err instanceof NetworkError) {
+        setError(err.message);
+      } else if (err instanceof ApiError) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");

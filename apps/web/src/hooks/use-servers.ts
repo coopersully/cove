@@ -1,4 +1,4 @@
-import type { CreateServerRequest, UpdateServerRequest } from "@hearth/api-client";
+import type { CreateServerRequest, UpdateServerRequest } from "@cove/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 
@@ -13,6 +13,7 @@ export function useServer(serverId: string) {
   return useQuery({
     queryKey: ["servers", serverId],
     queryFn: () => api.servers.get(serverId),
+    enabled: !!serverId,
   });
 }
 

@@ -1,11 +1,13 @@
-import type { Message } from "@hearth/api-client";
-import { Avatar, AvatarFallback, AvatarImage, ResponsiveConfirmModal, Textarea } from "@hearth/ui";
+import type { Message } from "@cove/api-client";
+import { ResponsiveConfirmModal, Textarea } from "@cove/ui";
 import { Pencil, Trash2 } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useDeleteMessage, useUpdateMessage } from "../../hooks/use-messages.js";
 import { useAuthStore } from "../../stores/auth.js";
+import { ProfileCard } from "../layout/profile-card.js";
+import { UserAvatar } from "../user-avatar.js";
 import { MarkdownContent } from "./markdown-content.js";
 
 interface MessageItemProps {
@@ -36,10 +38,6 @@ function formatTimestamp(iso: string): string {
     day: "numeric",
     year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   });
-}
-
-function getInitials(name: string): string {
-  return name.slice(0, 2).toUpperCase();
 }
 
 export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Element {
@@ -145,17 +143,15 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
         className="min-h-[2.5rem] resize-none text-sm"
         rows={1}
       />
-      <div className="mt-1 flex items-center gap-1 text-muted-foreground text-xs">
-        <span>
-          Escape to
-          <button type="button" onClick={cancelEditing} className="text-foreground hover:underline">
-            cancel
-          </button>
-          · Enter to
-          <button type="button" onClick={saveEdit} className="text-foreground hover:underline">
-            save
-          </button>
-        </span>
+      <div className="mt-1 text-muted-foreground text-xs">
+        Escape to{" "}
+        <button type="button" onClick={cancelEditing} className="text-foreground hover:underline">
+          cancel
+        </button>{" "}
+        · Enter to{" "}
+        <button type="button" onClick={saveEdit} className="text-foreground hover:underline">
+          save
+        </button>
       </div>
     </div>
   ) : (
@@ -183,15 +179,34 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
   return (
     <div className="group relative flex gap-3 py-1 pr-4 pl-4 transition-colors hover:bg-secondary/50">
       {actionBar}
-      <Avatar className="mt-0.5 size-10 shrink-0">
-        <AvatarImage src={message.author.avatarUrl ?? undefined} alt={displayName} />
-        <AvatarFallback className="bg-primary/20 text-primary text-xs">
-          {getInitials(displayName)}
-        </AvatarFallback>
-      </Avatar>
+      <ProfileCard userId={message.author.id}>
+        <button type="button" className="mt-0.5 shrink-0 cursor-pointer">
+          <UserAvatar
+            user={{
+              id: message.author.id,
+              avatarUrl: message.author.avatarUrl,
+              displayName: message.author.displayName,
+              username: message.author.username,
+            }}
+            size="lg"
+          />
+        </button>
+      </ProfileCard>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-foreground text-sm">{displayName}</span>
+          <ProfileCard userId={message.author.id}>
+            <button
+              type="button"
+              className="cursor-pointer font-semibold text-foreground text-sm hover:underline"
+            >
+              {displayName}
+            </button>
+          </ProfileCard>
+          {message.author.statusEmoji && (
+            <span className="text-sm" role="img">
+              {message.author.statusEmoji}
+            </span>
+          )}
           <span className="text-muted-foreground text-xs">
             {formatTimestamp(message.createdAt)}
           </span>

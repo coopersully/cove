@@ -1,5 +1,5 @@
-import { getUser, requireAuth } from "@hearth/auth";
-import { channels, db, messages, serverMembers, servers, users } from "@hearth/db";
+import { getUser, requireAuth } from "@cove/auth";
+import { channels, db, messages, serverMembers, servers, users } from "@cove/db";
 import {
   AppError,
   Permissions,
@@ -8,7 +8,7 @@ import {
   messageContentSchema,
   paginationLimitSchema,
   snowflakeSchema,
-} from "@hearth/shared";
+} from "@cove/shared";
 import { and, desc, eq, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -77,6 +77,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       authorUsername: users.username,
       authorDisplayName: users.displayName,
       authorAvatarUrl: users.avatarUrl,
+      authorStatusEmoji: users.statusEmoji,
     })
     .from(messages)
     .innerJoin(users, eq(messages.authorId, users.id))
@@ -106,6 +107,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
         username: m.authorUsername,
         displayName: m.authorDisplayName,
         avatarUrl: m.authorAvatarUrl,
+        statusEmoji: m.authorStatusEmoji,
       },
     })),
   });
@@ -164,6 +166,7 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
           username: user.username,
           displayName: user.displayName,
           avatarUrl: user.avatarUrl,
+          statusEmoji: user.statusEmoji,
         },
       },
     },

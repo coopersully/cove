@@ -1,4 +1,4 @@
-import type { Server } from "@hearth/api-client";
+import type { Server } from "@cove/api-client";
 import {
   Avatar,
   AvatarFallback,
@@ -9,13 +9,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@hearth/ui";
-import { ChevronDown, Flame, Hash, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
+} from "@cove/ui";
+import { ChevronDown, Hash, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
+import { getServerAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 import { EditProfileDialog } from "../layout/edit-profile-dialog.js";
+import { Logo } from "../logo.js";
+import { UserAvatar } from "../user-avatar.js";
 
 interface MobileTopBarProps {
   readonly server: Server | undefined;
@@ -40,14 +43,14 @@ export function MobileTopBar({
       >
         {server ? (
           <Avatar className="size-7">
-            <AvatarImage src={server.iconUrl ?? undefined} alt={server.name} />
+            <AvatarImage src={server.iconUrl ?? getServerAvatarUrl(server.id)} alt={server.name} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {server.name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         ) : (
           <div className="flex size-7 items-center justify-center rounded-full bg-primary/10">
-            <Flame className="size-3.5 text-primary" />
+            <Logo className="size-3.5 text-primary" />
           </div>
         )}
         <ChevronDown className="size-3 text-muted-foreground" />
@@ -86,7 +89,6 @@ function MobileUserButton(): JSX.Element {
   const [profileOpen, setProfileOpen] = useState(false);
 
   const displayName = user?.displayName ?? user?.username ?? "User";
-  const initials = displayName.slice(0, 2).toUpperCase();
 
   const nextTheme = theme === "dark" ? "light" : theme === "light" ? "system" : "dark";
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
@@ -101,12 +103,15 @@ function MobileUserButton(): JSX.Element {
             className="flex shrink-0 items-center justify-center rounded-full p-1 transition-colors active:bg-secondary/50"
             aria-label="User menu"
           >
-            <Avatar className="size-7">
-              <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              user={{
+                id: user?.id ?? "",
+                avatarUrl: user?.avatarUrl,
+                displayName: user?.displayName,
+                username: user?.username ?? "",
+              }}
+              size="sm"
+            />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

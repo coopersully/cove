@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
-import { db, refreshTokens } from "@hearth/db";
-import { AppError, generateSnowflake } from "@hearth/shared";
+import { db, refreshTokens } from "@cove/db";
+import { AppError, generateSnowflake } from "@cove/shared";
 import { and, eq, isNull } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 

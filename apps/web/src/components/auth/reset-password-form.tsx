@@ -1,5 +1,5 @@
-import { ApiError } from "@hearth/api-client";
-import { resetPasswordSchema } from "@hearth/shared";
+import { ApiError, NetworkError } from "@cove/api-client";
+import { resetPasswordSchema } from "@cove/shared";
 import {
   Button,
   Card,
@@ -17,7 +17,7 @@ import {
   FormMessage,
   PasswordInput,
   SubmitButton,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, CheckCircle, KeyRound } from "lucide-react";
 import type { JSX } from "react";
@@ -70,7 +70,9 @@ export function ResetPasswordForm(): JSX.Element {
       await api.auth.resetPassword({ token, password: data.password });
       setSuccess(true);
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
+      if (err instanceof NetworkError) {
+        setError(err.message);
+      } else if (err instanceof ApiError) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");

@@ -1,5 +1,5 @@
-import type { Server } from "@hearth/api-client";
-import { Input, Label, ResponsiveConfirmModal } from "@hearth/ui";
+import type { Server } from "@cove/api-client";
+import { Input, Label, ResponsiveConfirmModal } from "@cove/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router";

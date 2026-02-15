@@ -2,6 +2,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerTitle,
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,7 @@ import {
   DropdownMenuTrigger,
   Separator,
   cn,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ChevronDown, Hash, LogOut, Settings, Trash2, Volume2 } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -58,6 +59,7 @@ export function MobileChannelPicker({
     <>
       <Drawer direction="left" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="p-0">
+          <DrawerDescription className="sr-only">Select a channel</DrawerDescription>
           {/* Server header with dropdown */}
           <div className="flex items-center justify-between border-border border-b px-4 py-3">
             <DropdownMenu>

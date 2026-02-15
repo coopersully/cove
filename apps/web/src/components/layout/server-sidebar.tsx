@@ -1,7 +1,4 @@
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -13,13 +10,14 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ArrowDownToLine, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { useServers } from "../../hooks/use-servers.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
+import { UserAvatar } from "../user-avatar.js";
 import { CreateServerDialog } from "./create-server-dialog.js";
 import { EditProfileDialog } from "./edit-profile-dialog.js";
 import { JoinServerDialog } from "./join-server-dialog.js";
@@ -31,20 +29,20 @@ export function ServerSidebar(): JSX.Element {
   const [joinOpen, setJoinOpen] = useState(false);
 
   return (
-    <aside className="flex w-[72px] flex-col items-center bg-secondary">
+    <aside className="flex w-[72px] flex-col items-center border-r border-sidebar-border bg-sidebar">
       <ScrollArea className="w-full flex-1">
         <nav className="flex flex-col items-center gap-2 px-3 py-3">
           {servers.map((server) => (
             <ServerIcon key={server.id} server={server} />
           ))}
-          <Separator className="mx-auto w-8 bg-secondary" />
+          <Separator className="mx-auto w-8 bg-sidebar" />
           <CreateServerDialog />
           <Tooltip>
             <TooltipTrigger asChild={true}>
               <button
                 type="button"
                 onClick={() => setJoinOpen(true)}
-                className="group relative flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-emerald-600 hover:text-white"
+                className="group relative flex size-12 items-center justify-center rounded-full bg-sidebar-accent text-muted-foreground transition-colors hover:bg-emerald-600 hover:text-white"
                 aria-label="Join server"
               >
                 <ArrowDownToLine className="size-5" />
@@ -57,7 +55,7 @@ export function ServerSidebar(): JSX.Element {
           <JoinServerDialog open={joinOpen} onOpenChange={setJoinOpen} />
         </nav>
       </ScrollArea>
-      <Separator className="mx-auto w-8 bg-secondary" />
+      <Separator className="mx-auto w-8 bg-sidebar" />
       <div className="py-3">
         <UserButton />
       </div>
@@ -72,7 +70,6 @@ function UserButton(): JSX.Element {
   const [profileOpen, setProfileOpen] = useState(false);
 
   const displayName = user?.displayName ?? user?.username ?? "User";
-  const initials = displayName.slice(0, 2).toUpperCase();
 
   const nextTheme = theme === "dark" ? "light" : theme === "light" ? "system" : "dark";
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
@@ -82,17 +79,16 @@ function UserButton(): JSX.Element {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>
-          <button
-            type="button"
-            className="flex size-12 items-center justify-center rounded-full transition-colors"
-            aria-label="User menu"
-          >
-            <Avatar className="size-10">
-              <AvatarImage src={user?.avatarUrl ?? undefined} alt={displayName} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+          <button type="button" className="transition-colors" aria-label="User menu">
+            <UserAvatar
+              user={{
+                id: user?.id ?? "",
+                avatarUrl: user?.avatarUrl,
+                displayName: user?.displayName,
+                username: user?.username ?? "",
+              }}
+              size="lg"
+            />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="right" align="end" className="w-56">

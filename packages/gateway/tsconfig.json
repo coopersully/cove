@@ -1,5 +1,5 @@
 {
-  "extends": "@hearth/config/tsconfig/node",
+  "extends": "@cove/config/tsconfig/node",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src"

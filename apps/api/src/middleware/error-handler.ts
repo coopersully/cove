@@ -1,4 +1,4 @@
-import { AppError } from "@hearth/shared";
+import { AppError } from "@cove/shared";
 import type { ErrorHandler } from "hono";
 
 export const errorHandler: ErrorHandler = (err, c) => {

@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
-import { db, passwordResetTokens, refreshTokens } from "@hearth/db";
-import { AppError, generateSnowflake } from "@hearth/shared";
+import { db, passwordResetTokens, refreshTokens } from "@cove/db";
+import { AppError, generateSnowflake } from "@cove/shared";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { hashToken } from "./tokens.js";

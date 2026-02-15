@@ -5,15 +5,17 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerTitle,
   Separator,
   cn,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ArrowDownToLine } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useServers } from "../../hooks/use-servers.js";
+import { getServerAvatarUrl } from "../../lib/avatar.js";
 import { CreateServerDialog } from "../layout/create-server-dialog.js";
 import { JoinServerDialog } from "../layout/join-server-dialog.js";
 
@@ -33,6 +35,7 @@ export function MobileServerPicker({ open, onOpenChange }: MobileServerPickerPro
       <Drawer direction="left" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="p-0">
           <DrawerTitle className="px-4 pt-4 pb-2 text-sm">Servers</DrawerTitle>
+          <DrawerDescription className="sr-only">Select a server</DrawerDescription>
           <div className="flex flex-1 flex-col overflow-y-auto">
             {servers.map((server) => {
               const isActive = serverId === server.id;
@@ -46,7 +49,10 @@ export function MobileServerPicker({ open, onOpenChange }: MobileServerPickerPro
                     )}
                   >
                     <Avatar className="size-9 shrink-0">
-                      <AvatarImage src={server.iconUrl ?? undefined} alt={server.name} />
+                      <AvatarImage
+                        src={server.iconUrl ?? getServerAvatarUrl(server.id)}
+                        alt={server.name}
+                      />
                       <AvatarFallback
                         className={cn(
                           "text-xs font-semibold",

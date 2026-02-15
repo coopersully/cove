@@ -1,4 +1,4 @@
-import { db, roles, serverMembers } from "@hearth/db";
+import { db, roles, serverMembers } from "@cove/db";
 import { and, eq } from "drizzle-orm";
 
 /**

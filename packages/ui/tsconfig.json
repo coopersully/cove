@@ -1,5 +1,5 @@
 {
-  "extends": "@hearth/config/tsconfig/react",
+  "extends": "@cove/config/tsconfig/react",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",

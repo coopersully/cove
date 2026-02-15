@@ -35,7 +35,7 @@ body:
     id: scope
     attributes:
       label: Scope
-      description: Which part of Hearth does this affect?
+      description: Which part of Cove does this affect?
       options:
         - Web Client
         - Mobile Client

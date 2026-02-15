@@ -6,14 +6,14 @@
 
 ## Decisions
 
-- Full Zod schemas in `@hearth/shared`, shared between frontend and API
+- Full Zod schemas in `@cove/shared`, shared between frontend and API
 - All dialog forms use `ResponsiveModal` consistently (mobile drawer + desktop dialog)
 - A composed `ResponsiveFormModal` wrapper handles common dialog form layout
 - react-hook-form + shadcn Form primitives for all form state management
 
 ## Architecture
 
-### 1. Form Schemas — `@hearth/shared/src/schemas.ts`
+### 1. Form Schemas — `@cove/shared/src/schemas.ts`
 
 Compose existing field validators (`emailSchema`, `passwordSchema`, etc. from `validators.ts`) into form-level schemas:
 
@@ -30,7 +30,7 @@ Compose existing field validators (`emailSchema`, `passwordSchema`, etc. from `v
 
 Shared between frontend (react-hook-form zodResolver) and API (Hono request validation).
 
-### 2. New Components in `@hearth/ui`
+### 2. New Components in `@cove/ui`
 
 **Dependencies:** `react-hook-form` (peer dep), `@hookform/resolvers` (dep)
 
@@ -83,4 +83,4 @@ Auth forms don't use modals but still benefit from:
 
 ### 5. Zod 4 Compatibility
 
-`@hearth/shared` uses Zod 4 (`^4.3.6`). Must verify `@hookform/resolvers` zodResolver works with Zod 4 during implementation. If not, use the Zod 4-specific resolver or a thin adapter.
+`@cove/shared` uses Zod 4 (`^4.3.6`). Must verify `@hookform/resolvers` zodResolver works with Zod 4 during implementation. If not, use the Zod 4-specific resolver or a thin adapter.

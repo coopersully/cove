@@ -1,5 +1,5 @@
-import { db, users } from "@hearth/db";
-import { AppError } from "@hearth/shared";
+import { db, users } from "@cove/db";
+import { AppError } from "@cove/shared";
 import { eq } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 
@@ -12,6 +12,9 @@ export interface AuthUser {
   email: string;
   avatarUrl: string | null;
   status: string | null;
+  bio: string | null;
+  pronouns: string | null;
+  statusEmoji: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +43,9 @@ export function requireAuth(): MiddlewareHandler<AuthEnv> {
         email: users.email,
         avatarUrl: users.avatarUrl,
         status: users.status,
+        bio: users.bio,
+        pronouns: users.pronouns,
+        statusEmoji: users.statusEmoji,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
