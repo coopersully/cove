@@ -1,9 +1,13 @@
 import crypto from "node:crypto";
 import {
+  consumePasswordResetToken,
   generateAccessToken,
+  generatePasswordResetToken,
   generateRefreshToken,
   hashPassword,
+  revokeAllRefreshTokens,
   rotateRefreshToken,
+  validatePasswordResetToken,
   verifyPassword,
 } from "@hearth/auth";
 
@@ -19,6 +23,7 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { sendPasswordResetEmail } from "../lib/index.js";
 import { validate } from "../middleware/index.js";
 
 const registerSchema = z.object({
@@ -34,6 +39,19 @@ const loginSchema = z.object({
 
 const refreshSchema = z.object({
   refreshToken: z.string().min(1),
+});
+
+const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+const validateResetTokenSchema = z.object({
+  token: z.string().min(1),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: passwordSchema,
 });
 
 export const authRoutes = new Hono();
@@ -170,4 +188,56 @@ authRoutes.post("/refresh", validate(refreshSchema), async (c) => {
     accessToken,
     refreshToken: newRefreshToken,
   });
+});
+
+// POST /auth/forgot-password
+authRoutes.post("/forgot-password", validate(forgotPasswordSchema), async (c) => {
+  const body = c.get("body");
+
+  // Always return success to prevent email enumeration
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, body.email))
+    .limit(1);
+
+  if (user) {
+    const userId = String(user.id);
+    const token = await generatePasswordResetToken(userId);
+
+    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+
+    // Fire-and-forget: don't block the response or leak errors
+    sendPasswordResetEmail(body.email, resetUrl).catch((err) => {
+      console.error("[Password Reset] Email send failed:", err);
+    });
+  }
+
+  return c.json({ success: true as const });
+});
+
+// POST /auth/validate-reset-token
+authRoutes.post("/validate-reset-token", validate(validateResetTokenSchema), async (c) => {
+  const body = c.get("body");
+  const valid = await validatePasswordResetToken(body.token);
+  return c.json({ valid });
+});
+
+// POST /auth/reset-password
+authRoutes.post("/reset-password", validate(resetPasswordSchema), async (c) => {
+  const body = c.get("body");
+
+  const userId = await consumePasswordResetToken(body.token);
+  const passwordHash = await hashPassword(body.password);
+
+  await db
+    .update(users)
+    .set({ passwordHash, updatedAt: new Date() })
+    .where(eq(users.id, BigInt(userId)));
+
+  // Revoke all existing sessions
+  await revokeAllRefreshTokens(userId);
+
+  return c.json({ success: true as const });
 });

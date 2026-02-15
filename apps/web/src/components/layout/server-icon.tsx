@@ -25,10 +25,10 @@ export function ServerIcon({ server }: ServerIconProps): JSX.Element {
         <Link
           to={`/servers/${server.id}`}
           className={cn(
-            "group relative flex size-12 items-center justify-center rounded-full transition-all",
+            "group relative flex size-12 items-center justify-center rounded-full transition-colors",
             isActive
-              ? "rounded-2xl bg-primary text-primary-foreground"
-              : "bg-secondary text-muted-foreground hover:rounded-2xl hover:bg-primary hover:text-primary-foreground",
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground",
           )}
         >
           <Avatar className="size-full rounded-[inherit]">

@@ -8,15 +8,17 @@ import {
   Separator,
   cn,
 } from "@hearth/ui";
-import { ChevronDown, LogOut, Settings } from "lucide-react";
+import { ChevronDown, LogOut, Settings, Trash2 } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { useChannels } from "../../hooks/use-channels.js";
 import { useServer } from "../../hooks/use-servers.js";
 import { useAuthStore } from "../../stores/auth.js";
-import { UserSection } from "../layout/user-section.js";
 import { ChannelItem } from "./channel-item.js";
 import { CreateChannelDialog } from "./create-channel-dialog.js";
+import { DeleteServerDialog } from "./delete-server-dialog.js";
+import { LeaveServerDialog } from "./leave-server-dialog.js";
+import { ServerSettingsDialog } from "./server-settings-dialog.js";
 
 interface ChannelListProps {
   readonly serverId: string;
@@ -28,6 +30,9 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
   const user = useAuthStore((s) => s.user);
   const [textCollapsed, setTextCollapsed] = useState(false);
   const [voiceCollapsed, setVoiceCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const channels = channelData?.channels ?? [];
   const server = serverData?.server;
@@ -42,7 +47,7 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
     .sort((a, b) => a.position - b.position);
 
   return (
-    <div className="flex w-60 flex-col border-border border-r bg-card">
+    <div className="flex w-60 flex-col bg-secondary">
       {/* Server header with dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>
@@ -57,15 +62,25 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuItem>
-            <Settings className="size-4" />
-            Server Settings
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">
-            <LogOut className="size-4" />
-            Leave Server
-          </DropdownMenuItem>
+          {isOwner && (
+            <>
+              <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+                <Settings className="size-4" />
+                Server Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
+                <Trash2 className="size-4" />
+                Delete Server
+              </DropdownMenuItem>
+            </>
+          )}
+          {!isOwner && (
+            <DropdownMenuItem variant="destructive" onSelect={() => setLeaveOpen(true)}>
+              <LogOut className="size-4" />
+              Leave Server
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -86,7 +101,9 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
             {isOwner && <CreateChannelDialog serverId={serverId} />}
           </div>
           {!textCollapsed &&
-            textChannels.map((channel) => <ChannelItem key={channel.id} channel={channel} />)}
+            textChannels.map((channel) => (
+              <ChannelItem key={channel.id} channel={channel} isOwner={isOwner} />
+            ))}
 
           {/* Voice Channels */}
           {voiceChannels.length > 0 && (
@@ -105,14 +122,28 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
                 </button>
               </div>
               {!voiceCollapsed &&
-                voiceChannels.map((channel) => <ChannelItem key={channel.id} channel={channel} />)}
+                voiceChannels.map((channel) => (
+                  <ChannelItem key={channel.id} channel={channel} isOwner={isOwner} />
+                ))}
             </>
           )}
         </div>
       </ScrollArea>
 
-      {/* User section */}
-      <UserSection />
+      {/* Server management dialogs */}
+      {server && isOwner && (
+        <>
+          <ServerSettingsDialog
+            server={server}
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+          />
+          <DeleteServerDialog server={server} open={deleteOpen} onOpenChange={setDeleteOpen} />
+        </>
+      )}
+      {server && !isOwner && (
+        <LeaveServerDialog server={server} open={leaveOpen} onOpenChange={setLeaveOpen} />
+      )}
     </div>
   );
 }

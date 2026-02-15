@@ -67,9 +67,22 @@ export interface RefreshRequest {
 }
 
 export interface UpdateProfileRequest {
-  readonly displayName?: string;
-  readonly avatarUrl?: string;
-  readonly status?: string;
+  readonly displayName?: string | null;
+  readonly avatarUrl?: string | null;
+  readonly status?: string | null;
+}
+
+export interface ForgotPasswordRequest {
+  readonly email: string;
+}
+
+export interface ValidateResetTokenRequest {
+  readonly token: string;
+}
+
+export interface ResetPasswordRequest {
+  readonly token: string;
+  readonly password: string;
 }
 
 export interface CreateServerRequest {
@@ -153,6 +166,10 @@ export interface MessageResponse {
 
 export interface MessageListResponse {
   readonly messages: readonly Message[];
+}
+
+export interface ValidateResetTokenResponse {
+  readonly valid: boolean;
 }
 
 export interface SuccessResponse {

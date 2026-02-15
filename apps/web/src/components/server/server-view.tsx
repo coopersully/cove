@@ -30,7 +30,7 @@ export function ServerView(): JSX.Element {
       {channelId ? (
         <ChannelView key={channelId} channelId={channelId} channelName={currentChannel?.name} />
       ) : (
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">
+        <div className="flex flex-1 items-center justify-center bg-background text-muted-foreground">
           <p className="font-body text-sm">Select a channel to start chatting</p>
         </div>
       )}

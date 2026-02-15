@@ -1,4 +1,4 @@
-import type { CreateServerRequest } from "@hearth/api-client";
+import type { CreateServerRequest, UpdateServerRequest } from "@hearth/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 
@@ -20,6 +20,48 @@ export function useCreateServer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateServerRequest) => api.servers.create(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["servers"] });
+    },
+  });
+}
+
+export function useUpdateServer(serverId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateServerRequest) => api.servers.update(serverId, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["servers"] });
+      void queryClient.invalidateQueries({ queryKey: ["servers", serverId] });
+    },
+  });
+}
+
+export function useDeleteServer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (serverId: string) => api.servers.delete(serverId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["servers"] });
+    },
+  });
+}
+
+export function useLeaveServer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (serverId: string) => api.servers.leave(serverId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["servers"] });
+    },
+  });
+}
+
+export function useJoinServer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ serverId, inviteCode }: { serverId: string; inviteCode?: string }) =>
+      api.servers.join(serverId, inviteCode ? { inviteCode } : undefined),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["servers"] });
     },

@@ -4,14 +4,18 @@ import { Navigate, Route, Routes } from "react-router";
 import { AuthGuard } from "./components/auth/auth-guard.js";
 import { AppLayout } from "./components/layout/app-layout.js";
 import { ServerView } from "./components/server/server-view.js";
+import { ForgotPasswordPage } from "./pages/forgot-password.js";
 import { LoginPage } from "./pages/login.js";
 import { RegisterPage } from "./pages/register.js";
+import { ResetPasswordPage } from "./pages/reset-password.js";
 
 export function App(): JSX.Element {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<AuthGuard />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/servers" replace={true} />} />
@@ -29,8 +33,8 @@ function ServerListPlaceholder(): JSX.Element {
   return (
     <div className="flex flex-1 items-center justify-center text-muted-foreground">
       <div className="animate-fade-up-in text-center">
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-ember/10">
-          <Flame className="size-8 text-ember" />
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
+          <Flame className="size-8 text-primary" />
         </div>
         <h2 className="font-display font-semibold text-foreground text-xl">Welcome to Hearth</h2>
         <p className="mt-2 max-w-xs font-body text-sm">
