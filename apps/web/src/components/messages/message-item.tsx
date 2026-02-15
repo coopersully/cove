@@ -188,7 +188,10 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
       <ProfileCard userId={message.author.id}>
         <button type="button" className="mt-0.5 shrink-0 cursor-pointer">
           <Avatar className="size-10">
-            <AvatarImage src={message.author.avatarUrl ?? getUserAvatarUrl(message.author.id)} alt={displayName} />
+            <AvatarImage
+              src={message.author.avatarUrl ?? getUserAvatarUrl(message.author.id)}
+              alt={displayName}
+            />
             <AvatarFallback className="bg-primary/20 text-primary text-xs">
               {getInitials(displayName)}
             </AvatarFallback>
@@ -198,12 +201,17 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <ProfileCard userId={message.author.id}>
-            <button type="button" className="cursor-pointer font-semibold text-foreground text-sm hover:underline">
+            <button
+              type="button"
+              className="cursor-pointer font-semibold text-foreground text-sm hover:underline"
+            >
               {displayName}
             </button>
           </ProfileCard>
           {message.author.statusEmoji && (
-            <span className="text-sm" role="img">{message.author.statusEmoji}</span>
+            <span className="text-sm" role="img">
+              {message.author.statusEmoji}
+            </span>
           )}
           <span className="text-muted-foreground text-xs">
             {formatTimestamp(message.createdAt)}

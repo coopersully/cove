@@ -1,4 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage, Popover, PopoverContent, PopoverTrigger } from "@cove/ui";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@cove/ui";
 import type { JSX, ReactNode } from "react";
 import { useUserProfile } from "../../hooks/use-user-profile.js";
 import { getUserAvatarUrl } from "../../lib/avatar.js";
@@ -26,7 +33,7 @@ export function ProfileCard({ userId, children }: ProfileCardProps): JSX.Element
 
   return (
     <Popover>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverTrigger asChild={true}>{children}</PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
         {status === "pending" && (
           <div className="flex items-center justify-center p-8">
