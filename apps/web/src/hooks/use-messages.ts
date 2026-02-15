@@ -2,7 +2,7 @@ import type {
   CreateMessageRequest,
   MessageListResponse,
   UpdateMessageRequest,
-} from "@hearth/api-client";
+} from "@cove/api-client";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";

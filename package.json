@@ -1,5 +1,5 @@
 {
-  "name": "hearth",
+  "name": "cove",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.16.0",
@@ -13,7 +13,7 @@
     "lint": "biome ci .",
     "lint:fix": "biome check --write .",
     "test": "turbo run test",
-    "dev": "pnpm --filter @hearth/api dev & pnpm --filter @hearth/ws dev & pnpm --filter @hearth/web dev & wait",
+    "dev": "pnpm --filter @cove/api dev & pnpm --filter @cove/ws dev & pnpm --filter @cove/web dev & wait",
     "format": "biome format --write ."
   },
   "pnpm": {

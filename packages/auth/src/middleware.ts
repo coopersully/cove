@@ -1,5 +1,5 @@
-import { db, users } from "@hearth/db";
-import { AppError } from "@hearth/shared";
+import { db, users } from "@cove/db";
+import { AppError } from "@cove/shared";
 import { eq } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 

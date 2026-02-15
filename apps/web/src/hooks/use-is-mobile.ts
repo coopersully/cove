@@ -1,4 +1,4 @@
-import { useMediaQuery } from "@hearth/ui";
+import { useMediaQuery } from "@cove/ui";
 
 const DESKTOP_QUERY = "(min-width: 768px)";
 

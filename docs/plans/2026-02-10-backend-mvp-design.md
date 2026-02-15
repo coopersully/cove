@@ -164,7 +164,7 @@ Default argon2id params (memory 65536 KB, time cost 3, parallelism 4).
 
 Also exports `getUser(c)` helper for typed user access from context.
 
-**Dependencies**: `argon2`, `jose`, `@hearth/db`
+**Dependencies**: `argon2`, `jose`, `@cove/db`
 
 ---
 
@@ -177,7 +177,7 @@ src/
   app.ts              — Creates Hono app, mounts routes + middleware
   middleware/
     error-handler.ts  — Global error catching
-    auth.ts           — Re-exports requireAuth from @hearth/auth
+    auth.ts           — Re-exports requireAuth from @cove/auth
   routes/
     auth.ts           — /auth/*
     users.ts          — /users/*

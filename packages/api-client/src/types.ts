@@ -1,4 +1,4 @@
-import type { Snowflake } from "@hearth/shared";
+import type { Snowflake } from "@cove/shared";
 
 // ── Entity types ──────────────────────────────────────
 
@@ -174,6 +174,10 @@ export interface ValidateResetTokenResponse {
 
 export interface SuccessResponse {
   readonly success: true;
+}
+
+export interface CheckAvailabilityResponse {
+  readonly available: boolean;
 }
 
 export interface ApiErrorResponse {

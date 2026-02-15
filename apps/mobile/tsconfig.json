@@ -1,4 +1,4 @@
 {
-  "extends": "@hearth/config/tsconfig/react-native",
+  "extends": "@cove/config/tsconfig/react-native",
   "include": ["src"]
 }

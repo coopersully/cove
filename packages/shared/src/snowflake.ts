@@ -1,6 +1,6 @@
 /** Discord-compatible snowflake ID generator. */
 
-/** Hearth epoch: 2025-01-01T00:00:00Z */
+/** Cove epoch: 2025-01-01T00:00:00Z */
 const EPOCH = 1_735_689_600_000n;
 
 const WORKER_BITS = 5n;

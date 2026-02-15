@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   Separator,
   cn,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ChevronDown, Hash, LogOut, Settings, Trash2, Volume2 } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";

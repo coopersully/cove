@@ -1,6 +1,6 @@
-import { getUser, requireAuth } from "@hearth/auth";
-import { db, users } from "@hearth/db";
-import { AppError, displayNameSchema, statusSchema } from "@hearth/shared";
+import { getUser, requireAuth } from "@cove/auth";
+import { db, users } from "@cove/db";
+import { AppError, displayNameSchema, statusSchema } from "@cove/shared";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";

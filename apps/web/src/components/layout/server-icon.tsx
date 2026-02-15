@@ -29,7 +29,7 @@ export function ServerIcon({ server }: ServerIconProps): JSX.Element {
             "group relative flex size-12 items-center justify-center rounded-full transition-colors",
             isActive
               ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground",
+              : "bg-sidebar-accent text-muted-foreground hover:bg-primary hover:text-primary-foreground",
           )}
         >
           <Avatar className="size-full rounded-[inherit]">

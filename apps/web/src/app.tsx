@@ -38,7 +38,7 @@ function ServerListPlaceholder(): JSX.Element {
         <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
           <Logo className="size-8 text-primary" />
         </div>
-        <h2 className="font-display font-semibold text-foreground text-xl">Welcome to Hearth</h2>
+        <h2 className="font-display font-semibold text-foreground text-xl">Welcome to Cove</h2>
         <p className="mt-2 max-w-xs font-body text-sm">
           Select a server or create a new one to get started.
         </p>

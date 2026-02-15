@@ -1,5 +1,5 @@
-import type { Channel } from "@hearth/api-client";
-import { ResponsiveConfirmModal } from "@hearth/ui";
+import type { Channel } from "@cove/api-client";
+import { ResponsiveConfirmModal } from "@cove/ui";
 import type { JSX } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDeleteChannel } from "../../hooks/use-channels.js";

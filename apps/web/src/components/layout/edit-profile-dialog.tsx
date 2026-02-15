@@ -1,4 +1,4 @@
-import { editProfileSchema } from "@hearth/shared";
+import { editProfileSchema } from "@cove/shared";
 import {
   FormControl,
   FormField,
@@ -7,7 +7,7 @@ import {
   FormMessage,
   Input,
   ResponsiveFormModal,
-} from "@hearth/ui";
+} from "@cove/ui";
 import type { JSX } from "react";
 import { useUpdateProfile } from "../../hooks/use-users.js";
 import { useAuthStore } from "../../stores/auth.js";

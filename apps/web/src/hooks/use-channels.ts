@@ -1,4 +1,4 @@
-import type { CreateChannelRequest, UpdateChannelRequest } from "@hearth/api-client";
+import type { CreateChannelRequest, UpdateChannelRequest } from "@cove/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 

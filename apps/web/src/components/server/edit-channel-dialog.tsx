@@ -1,5 +1,5 @@
-import type { Channel } from "@hearth/api-client";
-import { editChannelSchema } from "@hearth/shared";
+import type { Channel } from "@cove/api-client";
+import { editChannelSchema } from "@cove/shared";
 import {
   FormControl,
   FormField,
@@ -8,7 +8,7 @@ import {
   FormMessage,
   Input,
   ResponsiveFormModal,
-} from "@hearth/ui";
+} from "@cove/ui";
 import type { JSX } from "react";
 import { useUpdateChannel } from "../../hooks/use-channels.js";
 

@@ -1,5 +1,5 @@
 /*
- * Hearth Design System — Tailwind v4 Theme Preset
+ * Cove Design System — Tailwind v4 Theme Preset
  *
  * Colors, typography, spacing, and border radius
  * derived from docs/brand-guidelines.md
@@ -9,7 +9,7 @@
   /* ---- Spacing (4px base grid) ---- */
   --spacing: 4px;
 
-  /* ---- Accent: Amber/Hearth-glow ---- */
+  /* ---- Accent: Amber/Cove-glow ---- */
   --color-ember: #B45309;
   --color-ember-light: #D97706;
   --color-ember-dark: #92400E;
@@ -35,8 +35,9 @@
   --color-rose: #B91C1C;
 
   /* ---- Dark Mode Surfaces ---- */
+  --color-surface-deep: #151311;
   --color-surface: #1C1917;
-  --color-card: #292524;
+  --color-surface-raised: #292524;
   --color-elevated: #44403C;
 
   /* ---- Typography ---- */

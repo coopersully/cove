@@ -111,7 +111,7 @@ export function MobileLayout(): JSX.Element {
             </div>
             <div className="text-center">
               <h2 className="font-display font-semibold text-foreground text-xl">
-                Welcome to Hearth
+                Welcome to Cove
               </h2>
               <p className="mt-2 max-w-xs font-body text-sm">
                 Select a server or create a new one to get started.

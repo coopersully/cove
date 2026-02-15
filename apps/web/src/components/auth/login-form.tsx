@@ -1,5 +1,5 @@
-import { ApiError, NetworkError } from "@hearth/api-client";
-import { loginSchema } from "@hearth/shared";
+import { ApiError, NetworkError } from "@cove/api-client";
+import { loginSchema } from "@cove/shared";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import {
   Input,
   PasswordInput,
   SubmitButton,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -56,7 +56,7 @@ export function LoginForm(): JSX.Element {
     <Card className="w-full max-w-sm animate-fade-up-in">
       <CardHeader>
         <CardTitle className="font-display text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your Hearth account</CardDescription>
+        <CardDescription>Sign in to your Cove account</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

@@ -1,4 +1,4 @@
-import type { Message } from "@hearth/api-client";
+import type { Message } from "@cove/api-client";
 import type { JSX } from "react";
 import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
@@ -107,7 +107,7 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
       <div ref={loadMoreRef} className="shrink-0 px-4 py-2">
         {isFetchingNextPage && (
           <div className="flex justify-center">
-            <div className="size-4 animate-hearth-ember rounded-full bg-primary/80" />
+            <div className="size-4 animate-cove-ember rounded-full bg-primary/80" />
           </div>
         )}
         {!hasNextPage && allMessages.length > 0 && (

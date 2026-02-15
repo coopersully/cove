@@ -1,4 +1,4 @@
-import type { UpdateProfileRequest } from "@hearth/api-client";
+import type { UpdateProfileRequest } from "@cove/api-client";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 import { useAuthStore } from "../stores/auth.js";

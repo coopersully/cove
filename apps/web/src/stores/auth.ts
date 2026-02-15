@@ -1,8 +1,8 @@
-import type { User } from "@hearth/api-client";
+import type { User } from "@cove/api-client";
 import { create } from "zustand";
 import { api } from "../lib/api.js";
 
-const REFRESH_TOKEN_KEY = "hearth:refreshToken";
+const REFRESH_TOKEN_KEY = "cove:refreshToken";
 
 interface AuthState {
   accessToken: string | null;

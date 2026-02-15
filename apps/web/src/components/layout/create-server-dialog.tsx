@@ -1,4 +1,4 @@
-import { createServerSchema } from "@hearth/shared";
+import { createServerSchema } from "@cove/shared";
 import {
   FormControl,
   FormField,
@@ -10,7 +10,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { Plus } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -29,7 +29,7 @@ export function CreateServerDialog(): JSX.Element {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="group relative flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="group relative flex size-12 items-center justify-center rounded-full bg-sidebar-accent text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
             aria-label="Create server"
           >
             <Plus className="size-5" />

@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Hearth, please report it responsibly.
+If you discover a security vulnerability in Cove, please report it responsibly.
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
@@ -30,7 +30,7 @@ Instead, please email security concerns to: **coopersully@pm.me**
 
 ## Security Best Practices
 
-When contributing to Hearth, please:
+When contributing to Cove, please:
 
 - Never commit secrets, API keys, or credentials
 - Use parameterized queries (Drizzle ORM handles this)

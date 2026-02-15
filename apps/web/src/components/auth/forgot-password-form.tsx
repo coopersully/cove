@@ -1,5 +1,5 @@
-import { ApiError, NetworkError } from "@hearth/api-client";
-import { forgotPasswordSchema } from "@hearth/shared";
+import { ApiError, NetworkError } from "@cove/api-client";
+import { forgotPasswordSchema } from "@cove/shared";
 import {
   Card,
   CardContent,
@@ -16,7 +16,7 @@ import {
   FormMessage,
   Input,
   SubmitButton,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle, Mail } from "lucide-react";
 import type { JSX } from "react";

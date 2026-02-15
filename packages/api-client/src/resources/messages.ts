@@ -1,4 +1,4 @@
-import type { Snowflake } from "@hearth/shared";
+import type { Snowflake } from "@cove/shared";
 import type { HttpClient } from "../http.js";
 import type {
   CreateMessageRequest,

@@ -1,4 +1,4 @@
-import { createChannelSchema } from "@hearth/shared";
+import { createChannelSchema } from "@cove/shared";
 import {
   Button,
   FormControl,
@@ -8,7 +8,7 @@ import {
   FormMessage,
   Input,
   ResponsiveFormModal,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { Plus } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";

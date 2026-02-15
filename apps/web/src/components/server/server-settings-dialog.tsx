@@ -1,5 +1,5 @@
-import type { Server } from "@hearth/api-client";
-import { serverSettingsSchema } from "@hearth/shared";
+import type { Server } from "@cove/api-client";
+import { serverSettingsSchema } from "@cove/shared";
 import {
   FormControl,
   FormField,
@@ -8,7 +8,7 @@ import {
   FormMessage,
   Input,
   ResponsiveFormModal,
-} from "@hearth/ui";
+} from "@cove/ui";
 import type { JSX } from "react";
 import { useUpdateServer } from "../../hooks/use-servers.js";
 

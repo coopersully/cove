@@ -1,6 +1,6 @@
-# @hearth/desktop
+# @cove/desktop
 
-Hearth desktop app built with Tauri v2, wrapping `@hearth/web`.
+Cove desktop app built with Tauri v2, wrapping `@cove/web`.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ Hearth desktop app built with Tauri v2, wrapping `@hearth/web`.
 
 ## Architecture
 
-The desktop app wraps the same React SPA that powers `@hearth/web`. The Tauri
+The desktop app wraps the same React SPA that powers `@cove/web`. The Tauri
 backend provides native capabilities:
 
 - System tray with presence indicator

@@ -1,5 +1,5 @@
-import { createApiClient } from "@hearth/api-client";
-import type { TokenProvider } from "@hearth/api-client";
+import { createApiClient } from "@cove/api-client";
+import type { TokenProvider } from "@cove/api-client";
 import { useAuthStore } from "../stores/auth.js";
 
 const tokenProvider: TokenProvider = {

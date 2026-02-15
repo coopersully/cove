@@ -1,6 +1,7 @@
 import type { HttpClient } from "../http.js";
 import type {
   AuthResponse,
+  CheckAvailabilityResponse,
   ForgotPasswordRequest,
   LoginRequest,
   RefreshRequest,
@@ -19,6 +20,7 @@ export interface AuthResource {
   forgotPassword(data: ForgotPasswordRequest): Promise<SuccessResponse>;
   validateResetToken(data: ValidateResetTokenRequest): Promise<ValidateResetTokenResponse>;
   resetPassword(data: ResetPasswordRequest): Promise<SuccessResponse>;
+  checkUsernameAvailability(username: string): Promise<CheckAvailabilityResponse>;
 }
 
 export function createAuthResource(http: HttpClient): AuthResource {
@@ -30,5 +32,7 @@ export function createAuthResource(http: HttpClient): AuthResource {
     validateResetToken: (data) =>
       http.post<ValidateResetTokenResponse>("/auth/validate-reset-token", data),
     resetPassword: (data) => http.post<SuccessResponse>("/auth/reset-password", data),
+    checkUsernameAvailability: (username) =>
+      http.get<CheckAvailabilityResponse>("/auth/check-availability", { username }),
   };
 }

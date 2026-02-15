@@ -1,4 +1,4 @@
-import { AppError } from "@hearth/shared";
+import { AppError } from "@cove/shared";
 import type { MiddlewareHandler } from "hono";
 import type { z } from "zod";
 

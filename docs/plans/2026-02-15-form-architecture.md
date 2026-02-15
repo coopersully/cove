@@ -4,7 +4,7 @@
 
 **Goal:** Replace ad-hoc form state management with react-hook-form + Zod schemas + shared UI components across all 10 forms.
 
-**Architecture:** Shared Zod schemas in `@hearth/shared`, shadcn Form primitives + `FormAlert` + `SubmitButton` + `ResponsiveFormModal` in `@hearth/ui`, all forms refactored to use these.
+**Architecture:** Shared Zod schemas in `@cove/shared`, shadcn Form primitives + `FormAlert` + `SubmitButton` + `ResponsiveFormModal` in `@cove/ui`, all forms refactored to use these.
 
 **Tech Stack:** react-hook-form, @hookform/resolvers, zod (v4, already installed), shadcn/ui Form component
 
@@ -20,19 +20,19 @@
 **Step 1: Install react-hook-form and @hookform/resolvers**
 
 ```bash
-cd /Users/cooper/conductor/workspaces/hearth/sun-valley
-pnpm --filter @hearth/ui add react-hook-form @hookform/resolvers
-pnpm --filter @hearth/web add react-hook-form @hookform/resolvers
+cd /Users/cooper/conductor/workspaces/cove/sun-valley
+pnpm --filter @cove/ui add react-hook-form @hookform/resolvers
+pnpm --filter @cove/web add react-hook-form @hookform/resolvers
 ```
 
-Note: `@hearth/ui` needs these as dependencies since `ResponsiveFormModal` calls `useForm` internally. `apps/web` also needs them for auth forms which call `useForm` directly. `zod` is already available transitively via `@hearth/shared`.
+Note: `@cove/ui` needs these as dependencies since `ResponsiveFormModal` calls `useForm` internally. `apps/web` also needs them for auth forms which call `useForm` directly. `zod` is already available transitively via `@cove/shared`.
 
 **Step 2: Verify Zod 4 compatibility**
 
 The project uses Zod 4 (`^4.3.6`). Test that `zodResolver` works by checking the installed version of `@hookform/resolvers`. If it uses `@hookform/resolvers/zod`, verify it exports a working resolver. If Zod 4 requires a different import path (e.g., `@hookform/resolvers/zod4`), adjust accordingly.
 
 ```bash
-cd /Users/cooper/conductor/workspaces/hearth/sun-valley
+cd /Users/cooper/conductor/workspaces/cove/sun-valley
 node -e "const { zodResolver } = await import('@hookform/resolvers/zod'); console.log('zodResolver:', typeof zodResolver);"
 ```
 
@@ -49,7 +49,7 @@ git commit -m "chore: add react-hook-form and @hookform/resolvers dependencies"
 
 ---
 
-### Task 2: Create form schemas in `@hearth/shared`
+### Task 2: Create form schemas in `@cove/shared`
 
 **Files:**
 - Create: `packages/shared/src/schemas.ts`
@@ -156,8 +156,8 @@ export * from "./schemas.js";
 **Step 3: Verify types compile**
 
 ```bash
-cd /Users/cooper/conductor/workspaces/hearth/sun-valley
-pnpm --filter @hearth/shared run check
+cd /Users/cooper/conductor/workspaces/cove/sun-valley
+pnpm --filter @cove/shared run check
 ```
 
 Expected: No errors.
@@ -171,7 +171,7 @@ git commit -m "feat(shared): add composed form schemas for all forms"
 
 ---
 
-### Task 3: Create shadcn Form primitives in `@hearth/ui`
+### Task 3: Create shadcn Form primitives in `@cove/ui`
 
 **Files:**
 - Create: `packages/ui/src/components/ui/form.tsx`
@@ -344,7 +344,7 @@ export {
 **Step 2: Verify it compiles**
 
 ```bash
-pnpm --filter @hearth/ui run check
+pnpm --filter @cove/ui run check
 ```
 
 If there are type issues with `<slot>`, switch to Radix `Slot`:
@@ -580,7 +580,7 @@ export function ResponsiveFormModal<T extends FieldValues>({
 
 ---
 
-### Task 7: Update `@hearth/ui` barrel exports
+### Task 7: Update `@cove/ui` barrel exports
 
 **Files:**
 - Modify: `packages/ui/src/index.ts`
@@ -608,7 +608,7 @@ export { ResponsiveFormModal } from "./components/ui/responsive-form-modal.js";
 **Step 2: Verify full build**
 
 ```bash
-pnpm --filter @hearth/ui run check
+pnpm --filter @cove/ui run check
 ```
 
 **Step 3: Commit all new UI components**
@@ -630,8 +630,8 @@ git commit -m "feat(ui): add Form primitives, FormAlert, SubmitButton, and Respo
 Replace the entire file with:
 
 ```typescript
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal, Tooltip, TooltipContent, TooltipTrigger } from "@hearth/ui";
-import { createServerSchema } from "@hearth/shared";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal, Tooltip, TooltipContent, TooltipTrigger } from "@cove/ui";
+import { createServerSchema } from "@cove/shared";
 import { Plus } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -717,7 +717,7 @@ export function CreateServerDialog(): JSX.Element {
 **Step 2: Verify it compiles**
 
 ```bash
-pnpm --filter @hearth/web run check
+pnpm --filter @cove/web run check
 ```
 
 ---
@@ -730,8 +730,8 @@ pnpm --filter @hearth/web run check
 **Step 1: Rewrite using ResponsiveFormModal**
 
 ```typescript
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
-import { joinServerSchema } from "@hearth/shared";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@cove/ui";
+import { joinServerSchema } from "@cove/shared";
 import type { JSX } from "react";
 import { useNavigate } from "react-router";
 import { useJoinServer } from "../../hooks/use-servers.js";
@@ -791,8 +791,8 @@ export function JoinServerDialog({ open, onOpenChange }: JoinServerDialogProps):
 **Step 1: Rewrite using ResponsiveFormModal**
 
 ```typescript
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
-import { editProfileSchema } from "@hearth/shared";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@cove/ui";
+import { editProfileSchema } from "@cove/shared";
 import type { JSX } from "react";
 import { useUpdateProfile } from "../../hooks/use-users.js";
 import { useAuthStore } from "../../stores/auth.js";
@@ -884,8 +884,8 @@ import {
   FormMessage,
   Input,
   ResponsiveFormModal,
-} from "@hearth/ui";
-import { createChannelSchema } from "@hearth/shared";
+} from "@cove/ui";
+import { createChannelSchema } from "@cove/shared";
 import { Plus } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -960,9 +960,9 @@ export function CreateChannelDialog({ serverId }: CreateChannelDialogProps): JSX
 **Step 1: Rewrite using ResponsiveFormModal**
 
 ```typescript
-import type { Channel } from "@hearth/api-client";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
-import { editChannelSchema } from "@hearth/shared";
+import type { Channel } from "@cove/api-client";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@cove/ui";
+import { editChannelSchema } from "@cove/shared";
 import type { JSX } from "react";
 import { useUpdateChannel } from "../../hooks/use-channels.js";
 
@@ -1048,9 +1048,9 @@ export function EditChannelDialog({
 **Step 1: Rewrite using ResponsiveFormModal**
 
 ```typescript
-import type { Server } from "@hearth/api-client";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@hearth/ui";
-import { serverSettingsSchema } from "@hearth/shared";
+import type { Server } from "@cove/api-client";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Input, ResponsiveFormModal } from "@cove/ui";
+import { serverSettingsSchema } from "@cove/shared";
 import type { JSX } from "react";
 import { useUpdateServer } from "../../hooks/use-servers.js";
 
@@ -1139,7 +1139,7 @@ git commit -m "refactor: migrate all dialog forms to ResponsiveFormModal"
 **Step 1: Rewrite using react-hook-form + shared components**
 
 ```typescript
-import { ApiError } from "@hearth/api-client";
+import { ApiError } from "@cove/api-client";
 import {
   Button,
   Card,
@@ -1158,8 +1158,8 @@ import {
   Input,
   PasswordInput,
   SubmitButton,
-} from "@hearth/ui";
-import { loginSchema } from "@hearth/shared";
+} from "@cove/ui";
+import { loginSchema } from "@cove/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -1196,7 +1196,7 @@ export function LoginForm(): JSX.Element {
     <Card className="w-full max-w-sm animate-fade-up-in">
       <CardHeader>
         <CardTitle className="font-display text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your Hearth account</CardDescription>
+        <CardDescription>Sign in to your Cove account</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -1286,7 +1286,7 @@ export function LoginForm(): JSX.Element {
 **Step 1: Rewrite using react-hook-form + shared components**
 
 ```typescript
-import { ApiError } from "@hearth/api-client";
+import { ApiError } from "@cove/api-client";
 import {
   Button,
   Card,
@@ -1305,8 +1305,8 @@ import {
   Input,
   PasswordInput,
   SubmitButton,
-} from "@hearth/ui";
-import { registerSchema } from "@hearth/shared";
+} from "@cove/ui";
+import { registerSchema } from "@cove/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -1348,7 +1348,7 @@ export function RegisterForm(): JSX.Element {
     <Card className="w-full max-w-sm animate-fade-up-in">
       <CardHeader>
         <CardTitle className="font-display text-2xl">Create an account</CardTitle>
-        <CardDescription>Join Hearth and start the conversation</CardDescription>
+        <CardDescription>Join Cove and start the conversation</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -1458,7 +1458,7 @@ export function RegisterForm(): JSX.Element {
 **Step 1: Rewrite using react-hook-form + shared components**
 
 ```typescript
-import { ApiError } from "@hearth/api-client";
+import { ApiError } from "@cove/api-client";
 import {
   Button,
   Card,
@@ -1476,8 +1476,8 @@ import {
   FormMessage,
   Input,
   SubmitButton,
-} from "@hearth/ui";
-import { forgotPasswordSchema } from "@hearth/shared";
+} from "@cove/ui";
+import { forgotPasswordSchema } from "@cove/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle, Mail } from "lucide-react";
 import type { JSX } from "react";
@@ -1605,7 +1605,7 @@ export function ForgotPasswordForm(): JSX.Element {
 **Step 1: Rewrite using react-hook-form + shared components**
 
 ```typescript
-import { ApiError } from "@hearth/api-client";
+import { ApiError } from "@cove/api-client";
 import {
   Button,
   Card,
@@ -1623,8 +1623,8 @@ import {
   FormMessage,
   PasswordInput,
   SubmitButton,
-} from "@hearth/ui";
-import { resetPasswordSchema } from "@hearth/shared";
+} from "@cove/ui";
+import { resetPasswordSchema } from "@cove/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, CheckCircle, KeyRound } from "lucide-react";
 import type { JSX } from "react";

@@ -1,4 +1,4 @@
-import type { Channel } from "@hearth/api-client";
+import type { Channel } from "@cove/api-client";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -6,7 +6,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
   cn,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { Hash, Pencil, Trash2, Volume2 } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -31,8 +31,8 @@ export function ChannelItem({ channel, isOwner }: ChannelItemProps): JSX.Element
       className={cn(
         "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
         isActive
-          ? "bg-secondary font-medium text-foreground"
-          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+          ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+          : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
       )}
     >
       {channel.type === "text" ? (

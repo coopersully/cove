@@ -3,7 +3,7 @@ import postgres from "postgres";
 
 import * as schema from "./schema/index.js";
 
-const DEFAULT_DB_URL = "postgresql://hearth:hearth@localhost:5432/hearth";
+const DEFAULT_DB_URL = "postgresql://cove:cove@localhost:5433/cove";
 
 const connectionString = process.env.DATABASE_URL ?? DEFAULT_DB_URL;
 

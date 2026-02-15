@@ -7,7 +7,7 @@ import {
   ScrollArea,
   Separator,
   cn,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { ChevronDown, LogOut, Settings, Trash2 } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -47,13 +47,13 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
     .sort((a, b) => a.position - b.position);
 
   return (
-    <div className="flex w-60 flex-col bg-secondary">
+    <div className="flex w-60 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Server header with dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>
           <button
             type="button"
-            className="flex h-12 w-full items-center justify-between border-border border-b px-4 transition-colors hover:bg-secondary/30"
+            className="flex h-12 w-full items-center justify-between border-sidebar-border border-b px-4 transition-colors hover:bg-sidebar-accent/50"
           >
             <h2 className="truncate font-display font-semibold text-foreground text-sm">
               {server?.name ?? "Loading..."}

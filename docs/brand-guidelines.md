@@ -1,4 +1,4 @@
-# Hearth — Brand Guidelines
+# Cove — Brand Guidelines
 
 > A community platform should feel like a place you want to be, not a product you're being sold.
 
@@ -6,9 +6,9 @@
 
 ## The idea
 
-Hearth is an open-source, community-focused platform for internet-native people. It exists because the spaces we gather in online have drifted toward noise, engagement metrics, and visual clutter — and away from the people in them.
+Cove is an open-source, community-focused platform for internet-native people. It exists because the spaces we gather in online have drifted toward noise, engagement metrics, and visual clutter — and away from the people in them.
 
-Hearth should feel like a well-lit room with good chairs. Comfortable enough to stay in for hours. Quiet enough to think. Alive enough to not feel sterile.
+Cove should feel like a well-lit room with good chairs. Comfortable enough to stay in for hours. Quiet enough to think. Alive enough to not feel sterile.
 
 The brand reflects this. It borrows the trust and restraint of editorial design — think journals, independent magazines, public radio — but leaves room for the people using it to be the personality.
 
@@ -19,13 +19,13 @@ The brand reflects this. It borrows the trust and restraint of editorial design 
 These guide every design, copy, and product decision.
 
 **1. The platform is the background.**
-Hearth is infrastructure, not identity. The UI, the brand, the copy — all of it should recede so the people and their conversations come forward. If someone notices the platform more than the community, something is wrong.
+Cove is infrastructure, not identity. The UI, the brand, the copy — all of it should recede so the people and their conversations come forward. If someone notices the platform more than the community, something is wrong.
 
 **2. Comfort over excitement.**
 We're not trying to hype anyone up. We're trying to make a space that feels settled and easy to be in. Warm neutrals over neon. Breathing room over density. Calm over stimulation.
 
 **3. Trust through restraint.**
-Credibility comes from what you don't do. No attention-grabbing animations. No dark patterns. No engagement tricks. Hearth earns trust the same way a good newspaper does — by being consistent, clear, and respectful of your time.
+Credibility comes from what you don't do. No attention-grabbing animations. No dark patterns. No engagement tricks. Cove earns trust the same way a good newspaper does — by being consistent, clear, and respectful of your time.
 
 **4. Simple until proven otherwise.**
 Every feature, every UI element, every word should justify its existence. If it doesn't serve the person using it, it doesn't ship. Modularity means people opt into complexity — they're never dropped into it.
@@ -37,7 +37,7 @@ The humans in the room are more interesting than the room itself. Design and cop
 
 ## Voice & tone
 
-Hearth's voice is the voice of a thoughtful friend who happens to be good at design. Not a brand. Not a mascot. Not a corporation.
+Cove's voice is the voice of a thoughtful friend who happens to be good at design. Not a brand. Not a mascot. Not a corporation.
 
 ### We sound like
 
@@ -65,7 +65,7 @@ Hearth's voice is the voice of a thoughtful friend who happens to be good at des
 ### Capitalization & punctuation
 
 - Sentence case everywhere. Not Title Case. Not ALL CAPS.
-- Hearth is always capitalized (it's a name).
+- Cove is always capitalized (it's a name).
 - No periods on headlines or buttons.
 - Oxford comma, always.
 - Em dashes are fine — we like them.
@@ -76,7 +76,7 @@ Hearth's voice is the voice of a thoughtful friend who happens to be good at des
 
 ### Philosophy
 
-Hearth's visual language borrows from editorial and print design traditions. Clean grids. Generous whitespace. Typography that does the heavy lifting. The goal is a UI that feels like a well-typeset page — structured but not rigid, minimal but not cold.
+Cove's visual language borrows from editorial and print design traditions. Clean grids. Generous whitespace. Typography that does the heavy lifting. The goal is a UI that feels like a well-typeset page — structured but not rigid, minimal but not cold.
 
 ### Color
 
@@ -88,7 +88,7 @@ Surface          #F2F0EB    slightly darker, for cards and panels
 Border           #E2DFD8    soft, warm gray for separation
 Text primary     #1C1917    near-black with warmth, not pure #000
 Text secondary   #78716C    muted warm gray for supporting text
-Accent           #B45309    amber/hearth-glow, used sparingly
+Accent           #B45309    amber/cove-glow, used sparingly
 Accent hover     #92400E    deeper amber for interactive states
 Danger           #B91C1C    muted red, only for destructive actions
 Success          #15803D    muted green, only for confirmations
@@ -158,7 +158,7 @@ Moderate:         8px for cards and containers
 None:             0px for full-width sections and large layout blocks
 ```
 
-Avoid pill shapes (full-radius buttons) and heavy rounding. Hearth should feel grounded and editorial, not bubbly.
+Avoid pill shapes (full-radius buttons) and heavy rounding. Cove should feel grounded and editorial, not bubbly.
 
 ---
 
@@ -169,13 +169,13 @@ Avoid pill shapes (full-radius buttons) and heavy rounding. Hearth should feel g
 Guiding constraints for the eventual logo:
 
 - Should work as a small favicon and a large header mark.
-- Wordmark preferred over an abstract symbol. The name "Hearth" carries meaning — let it be read.
+- Wordmark preferred over an abstract symbol. The name "Cove" carries meaning — let it be read.
 - No gradients, no shadows, no effects. Flat, single-color, works in monochrome.
 - Should feel like it belongs on the masthead of a journal, not on a tech startup's pitch deck.
 
 ---
 
-## Writing for Hearth
+## Writing for Cove
 
 ### UI copy
 
@@ -199,11 +199,11 @@ Guiding constraints for the eventual logo:
 
 ---
 
-## What Hearth is not
+## What Cove is not
 
 Defining edges helps as much as defining the center.
 
-- **Not a brand with personality.** Hearth's personality is the absence of a performed personality. The personality comes from the people.
+- **Not a brand with personality.** Cove's personality is the absence of a performed personality. The personality comes from the people.
 - **Not minimal for aesthetics.** We're minimal because every unnecessary element is a small tax on attention. Simplicity is functional.
 - **Not neutral on values.** We are opinionated about respecting people's time, attention, and autonomy. That's a position, and we hold it.
 - **Not trying to be cool.** Cool alienates. Comfortable includes.
@@ -212,7 +212,7 @@ Defining edges helps as much as defining the center.
 
 ## Contributing to the brand
 
-If you're contributing to Hearth — code, design, docs, or community — these guidelines are here to help, not restrict. The goal is coherence, not conformity.
+If you're contributing to Cove — code, design, docs, or community — these guidelines are here to help, not restrict. The goal is coherence, not conformity.
 
 When making a decision the guidelines don't cover, ask: *Does this make the space more comfortable and trustworthy for the person using it?* If yes, you're probably fine.
 

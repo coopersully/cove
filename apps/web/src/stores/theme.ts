@@ -7,7 +7,7 @@ interface ThemeState {
   setTheme: (theme: Theme) => void;
 }
 
-const THEME_KEY = "hearth:theme";
+const THEME_KEY = "cove:theme";
 
 function applyTheme(theme: Theme): void {
   const root = document.documentElement;

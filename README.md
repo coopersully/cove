@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">Hearth</h1>
+  <h1 align="center">Cove</h1>
   <p align="center">A warm, open-source community platform — built for connection, not extraction.</p>
 </p>
 
@@ -15,7 +15,7 @@
 
 ## Overview
 
-Hearth is a Discord-like community platform that puts people first. It's designed from the ground up to be open-source, self-hostable, and extensible — offering real-time messaging, voice/video chat, rich media sharing, and community management tools.
+Cove is a Discord-like community platform that puts people first. It's designed from the ground up to be open-source, self-hostable, and extensible — offering real-time messaging, voice/video chat, rich media sharing, and community management tools.
 
 ### Vision
 
@@ -26,10 +26,10 @@ Hearth is a Discord-like community platform that puts people first. It's designe
 
 ## Architecture
 
-Hearth is a **pnpm monorepo** powered by **Turborepo**, structured as:
+Cove is a **pnpm monorepo** powered by **Turborepo**, structured as:
 
 ```
-hearth/
+cove/
 ├── apps/
 │   ├── api/          # REST API (Hono on Node.js)
 │   ├── ws/           # WebSocket gateway (custom protocol)
@@ -76,8 +76,8 @@ hearth/
 
 ```bash
 # Clone the repository
-git clone https://github.com/coopersully/hearth.git
-cd hearth
+git clone https://github.com/coopersully/cove.git
+cd cove
 
 # Install dependencies
 pnpm install
@@ -115,6 +115,6 @@ Please also review our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-Hearth is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+Cove is licensed under the [GNU Affero General Public License v3.0](LICENSE).
 
-This means you can freely use, modify, and distribute Hearth, but any modifications to the server-side code must also be made available under the same license — even when running as a network service.
+This means you can freely use, modify, and distribute Cove, but any modifications to the server-side code must also be made available under the same license — even when running as a network service.

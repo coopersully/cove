@@ -1,4 +1,4 @@
-export const APP_NAME = "Hearth" as const;
+export const APP_NAME = "Cove" as const;
 
 export const MAX_USERNAME_LENGTH = 32 as const;
 export const MIN_USERNAME_LENGTH = 3 as const;

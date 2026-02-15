@@ -1,6 +1,6 @@
-# @hearth/mobile
+# @cove/mobile
 
-Hearth mobile app built with React Native 0.83 and Expo SDK 54.
+Cove mobile app built with React Native 0.83 and Expo SDK 54.
 
 ## Setup
 
@@ -23,6 +23,6 @@ This workspace requires the full Expo toolchain. To initialize:
 ## Shared Code
 
 This app shares types, validators, API client, and gateway protocol definitions
-with the web app via `@hearth/shared`, `@hearth/api-client`, and `@hearth/gateway`.
+with the web app via `@cove/shared`, `@cove/api-client`, and `@cove/gateway`.
 UI components are largely platform-specific due to differing navigation patterns,
 gesture handling, and notification UX.

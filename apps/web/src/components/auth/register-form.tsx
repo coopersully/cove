@@ -1,5 +1,5 @@
-import { ApiError, NetworkError } from "@hearth/api-client";
-import { registerSchema } from "@hearth/shared";
+import { ApiError, NetworkError } from "@cove/api-client";
+import { registerSchema, usernameSchema } from "@cove/shared";
 import {
   Card,
   CardContent,
@@ -17,13 +17,14 @@ import {
   Input,
   PasswordInput,
   SubmitButton,
-} from "@hearth/ui";
+} from "@cove/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { JSX } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import type { z } from "zod";
+import { api } from "../../lib/api.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { PasswordRequirements } from "./password-requirements.js";
 
@@ -61,7 +62,7 @@ export function RegisterForm(): JSX.Element {
     <Card className="w-full max-w-sm animate-fade-up-in">
       <CardHeader>
         <CardTitle className="font-display text-2xl">Create an account</CardTitle>
-        <CardDescription>Join Hearth and start the conversation</CardDescription>
+        <CardDescription>Join Cove and start the conversation</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -75,7 +76,28 @@ export function RegisterForm(): JSX.Element {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="johndoe" autoFocus={true} {...field} />
+                      <Input
+                        placeholder="johndoe"
+                        autoFocus={true}
+                        {...field}
+                        onBlur={async (e) => {
+                          field.onBlur();
+                          const value = e.target.value;
+                          if (!usernameSchema.safeParse(value).success) return;
+                          try {
+                            const { available } =
+                              await api.auth.checkUsernameAvailability(value);
+                            if (!available) {
+                              form.setError("username", {
+                                type: "manual",
+                                message: "Username already taken",
+                              });
+                            }
+                          } catch {
+                            // Availability check is advisory — don't block on errors
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

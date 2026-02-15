@@ -1,5 +1,5 @@
 {
-  "name": "@hearth/web",
+  "name": "@cove/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,9 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@hearth/api-client": "workspace:*",
-    "@hearth/shared": "workspace:*",
-    "@hearth/ui": "workspace:*",
+    "@cove/api-client": "workspace:*",
+    "@cove/shared": "workspace:*",
+    "@cove/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.90.20",
     "class-variance-authority": "^0.7.1",
@@ -32,7 +32,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@hearth/config": "workspace:*",
+    "@cove/config": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
