@@ -1,14 +1,5 @@
 import type { Channel } from "@hearth/api-client";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@hearth/ui";
+import { ResponsiveConfirmModal } from "@hearth/ui";
 import type { JSX } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDeleteChannel } from "../../hooks/use-channels.js";
@@ -28,34 +19,36 @@ export function DeleteChannelDialog({
   const navigate = useNavigate();
   const { channelId } = useParams();
 
-  function handleDelete() {
-    deleteChannel.mutate(channel.id, {
-      onSuccess: () => {
-        onOpenChange(false);
-        if (channelId === channel.id) {
-          void navigate(`/servers/${channel.serverId}`);
-        }
-      },
+  async function handleConfirm() {
+    await new Promise<void>((resolve, reject) => {
+      deleteChannel.mutate(channel.id, {
+        onSuccess: () => {
+          onOpenChange(false);
+          if (channelId === channel.id) {
+            void navigate(`/servers/${channel.serverId}`);
+          }
+          resolve();
+        },
+        onError: reject,
+      });
     });
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Channel</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete <strong>#{channel.name}</strong> and all of its messages.
-            This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={handleDelete}>
-            Delete Channel
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ResponsiveConfirmModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Delete Channel"
+      description={
+        <>
+          This will permanently delete <strong>#{channel.name}</strong> and all of its messages.
+          This action cannot be undone.
+        </>
+      }
+      onConfirm={handleConfirm}
+      confirmLabel="Delete Channel"
+      pendingLabel="Deleting..."
+      variant="destructive"
+    />
   );
 }

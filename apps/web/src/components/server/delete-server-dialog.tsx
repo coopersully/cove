@@ -1,16 +1,5 @@
 import type { Server } from "@hearth/api-client";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Button,
-  Input,
-  Label,
-} from "@hearth/ui";
+import { Input, Label, ResponsiveConfirmModal } from "@hearth/ui";
 import type { JSX } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -33,59 +22,58 @@ export function DeleteServerDialog({
 
   const canDelete = confirmation === server.name;
 
-  function handleDelete() {
+  function handleOpenChange(v: boolean) {
+    onOpenChange(v);
+    if (!v) {
+      setConfirmation("");
+    }
+  }
+
+  async function handleConfirm() {
     if (!canDelete) {
       return;
     }
-    deleteServer.mutate(server.id, {
-      onSuccess: () => {
-        onOpenChange(false);
-        setConfirmation("");
-        void navigate("/servers");
-      },
+    await new Promise<void>((resolve, reject) => {
+      deleteServer.mutate(server.id, {
+        onSuccess: () => {
+          handleOpenChange(false);
+          setConfirmation("");
+          void navigate("/servers");
+          resolve();
+        },
+        onError: reject,
+      });
     });
   }
 
   return (
-    <AlertDialog
+    <ResponsiveConfirmModal
       open={open}
-      onOpenChange={(v) => {
-        onOpenChange(v);
-        if (!v) {
-          setConfirmation("");
-        }
-      }}
+      onOpenChange={handleOpenChange}
+      title="Delete Server"
+      description={
+        <>
+          This will permanently delete <strong>{server.name}</strong> and all of its channels and
+          messages. This action cannot be undone.
+        </>
+      }
+      onConfirm={handleConfirm}
+      confirmLabel="Delete Server"
+      pendingLabel="Deleting..."
+      variant="destructive"
+      disabled={!canDelete}
     >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Server</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete <strong>{server.name}</strong> and all of its channels and
-            messages. This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-server-name">
-            Type <strong>{server.name}</strong> to confirm
-          </Label>
-          <Input
-            id="confirm-server-name"
-            value={confirmation}
-            onChange={(e) => setConfirmation(e.target.value)}
-            placeholder={server.name}
-          />
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={!canDelete || deleteServer.isPending}
-          >
-            {deleteServer.isPending ? "Deleting..." : "Delete Server"}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <div className="space-y-2">
+        <Label htmlFor="confirm-server-name">
+          Type <strong>{server.name}</strong> to confirm
+        </Label>
+        <Input
+          id="confirm-server-name"
+          value={confirmation}
+          onChange={(e) => setConfirmation(e.target.value)}
+          placeholder={server.name}
+        />
+      </div>
+    </ResponsiveConfirmModal>
   );
 }

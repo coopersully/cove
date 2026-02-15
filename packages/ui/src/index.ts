@@ -125,5 +125,6 @@ export {
   ResponsiveModalTitle,
   ResponsiveModalTrigger,
 } from "./components/ui/responsive-modal.js";
+export { ResponsiveConfirmModal } from "./components/ui/responsive-confirm-modal.js";
 export { ResponsiveFormModal } from "./components/ui/responsive-form-modal.js";
 export { SubmitButton } from "./components/ui/submit-button.js";

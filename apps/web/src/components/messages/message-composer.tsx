@@ -1,5 +1,5 @@
-import { Button, Textarea, cn } from "@hearth/ui";
-import { SendHorizontal } from "lucide-react";
+import { Button, Textarea } from "@hearth/ui";
+import { ArrowUp } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useSendMessage } from "../../hooks/use-messages.js";
@@ -49,7 +49,7 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
 
   return (
     <div className="relative z-10 border-border border-t px-4 py-3">
-      <div className="flex items-end gap-2 rounded-xl bg-secondary px-3 py-2 ring-1 ring-transparent transition-all focus-within:ring-primary/30">
+      <div className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 ring-1 ring-transparent transition-all focus-within:ring-primary/30">
         <Textarea
           ref={textareaRef}
           value={content}
@@ -65,17 +65,11 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
         />
         <Button
           size="icon-sm"
-          variant="ghost"
           onClick={handleSend}
           disabled={!hasContent || sendMessage.isPending}
-          className={cn(
-            "shrink-0 rounded-full transition-all",
-            hasContent
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "text-muted-foreground hover:text-foreground",
-          )}
+          className="shrink-0 self-start rounded-full"
         >
-          <SendHorizontal className="size-4" />
+          <ArrowUp className="size-4" />
         </Button>
       </div>
     </div>

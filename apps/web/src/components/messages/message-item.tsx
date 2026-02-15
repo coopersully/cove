@@ -1,18 +1,5 @@
 import type { Message } from "@hearth/api-client";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Textarea,
-} from "@hearth/ui";
+import { Avatar, AvatarFallback, AvatarImage, ResponsiveConfirmModal, Textarea } from "@hearth/ui";
 import { Pencil, Trash2 } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
@@ -101,9 +88,15 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
     }
   }
 
-  function confirmDelete() {
-    deleteMessage.mutate(message.id, {
-      onSuccess: () => setDeleteOpen(false),
+  async function confirmDelete() {
+    await new Promise<void>((resolve, reject) => {
+      deleteMessage.mutate(message.id, {
+        onSuccess: () => {
+          setDeleteOpen(false);
+          resolve();
+        },
+        onError: reject,
+      });
     });
   }
 
@@ -129,22 +122,16 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
   );
 
   const deleteDialog = (
-    <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Message</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete this message? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={confirmDelete}>
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ResponsiveConfirmModal
+      open={deleteOpen}
+      onOpenChange={setDeleteOpen}
+      title="Delete Message"
+      description="Are you sure you want to delete this message? This action cannot be undone."
+      onConfirm={confirmDelete}
+      confirmLabel="Delete"
+      pendingLabel="Deleting..."
+      variant="destructive"
+    />
   );
 
   const contentOrEditor = editing ? (
