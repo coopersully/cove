@@ -1,23 +1,12 @@
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@cove/ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@cove/ui";
 import type { JSX, ReactNode } from "react";
 import { useUserProfile } from "../../hooks/use-user-profile.js";
-import { getUserAvatarUrl } from "../../lib/avatar.js";
 import { MarkdownContent } from "../messages/markdown-content.js";
+import { UserAvatar } from "../user-avatar.js";
 
 interface ProfileCardProps {
   readonly userId: string;
   readonly children: ReactNode;
-}
-
-function getInitials(name: string): string {
-  return name.slice(0, 2).toUpperCase();
 }
 
 function formatJoinDate(iso: string): string {
@@ -49,15 +38,15 @@ export function ProfileCard({ userId, children }: ProfileCardProps): JSX.Element
           <div className="flex flex-col">
             {/* Header with avatar */}
             <div className="flex items-start gap-3 p-4 pb-3">
-              <Avatar className="size-16 shrink-0">
-                <AvatarImage
-                  src={user.avatarUrl ?? getUserAvatarUrl(String(user.id))}
-                  alt={user.displayName ?? user.username}
-                />
-                <AvatarFallback className="bg-primary/20 text-primary text-lg">
-                  {getInitials(user.displayName ?? user.username)}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                user={{
+                  id: String(user.id),
+                  avatarUrl: user.avatarUrl,
+                  displayName: user.displayName,
+                  username: user.username,
+                }}
+                size="xl"
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="truncate font-display font-semibold text-foreground">

@@ -1,13 +1,13 @@
 import type { Message } from "@cove/api-client";
-import { Avatar, AvatarFallback, AvatarImage, ResponsiveConfirmModal, Textarea } from "@cove/ui";
+import { ResponsiveConfirmModal, Textarea } from "@cove/ui";
 import { Pencil, Trash2 } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useDeleteMessage, useUpdateMessage } from "../../hooks/use-messages.js";
-import { getUserAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { ProfileCard } from "../layout/profile-card.js";
+import { UserAvatar } from "../user-avatar.js";
 import { MarkdownContent } from "./markdown-content.js";
 
 interface MessageItemProps {
@@ -38,10 +38,6 @@ function formatTimestamp(iso: string): string {
     day: "numeric",
     year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   });
-}
-
-function getInitials(name: string): string {
-  return name.slice(0, 2).toUpperCase();
 }
 
 export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Element {
@@ -185,15 +181,15 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
       {actionBar}
       <ProfileCard userId={message.author.id}>
         <button type="button" className="mt-0.5 shrink-0 cursor-pointer">
-          <Avatar className="size-10">
-            <AvatarImage
-              src={message.author.avatarUrl ?? getUserAvatarUrl(message.author.id)}
-              alt={displayName}
-            />
-            <AvatarFallback className="bg-primary/20 text-primary text-xs">
-              {getInitials(displayName)}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            user={{
+              id: message.author.id,
+              avatarUrl: message.author.avatarUrl,
+              displayName: message.author.displayName,
+              username: message.author.username,
+            }}
+            size="lg"
+          />
         </button>
       </ProfileCard>
       <div className="min-w-0 flex-1">

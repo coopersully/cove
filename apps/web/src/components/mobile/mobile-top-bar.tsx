@@ -13,11 +13,12 @@ import {
 import { ChevronDown, Hash, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
-import { getServerAvatarUrl, getUserAvatarUrl } from "../../lib/avatar.js";
+import { getServerAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 import { EditProfileDialog } from "../layout/edit-profile-dialog.js";
 import { Logo } from "../logo.js";
+import { UserAvatar } from "../user-avatar.js";
 
 interface MobileTopBarProps {
   readonly server: Server | undefined;
@@ -88,7 +89,6 @@ function MobileUserButton(): JSX.Element {
   const [profileOpen, setProfileOpen] = useState(false);
 
   const displayName = user?.displayName ?? user?.username ?? "User";
-  const initials = displayName.slice(0, 2).toUpperCase();
 
   const nextTheme = theme === "dark" ? "light" : theme === "light" ? "system" : "dark";
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
@@ -103,15 +103,15 @@ function MobileUserButton(): JSX.Element {
             className="flex shrink-0 items-center justify-center rounded-full p-1 transition-colors active:bg-secondary/50"
             aria-label="User menu"
           >
-            <Avatar className="size-7">
-              <AvatarImage
-                src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")}
-                alt={displayName}
-              />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              user={{
+                id: user?.id ?? "",
+                avatarUrl: user?.avatarUrl,
+                displayName: user?.displayName,
+                username: user?.username ?? "",
+              }}
+              size="sm"
+            />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

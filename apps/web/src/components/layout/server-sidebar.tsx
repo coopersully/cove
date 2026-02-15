@@ -1,7 +1,4 @@
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -18,9 +15,9 @@ import { ArrowDownToLine, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-rea
 import type { JSX } from "react";
 import { useState } from "react";
 import { useServers } from "../../hooks/use-servers.js";
-import { getUserAvatarUrl } from "../../lib/avatar.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
+import { UserAvatar } from "../user-avatar.js";
 import { CreateServerDialog } from "./create-server-dialog.js";
 import { EditProfileDialog } from "./edit-profile-dialog.js";
 import { JoinServerDialog } from "./join-server-dialog.js";
@@ -73,7 +70,6 @@ function UserButton(): JSX.Element {
   const [profileOpen, setProfileOpen] = useState(false);
 
   const displayName = user?.displayName ?? user?.username ?? "User";
-  const initials = displayName.slice(0, 2).toUpperCase();
 
   const nextTheme = theme === "dark" ? "light" : theme === "light" ? "system" : "dark";
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
@@ -83,20 +79,16 @@ function UserButton(): JSX.Element {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>
-          <button
-            type="button"
-            className="flex size-12 items-center justify-center rounded-full bg-background transition-colors"
-            aria-label="User menu"
-          >
-            <Avatar className="size-10">
-              <AvatarImage
-                src={user?.avatarUrl ?? getUserAvatarUrl(user?.id ?? "")}
-                alt={displayName}
-              />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+          <button type="button" className="transition-colors" aria-label="User menu">
+            <UserAvatar
+              user={{
+                id: user?.id ?? "",
+                avatarUrl: user?.avatarUrl,
+                displayName: user?.displayName,
+                username: user?.username ?? "",
+              }}
+              size="lg"
+            />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="right" align="end" className="w-56">

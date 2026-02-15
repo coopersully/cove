@@ -34,10 +34,7 @@ export function UserAvatar({ user, size = "default", className }: UserAvatarProp
       )}
     >
       <Avatar className={config.avatar}>
-        <AvatarImage
-          src={user.avatarUrl ?? getUserAvatarUrl(user.id)}
-          alt={displayName}
-        />
+        <AvatarImage src={user.avatarUrl ?? getUserAvatarUrl(user.id)} alt={displayName} />
         <AvatarFallback className={cn("bg-primary/10 text-primary", config.text)}>
           {initials}
         </AvatarFallback>
