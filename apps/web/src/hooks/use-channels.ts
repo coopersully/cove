@@ -6,6 +6,7 @@ export function useChannels(serverId: string) {
   return useQuery({
     queryKey: ["servers", serverId, "channels"],
     queryFn: () => api.channels.list(serverId),
+    enabled: !!serverId,
   });
 }
 

@@ -86,7 +86,9 @@ export function ResponsiveFormModal<T extends FieldValues>({
       <ResponsiveModalContent>
         <ResponsiveModalHeader>
           <ResponsiveModalTitle>{title}</ResponsiveModalTitle>
-          {description && <ResponsiveModalDescription>{description}</ResponsiveModalDescription>}
+          <ResponsiveModalDescription className={description ? undefined : "sr-only"}>
+            {description || title}
+          </ResponsiveModalDescription>
         </ResponsiveModalHeader>
         <Form {...form}>
           <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">

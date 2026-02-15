@@ -5,6 +5,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerTitle,
   Separator,
   cn,
@@ -34,6 +35,7 @@ export function MobileServerPicker({ open, onOpenChange }: MobileServerPickerPro
       <Drawer direction="left" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="p-0">
           <DrawerTitle className="px-4 pt-4 pb-2 text-sm">Servers</DrawerTitle>
+          <DrawerDescription className="sr-only">Select a server</DrawerDescription>
           <div className="flex flex-1 flex-col overflow-y-auto">
             {servers.map((server) => {
               const isActive = serverId === server.id;

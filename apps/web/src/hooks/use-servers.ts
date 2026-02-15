@@ -13,6 +13,7 @@ export function useServer(serverId: string) {
   return useQuery({
     queryKey: ["servers", serverId],
     queryFn: () => api.servers.get(serverId),
+    enabled: !!serverId,
   });
 }
 
