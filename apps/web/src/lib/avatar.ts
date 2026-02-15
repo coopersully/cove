@@ -5,5 +5,5 @@ export function getUserAvatarUrl(userId: string): string {
 }
 
 export function getServerAvatarUrl(serverId: string): string {
-  return `${DICEBEAR_BASE}/avataaars/svg?seed=${serverId}`;
+  return `${DICEBEAR_BASE}/rings/svg?seed=${serverId}`;
 }
