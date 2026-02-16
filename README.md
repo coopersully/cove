@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="apps/web/public/logo.svg" alt="Cove" width="48" height="48" />
   <h1 align="center">Cove</h1>
   <p align="center">A warm, open-source community platform — built for connection, not extraction.</p>
 </p>
