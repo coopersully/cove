@@ -213,10 +213,16 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
   const updatePayload = {
     id: String(updated.id),
     channelId: String(updated.channelId),
-    authorId: String(updated.authorId),
     content: updated.content,
     createdAt: updated.createdAt,
     editedAt: updated.editedAt,
+    author: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      statusEmoji: user.statusEmoji,
+    },
   };
 
   emitMessageUpdate(eventTargets, updatePayload);

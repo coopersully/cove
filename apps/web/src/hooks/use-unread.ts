@@ -24,8 +24,8 @@ export function useUnreadCount(channelId: string): { hasUnread: boolean } {
 		return { hasUnread: !!latestMessage && !lastReadId };
 	}
 
-	// Compare snowflake IDs (lexicographic comparison works for snowflakes since they're monotonic)
-	return { hasUnread: latestMessage.id > lastReadId };
+	// Compare snowflake IDs numerically
+	return { hasUnread: BigInt(latestMessage.id) > BigInt(lastReadId) };
 }
 
 export function useServerUnread(channelIds: string[]): boolean {
@@ -46,7 +46,7 @@ export function useServerUnread(channelIds: string[]): boolean {
 
 		const latestMessage = messagesData?.pages[0]?.messages[0];
 
-		if (latestMessage && (!lastReadId || latestMessage.id > lastReadId)) {
+		if (latestMessage && (!lastReadId || BigInt(latestMessage.id) > BigInt(lastReadId))) {
 			return true;
 		}
 	}

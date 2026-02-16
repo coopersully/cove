@@ -47,7 +47,9 @@ function DmConversation({
 }): JSX.Element {
   const { data } = useDm(channelId);
 
-  const recipient = data?.members.find((m) => m.id !== currentUserId);
+  const recipient = currentUserId
+    ? data?.members.find((m) => m.id !== currentUserId)
+    : undefined;
   const recipientName = recipient?.displayName ?? recipient?.username ?? "User";
   useDocumentTitle(recipientName);
 

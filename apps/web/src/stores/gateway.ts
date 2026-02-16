@@ -29,8 +29,8 @@ export const useGatewayStore = create<GatewayState>()((set, get) => ({
 			});
 		});
 
-		client.connect(url, getToken);
 		set({ client, status: "connecting" });
+		client.connect(url, getToken);
 	},
 
 	disconnect: () => {

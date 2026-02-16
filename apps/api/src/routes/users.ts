@@ -83,7 +83,7 @@ userRoutes.get("/search", async (c) => {
       statusEmoji: users.statusEmoji,
     })
     .from(users)
-    .where(ilike(users.username, `${query}%`))
+    .where(ilike(users.username, `${query.replace(/[%_\\]/g, "\\$&")}%`))
     .limit(10);
 
   return c.json({

@@ -160,7 +160,7 @@ jobs:
             turbo-build-${{ runner.os }}-
 
       - name: Push schema to test DB
-        run: cd packages/db && npx drizzle-kit push
+        run: cd packages/db && npx drizzle-kit push --force
 
       - name: Test
         run: pnpm test

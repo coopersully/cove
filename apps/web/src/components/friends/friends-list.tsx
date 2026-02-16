@@ -68,10 +68,16 @@ export function FriendsList(): JSX.Element {
 }
 
 function AllFriends(): JSX.Element {
-  const { data } = useFriends();
+  const { data, isLoading } = useFriends();
   const friends = data?.friends ?? [];
   const removeFriend = useRemoveFriend();
   const createDm = useCreateDm();
+
+  if (isLoading) {
+    return (
+      <div className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</div>
+    );
+  }
 
   if (friends.length === 0) {
     return (
@@ -129,12 +135,18 @@ function AllFriends(): JSX.Element {
 }
 
 function PendingRequests(): JSX.Element {
-  const { data: incomingData } = useIncomingRequests();
-  const { data: outgoingData } = useOutgoingRequests();
+  const { data: incomingData, isLoading: incomingLoading } = useIncomingRequests();
+  const { data: outgoingData, isLoading: outgoingLoading } = useOutgoingRequests();
   const incoming = incomingData?.requests ?? [];
   const outgoing = outgoingData?.requests ?? [];
   const acceptRequest = useAcceptFriendRequest();
   const declineRequest = useDeclineFriendRequest();
+
+  if (incomingLoading || outgoingLoading) {
+    return (
+      <div className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</div>
+    );
+  }
 
   if (incoming.length === 0 && outgoing.length === 0) {
     return (

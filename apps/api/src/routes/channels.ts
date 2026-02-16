@@ -5,7 +5,7 @@ import {
   Permissions,
   channelNameSchema,
   channelTopicSchema,
-  channelTypeSchema,
+  serverChannelTypeSchema,
   generateSnowflake,
   hasPermission,
 } from "@cove/shared";
@@ -19,7 +19,7 @@ import { validate } from "../middleware/index.js";
 
 const createChannelSchema = z.object({
   name: channelNameSchema,
-  type: channelTypeSchema,
+  type: serverChannelTypeSchema,
   topic: channelTopicSchema.optional(),
 });
 

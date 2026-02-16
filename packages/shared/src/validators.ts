@@ -95,6 +95,7 @@ export const channelTopicSchema = z
   );
 
 export const channelTypeSchema = z.enum(["text", "voice", "dm"]);
+export const serverChannelTypeSchema = z.enum(["text", "voice"]);
 
 export const messageContentSchema = z
   .string()

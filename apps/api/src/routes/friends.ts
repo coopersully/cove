@@ -1,6 +1,6 @@
 import { getUser, requireAuth } from "@cove/auth";
 import { db, friendships, users } from "@cove/db";
-import { AppError, generateSnowflake, sendFriendRequestSchema } from "@cove/shared";
+import { AppError, generateSnowflake, sendFriendRequestSchema, snowflakeSchema } from "@cove/shared";
 import { and, eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 
@@ -217,6 +217,10 @@ friendRoutes.get("/friends/requests/outgoing", async (c) => {
 friendRoutes.post("/friends/requests/:requestId/accept", async (c) => {
   const user = getUser(c);
   const requestId = c.req.param("requestId");
+  const parsed = snowflakeSchema.safeParse(requestId);
+  if (!parsed.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid request ID");
+  }
 
   const [request] = await db
     .select()
@@ -264,6 +268,10 @@ friendRoutes.post("/friends/requests/:requestId/accept", async (c) => {
 friendRoutes.delete("/friends/requests/:requestId", async (c) => {
   const user = getUser(c);
   const requestId = c.req.param("requestId");
+  const parsed = snowflakeSchema.safeParse(requestId);
+  if (!parsed.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid request ID");
+  }
 
   const [request] = await db
     .select()
@@ -292,6 +300,10 @@ friendRoutes.delete("/friends/requests/:requestId", async (c) => {
 friendRoutes.delete("/friends/:userId", async (c) => {
   const user = getUser(c);
   const targetUserId = c.req.param("userId");
+  const parsed = snowflakeSchema.safeParse(targetUserId);
+  if (!parsed.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid user ID");
+  }
   const userId = BigInt(user.id);
   const targetId = BigInt(targetUserId);
 

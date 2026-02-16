@@ -4,7 +4,7 @@ import {
   bioSchema,
   channelNameSchema,
   channelTopicSchema,
-  channelTypeSchema,
+  serverChannelTypeSchema,
   displayNameSchema,
   emailSchema,
   passwordSchema,
@@ -71,7 +71,7 @@ export const serverSettingsSchema = z.object({
 
 export const createChannelSchema = z.object({
   name: channelNameSchema,
-  type: channelTypeSchema,
+  type: serverChannelTypeSchema,
 });
 
 export const editChannelSchema = z.object({

@@ -5,6 +5,7 @@ import {
 	db,
 	dmMembers,
 	friendships,
+	inviteCodes,
 	serverMembers,
 	servers,
 	users,
@@ -107,7 +108,6 @@ export async function createTestInviteCode(
 	creatorId: string,
 	overrides: { maxUses?: number; expiresAt?: Date } = {},
 ) {
-	const { inviteCodes } = await import("@cove/db");
 	const id = generateSnowflake();
 	const code = `invite-${id.slice(-8)}`;
 
