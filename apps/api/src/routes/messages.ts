@@ -1,5 +1,5 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { channels, db, dmMembers, messages, serverMembers, servers, users } from "@cove/db";
+import { channels, db, messages, servers, users } from "@cove/db";
 import {
   AppError,
   Permissions,
@@ -14,6 +14,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { emitMessageCreate, emitMessageDelete, emitMessageUpdate, emitTypingStart } from "../lib/events.js";
+import { requireChannelMembership } from "../lib/channel-membership.js";
 import { getMemberPermissions } from "../lib/index.js";
 import { validate } from "../middleware/index.js";
 
@@ -29,51 +30,16 @@ export const messageRoutes = new Hono();
 
 messageRoutes.use(requireAuth());
 
-async function requireChannelMembership(channelId: string, userId: string) {
-  const [channel] = await db
-    .select({ serverId: channels.serverId, type: channels.type })
-    .from(channels)
-    .where(eq(channels.id, BigInt(channelId)))
-    .limit(1);
-
-  if (!channel) {
-    throw new AppError("NOT_FOUND", "Channel not found");
-  }
-
+function getEventTargets(channel: { id: string; type: string; serverId: string | null }) {
   if (channel.type === "dm") {
-    const [member] = await db
-      .select()
-      .from(dmMembers)
-      .where(
-        and(eq(dmMembers.channelId, BigInt(channelId)), eq(dmMembers.userId, BigInt(userId))),
-      )
-      .limit(1);
-
-    if (!member) {
-      throw new AppError("FORBIDDEN", "You are not a member of this DM");
-    }
-  } else {
-    if (!channel.serverId) {
-      throw new AppError("INTERNAL_ERROR", "Server channel has no server");
-    }
-
-    const [member] = await db
-      .select()
-      .from(serverMembers)
-      .where(
-        and(
-          eq(serverMembers.serverId, channel.serverId),
-          eq(serverMembers.userId, BigInt(userId)),
-        ),
-      )
-      .limit(1);
-
-    if (!member) {
-      throw new AppError("FORBIDDEN", "You are not a member of this server");
-    }
+    return { channelId: channel.id };
   }
 
-  return channel;
+  if (!channel.serverId) {
+    throw new AppError("INTERNAL_ERROR", "Server channel has no server");
+  }
+
+  return { serverId: channel.serverId };
 }
 
 // GET /channels/:channelId/messages
@@ -142,14 +108,15 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
   const body = c.get("body");
 
   const channel = await requireChannelMembership(channelId, user.id);
+  const eventTargets = getEventTargets(channel);
 
   // DM members always have send permission; server channels check roles
   if (channel.type !== "dm" && channel.serverId) {
-    const serverId = String(channel.serverId);
+    const serverId = channel.serverId;
     const [server] = await db
       .select({ ownerId: servers.ownerId })
       .from(servers)
-      .where(eq(servers.id, channel.serverId))
+      .where(eq(servers.id, BigInt(serverId)))
       .limit(1);
 
     const isOwner = server && String(server.ownerId) === user.id;
@@ -192,7 +159,7 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     },
   };
 
-  emitMessageCreate(channelId, messagePayload);
+  emitMessageCreate(eventTargets, messagePayload);
 
   return c.json({ message: messagePayload }, 201);
 });
@@ -204,7 +171,7 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
   const body = c.get("body");
 
   const [message] = await db
-    .select({ authorId: messages.authorId })
+    .select({ authorId: messages.authorId, channelId: messages.channelId })
     .from(messages)
     .where(eq(messages.id, BigInt(messageId)))
     .limit(1);
@@ -216,6 +183,22 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
   if (String(message.authorId) !== user.id) {
     throw new AppError("FORBIDDEN", "You can only edit your own messages");
   }
+
+  const [channel] = await db
+    .select({ serverId: channels.serverId, type: channels.type })
+    .from(channels)
+    .where(eq(channels.id, message.channelId))
+    .limit(1);
+
+  if (!channel) {
+    throw new AppError("NOT_FOUND", "Channel not found");
+  }
+
+  const eventTargets = getEventTargets({
+    id: String(message.channelId),
+    type: channel.type,
+    serverId: channel.serverId ? String(channel.serverId) : null,
+  });
 
   const [updated] = await db
     .update(messages)
@@ -236,7 +219,7 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
     editedAt: updated.editedAt,
   };
 
-  emitMessageUpdate(String(updated.channelId), updatePayload);
+  emitMessageUpdate(eventTargets, updatePayload);
 
   return c.json({ message: updatePayload });
 });
@@ -257,33 +240,40 @@ messageRoutes.delete("/messages/:id", async (c) => {
   }
 
   const isAuthor = String(message.authorId) === user.id;
+  const [channel] = await db
+    .select({ serverId: channels.serverId, type: channels.type })
+    .from(channels)
+    .where(eq(channels.id, message.channelId))
+    .limit(1);
+
+  if (!channel) {
+    throw new AppError("NOT_FOUND", "Channel not found");
+  }
+
+  const channelInfo = {
+    id: String(message.channelId),
+    type: channel.type,
+    serverId: channel.serverId ? String(channel.serverId) : null,
+  };
+
+  const eventTargets = getEventTargets(channelInfo);
 
   if (!isAuthor) {
-    const [channel] = await db
-      .select({ serverId: channels.serverId, type: channels.type })
-      .from(channels)
-      .where(eq(channels.id, message.channelId))
-      .limit(1);
-
-    if (!channel) {
-      throw new AppError("NOT_FOUND", "Channel not found");
-    }
-
-    if (channel.type === "dm") {
+    if (channelInfo.type === "dm") {
       // In DMs, you can only delete your own messages
       throw new AppError("FORBIDDEN", "You can only delete your own messages in DMs");
     }
 
     // Server channels: check MANAGE_MESSAGES permission
-    if (!channel.serverId) {
+    if (!channelInfo.serverId) {
       throw new AppError("INTERNAL_ERROR", "Server channel has no server");
     }
 
-    const serverId = String(channel.serverId);
+    const serverId = channelInfo.serverId;
     const [server] = await db
       .select({ ownerId: servers.ownerId })
       .from(servers)
-      .where(eq(servers.id, channel.serverId))
+      .where(eq(servers.id, BigInt(serverId)))
       .limit(1);
 
     const isOwner = server && String(server.ownerId) === user.id;
@@ -297,7 +287,7 @@ messageRoutes.delete("/messages/:id", async (c) => {
 
   await db.delete(messages).where(eq(messages.id, BigInt(messageId)));
 
-  emitMessageDelete(String(message.channelId), messageId);
+  emitMessageDelete(eventTargets, channelInfo.id, messageId);
 
   return c.json({ success: true });
 });
@@ -307,9 +297,10 @@ messageRoutes.post("/channels/:channelId/typing", async (c) => {
   const user = getUser(c);
   const channelId = c.req.param("channelId");
 
-  await requireChannelMembership(channelId, user.id);
+  const channel = await requireChannelMembership(channelId, user.id);
+  const eventTargets = getEventTargets(channel);
 
-  emitTypingStart(channelId, user.id, user.username);
+  emitTypingStart(eventTargets, channel.id, user.id, user.username);
 
   return c.body(null, 204);
 });

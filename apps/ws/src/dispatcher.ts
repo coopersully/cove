@@ -125,7 +125,7 @@ export class Dispatcher {
 			// Client may have disconnected — ignore send errors
 		}
 
-		// Push to replay buffer (fire-and-forget)
+		// Push to replay buffer (fire-and-forget).
 		void pushReplayEvent(this.redis, client.sessionId, client.seq, serialized);
 	}
 }

@@ -1,10 +1,11 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { channelReadStates, db } from "@cove/db";
-import { snowflakeSchema } from "@cove/shared";
-import { eq } from "drizzle-orm";
+import { channelReadStates, db, messages } from "@cove/db";
+import { AppError, snowflakeSchema } from "@cove/shared";
+import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { requireChannelMembership } from "../lib/channel-membership.js";
 import { validate } from "../middleware/index.js";
 
 const ackSchema = z.object({
@@ -20,19 +21,40 @@ readStateRoutes.put("/channels/:channelId/ack", validate(ackSchema), async (c) =
 	const user = getUser(c);
 	const channelId = c.req.param("channelId");
 	const body = c.get("body");
+	const ackMessageId = BigInt(body.messageId);
+
+	const channel = await requireChannelMembership(channelId, user.id);
+	const [message] = await db
+		.select({ id: messages.id, channelId: messages.channelId })
+		.from(messages)
+		.where(eq(messages.id, ackMessageId))
+		.limit(1);
+
+	if (!message) {
+		throw new AppError("NOT_FOUND", "Message not found");
+	}
+
+	if (String(message.channelId) !== channel.id) {
+		throw new AppError("VALIDATION_ERROR", "Message does not belong to this channel");
+	}
 
 	await db
 		.insert(channelReadStates)
 		.values({
 			userId: BigInt(user.id),
-			channelId: BigInt(channelId),
-			lastReadMessageId: BigInt(body.messageId),
+			channelId: BigInt(channel.id),
+			lastReadMessageId: ackMessageId,
 			updatedAt: new Date(),
 		})
 		.onConflictDoUpdate({
 			target: [channelReadStates.userId, channelReadStates.channelId],
 			set: {
-				lastReadMessageId: BigInt(body.messageId),
+				lastReadMessageId: sql`CASE
+					WHEN ${channelReadStates.lastReadMessageId} IS NULL
+						OR ${channelReadStates.lastReadMessageId} < ${ackMessageId}
+					THEN ${ackMessageId}
+					ELSE ${channelReadStates.lastReadMessageId}
+				END`,
 				updatedAt: new Date(),
 			},
 		});

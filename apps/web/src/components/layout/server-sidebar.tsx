@@ -11,11 +11,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@cove/ui";
+import type { Server } from "@cove/api-client";
 import { ArrowDownToLine, LogOut, MessageSquare, Monitor, Moon, Sun, UserPen, Users } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
+import { useChannels } from "../../hooks/use-channels.js";
 import { useServers } from "../../hooks/use-servers.js";
+import { useServerUnread } from "../../hooks/use-unread.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 import { UserAvatar } from "../user-avatar.js";
@@ -74,7 +77,7 @@ export function ServerSidebar(): JSX.Element {
           </Tooltip>
           <Separator className="mx-auto w-8 bg-sidebar" />
           {servers.map((server) => (
-            <ServerIcon key={server.id} server={server} />
+            <ServerIconWithUnread key={server.id} server={server} />
           ))}
           <Separator className="mx-auto w-8 bg-sidebar" />
           <CreateServerDialog />
@@ -102,6 +105,14 @@ export function ServerSidebar(): JSX.Element {
       </div>
     </aside>
   );
+}
+
+function ServerIconWithUnread({ server }: { readonly server: Server }): JSX.Element {
+  const { data } = useChannels(server.id);
+  const channelIds = (data?.channels ?? []).map((channel) => channel.id);
+  const hasUnread = useServerUnread(channelIds);
+
+  return <ServerIcon server={server} hasUnread={hasUnread} />;
 }
 
 function UserButton(): JSX.Element {

@@ -72,6 +72,80 @@ describe("Read State Routes", () => {
 			expect(channelState!.lastReadMessageId).toBe(msg2Id);
 		});
 
+		it("does not move read state backwards", async () => {
+			const user = await createTestUser();
+			const server = await createTestServer(user.id);
+			const channel = await createTestChannel(server.id);
+
+			const { body: msg1Body } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+				token: user.token,
+				body: { content: "first" },
+			});
+			const msg1Id = (msg1Body.message as Record<string, unknown>).id as string;
+
+			const { body: msg2Body } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+				token: user.token,
+				body: { content: "second" },
+			});
+			const msg2Id = (msg2Body.message as Record<string, unknown>).id as string;
+
+			await apiRequest("PUT", `/channels/${channel.id}/ack`, {
+				token: user.token,
+				body: { messageId: msg2Id },
+			});
+
+			const { status } = await apiRequest("PUT", `/channels/${channel.id}/ack`, {
+				token: user.token,
+				body: { messageId: msg1Id },
+			});
+			expect(status).toBe(204);
+
+			const { body: listBody } = await apiRequest("GET", "/read-states", {
+				token: user.token,
+			});
+			const readStates = listBody.readStates as Array<Record<string, unknown>>;
+			const channelState = readStates.find((rs) => rs.channelId === channel.id);
+			expect(channelState!.lastReadMessageId).toBe(msg2Id);
+		});
+
+		it("rejects ACK for channels the user is not a member of", async () => {
+			const owner = await createTestUser();
+			const outsider = await createTestUser();
+			const server = await createTestServer(owner.id);
+			const channel = await createTestChannel(server.id);
+
+			const { body: msgBody } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+				token: owner.token,
+				body: { content: "hello" },
+			});
+			const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+			const { status } = await apiRequest("PUT", `/channels/${channel.id}/ack`, {
+				token: outsider.token,
+				body: { messageId },
+			});
+			expect(status).toBe(403);
+		});
+
+		it("rejects ACK when message does not belong to the channel", async () => {
+			const user = await createTestUser();
+			const server = await createTestServer(user.id);
+			const channel1 = await createTestChannel(server.id);
+			const channel2 = await createTestChannel(server.id);
+
+			const { body: msgBody } = await apiRequest("POST", `/channels/${channel1.id}/messages`, {
+				token: user.token,
+				body: { content: "hello" },
+			});
+			const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+			const { status } = await apiRequest("PUT", `/channels/${channel2.id}/ack`, {
+				token: user.token,
+				body: { messageId },
+			});
+			expect(status).toBe(400);
+		});
+
 		it("rejects without auth", async () => {
 			const { status } = await apiRequest("PUT", "/channels/123/ack", {
 				body: { messageId: "456" },

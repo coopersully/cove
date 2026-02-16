@@ -1,5 +1,6 @@
 export const GatewayEvents = {
   Ready: "READY",
+  Resumed: "RESUMED",
   MessageCreate: "MESSAGE_CREATE",
   MessageUpdate: "MESSAGE_UPDATE",
   MessageDelete: "MESSAGE_DELETE",

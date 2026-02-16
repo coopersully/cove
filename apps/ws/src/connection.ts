@@ -176,7 +176,7 @@ export function handleConnection(
 			ws,
 			sessionId: data.sessionId,
 			userId: decoded.sub,
-			seq: session.lastSeq,
+			seq: Math.max(session.lastSeq, data.seq),
 			subscribedChannels: new Set(),
 			subscribedServers: new Set(),
 		};
@@ -185,14 +185,23 @@ export function handleConnection(
 		dispatcher.register(client, session.subscribedChannels, session.subscribedServers);
 
 		// Replay missed events
+		let replaySeq = data.seq;
 		const missed = await getReplayEvents(redis, data.sessionId, data.seq);
 		for (const payload of missed) {
 			try {
 				ws.send(payload);
+				const parsed = JSON.parse(payload) as { s?: number };
+				if (typeof parsed.s === "number" && parsed.s > replaySeq) {
+					replaySeq = parsed.s;
+				}
 			} catch {
 				break;
 			}
 		}
+		client.seq = replaySeq;
+
+		// Signal successful resume so clients can transition back to "connected".
+		dispatcher.sendDispatch(client, "RESUMED", { sessionId: data.sessionId });
 
 		// Start heartbeat monitor
 		startHeartbeat();

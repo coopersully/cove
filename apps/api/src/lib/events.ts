@@ -3,6 +3,7 @@ import type { GatewayRedisEvent } from "@cove/gateway";
 import type { Redis } from "ioredis";
 
 let publisher: Redis | undefined;
+type EventTargets = GatewayRedisEvent["targets"];
 
 function getPublisher(): Redis {
 	publisher ??= createRedisPublisher();
@@ -17,27 +18,31 @@ async function emit(event: GatewayRedisEvent): Promise<void> {
 	}
 }
 
-export function emitMessageCreate(channelId: string, message: unknown): void {
+export function emitMessageCreate(targets: EventTargets, message: unknown): void {
 	void emit({
 		event: GatewayEvents.MessageCreate,
 		data: message,
-		targets: { channelId },
+		targets,
 	});
 }
 
-export function emitMessageUpdate(channelId: string, message: unknown): void {
+export function emitMessageUpdate(targets: EventTargets, message: unknown): void {
 	void emit({
 		event: GatewayEvents.MessageUpdate,
 		data: message,
-		targets: { channelId },
+		targets,
 	});
 }
 
-export function emitMessageDelete(channelId: string, messageId: string): void {
+export function emitMessageDelete(
+	targets: EventTargets,
+	channelId: string,
+	messageId: string,
+): void {
 	void emit({
 		event: GatewayEvents.MessageDelete,
 		data: { id: messageId, channelId },
-		targets: { channelId },
+		targets,
 	});
 }
 
@@ -65,10 +70,15 @@ export function emitChannelDelete(serverId: string, channelId: string): void {
 	});
 }
 
-export function emitTypingStart(channelId: string, userId: string, username: string): void {
+export function emitTypingStart(
+	targets: EventTargets,
+	channelId: string,
+	userId: string,
+	username: string,
+): void {
 	void emit({
 		event: GatewayEvents.TypingStart,
 		data: { channelId, userId, username },
-		targets: { channelId },
+		targets,
 	});
 }

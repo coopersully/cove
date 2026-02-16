@@ -186,6 +186,15 @@ export class GatewayClient {
 			this.setStatus("connected");
 		}
 
+		if (msg.t === "RESUMED") {
+			const data = msg.d as { sessionId?: string };
+			if (data.sessionId) {
+				this.sessionId = data.sessionId;
+			}
+			this.reconnectAttempts = 0;
+			this.setStatus("connected");
+		}
+
 		if (msg.t) {
 			for (const handler of this.handlers) {
 				try {
