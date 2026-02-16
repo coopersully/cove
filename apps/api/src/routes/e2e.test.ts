@@ -179,6 +179,48 @@ describe("E2E: Auth", () => {
 		expect(freeStatus).toBe(200);
 		expect(freeBody.available).toBe(true);
 	});
+
+	it("check availability rejects missing or malformed username query", async () => {
+		const { status: missingStatus } = await apiRequest("GET", "/auth/check-availability");
+		expect(missingStatus).toBe(400);
+
+		const { status: malformedStatus } = await apiRequest("GET", "/auth/check-availability", {
+			query: { username: "bad-name!" },
+		});
+		expect(malformedStatus).toBe(400);
+	});
+
+	it("password reset revokes all existing refresh tokens", async () => {
+		const alice = await registerUser("alice");
+		const initialRefreshToken = alice.refreshToken;
+
+		const { status: loginStatus, body: loginBody } = await apiRequest("POST", "/auth/login", {
+			body: { email: "alice@test.com", password: "Password1" },
+		});
+		expect(loginStatus).toBe(200);
+		const secondRefreshToken = loginBody.refreshToken as string;
+
+		const resetToken = await generatePasswordResetToken(alice.id);
+		const { status: resetStatus } = await apiRequest("POST", "/auth/reset-password", {
+			body: { token: resetToken, password: "EvenNewer1" },
+		});
+		expect(resetStatus).toBe(200);
+
+		const { status: refreshInitialStatus } = await apiRequest("POST", "/auth/refresh", {
+			body: { refreshToken: initialRefreshToken },
+		});
+		expect(refreshInitialStatus).toBe(401);
+
+		const { status: refreshSecondStatus } = await apiRequest("POST", "/auth/refresh", {
+			body: { refreshToken: secondRefreshToken },
+		});
+		expect(refreshSecondStatus).toBe(401);
+
+		const { status: reloginStatus } = await apiRequest("POST", "/auth/login", {
+			body: { email: "alice@test.com", password: "EvenNewer1" },
+		});
+		expect(reloginStatus).toBe(200);
+	});
 });
 
 // ── User Profile Journey ────────────────────────────────────────────────────
@@ -215,6 +257,48 @@ describe("E2E: User Profile", () => {
 		expect(profileStatus).toBe(200);
 		expect((profileBody.user as Record<string, unknown>).bio).toBe("Hello world");
 		expect((profileBody.user as Record<string, unknown>).pronouns).toBe("she/her");
+	});
+
+	it("profile fields can be cleared with null values", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+
+		await apiRequest("PATCH", "/users/me", {
+			token: alice.token,
+			body: {
+				displayName: "Alice Updated",
+				bio: "Temp bio",
+				pronouns: "she/her",
+				status: "In a test",
+				statusEmoji: ":wave:",
+			},
+		});
+
+		const { status: clearStatus } = await apiRequest("PATCH", "/users/me", {
+			token: alice.token,
+			body: {
+				displayName: null,
+				bio: null,
+				pronouns: null,
+				status: null,
+				statusEmoji: null,
+			},
+		});
+		expect(clearStatus).toBe(200);
+
+		const { status: profileStatus, body: profileBody } = await apiRequest(
+			"GET",
+			`/users/${alice.id}`,
+			{ token: bob.token },
+		);
+		expect(profileStatus).toBe(200);
+
+		const user = profileBody.user as Record<string, unknown>;
+		expect(user.displayName).toBeNull();
+		expect(user.bio).toBeNull();
+		expect(user.pronouns).toBeNull();
+		expect(user.status).toBeNull();
+		expect(user.statusEmoji).toBeNull();
 	});
 });
 
@@ -360,6 +444,51 @@ describe("E2E: Friend Requests", () => {
 		});
 		expect(outBody.requests).toEqual([]);
 	});
+
+	it("third-party user cannot accept or cancel someone else's request", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+		const charlie = await registerUser("charlie");
+
+		const { body: reqBody } = await apiRequest("POST", "/friends/requests", {
+			token: alice.token,
+			body: { username: "bob" },
+		});
+		const requestId = (reqBody.request as Record<string, unknown>).id as string;
+
+		const { status: acceptStatus } = await apiRequest(
+			"POST",
+			`/friends/requests/${requestId}/accept`,
+			{ token: charlie.token },
+		);
+		expect(acceptStatus).toBe(403);
+
+		const { status: cancelStatus } = await apiRequest("DELETE", `/friends/requests/${requestId}`, {
+			token: charlie.token,
+		});
+		expect(cancelStatus).toBe(403);
+
+		const { body: bobIncoming } = await apiRequest("GET", "/friends/requests/incoming", {
+			token: bob.token,
+		});
+		expect(bobIncoming.requests as unknown[]).toHaveLength(1);
+	});
+
+	it("reciprocal friend request is blocked while one is pending", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+
+		await apiRequest("POST", "/friends/requests", {
+			token: alice.token,
+			body: { username: "bob" },
+		});
+
+		const { status } = await apiRequest("POST", "/friends/requests", {
+			token: bob.token,
+			body: { username: "alice" },
+		});
+		expect(status).toBe(400);
+	});
 });
 
 // ── DM Journey ──────────────────────────────────────────────────────────────
@@ -444,6 +573,30 @@ describe("E2E: DMs", () => {
 			token: charlie.token,
 		});
 		expect(forbiddenStatus).toBe(403);
+	});
+
+	it("DM channels cannot be modified via server channel management endpoints", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+
+		await makeFriends(alice, "bob", bob);
+
+		const { body: dmBody } = await apiRequest("POST", "/dms", {
+			token: alice.token,
+			body: { recipientId: bob.id },
+		});
+		const channelId = (dmBody.channel as Record<string, unknown>).id as string;
+
+		const { status: patchStatus } = await apiRequest("PATCH", `/channels/${channelId}`, {
+			token: alice.token,
+			body: { name: "not-allowed" },
+		});
+		expect(patchStatus).toBe(403);
+
+		const { status: deleteStatus } = await apiRequest("DELETE", `/channels/${channelId}`, {
+			token: alice.token,
+		});
+		expect(deleteStatus).toBe(403);
 	});
 
 	it("cannot DM before accepting friend request", async () => {
@@ -795,6 +948,63 @@ describe("E2E: Servers", () => {
 		});
 		expect(status).toBe(403);
 	});
+
+	it("public servers are discoverable, but non-members cannot list channels until they join", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+
+		const { body: createBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Open Server", isPublic: true },
+		});
+		const serverId = (createBody.server as Record<string, unknown>).id as string;
+
+		const { status: discoverStatus } = await apiRequest("GET", `/servers/${serverId}`, {
+			token: bob.token,
+		});
+		expect(discoverStatus).toBe(200);
+
+		const { status: channelsBeforeJoin } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: bob.token,
+		});
+		expect(channelsBeforeJoin).toBe(403);
+
+		const { status: joinStatus } = await apiRequest("POST", `/servers/${serverId}/join`, {
+			token: bob.token,
+			body: {},
+		});
+		expect(joinStatus).toBe(201);
+
+		const { status: channelsAfterJoin, body: channelsBody } = await apiRequest(
+			"GET",
+			`/servers/${serverId}/channels`,
+			{ token: bob.token },
+		);
+		expect(channelsAfterJoin).toBe(200);
+		expect(channelsBody.channels as unknown[]).toHaveLength(1);
+	});
+
+	it("joining or leaving unknown membership/server states returns correct errors", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+
+		const { body: createBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Membership Edge", isPublic: true },
+		});
+		const serverId = (createBody.server as Record<string, unknown>).id as string;
+
+		const { status: leaveNotMember } = await apiRequest("POST", `/servers/${serverId}/leave`, {
+			token: bob.token,
+		});
+		expect(leaveNotMember).toBe(404);
+
+		const { status: joinMissing } = await apiRequest("POST", "/servers/999999999999999999/join", {
+			token: bob.token,
+			body: {},
+		});
+		expect(joinMissing).toBe(404);
+	});
 });
 
 // ── Channel Journey ─────────────────────────────────────────────────────────
@@ -996,6 +1206,39 @@ describe("E2E: Messages", () => {
 		expect(page[1]!.content).toBe("Message 1");
 	});
 
+	it("message pagination rejects invalid cursor and limit values", async () => {
+		const alice = await registerUser("alice");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Pagination Validation Server" },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const channelId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { status: invalidLimitLow } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			query: { limit: "0" },
+		});
+		expect(invalidLimitLow).toBe(400);
+
+		const { status: invalidLimitHigh } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			query: { limit: "1000" },
+		});
+		expect(invalidLimitHigh).toBe(400);
+
+		const { status: invalidBefore } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			query: { before: "not-a-snowflake" },
+		});
+		expect(invalidBefore).toBe(400);
+	});
+
 	it("server owner can delete another member's message", async () => {
 		const alice = await registerUser("alice");
 		const bob = await registerUser("bob");
@@ -1162,6 +1405,36 @@ describe("E2E: Messages", () => {
 		});
 		expect(forbiddenStatus).toBe(403);
 	});
+
+	it("user loses message read access after leaving a server", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Leave Read Access", isPublic: true },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const channelId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { status: readBeforeLeave } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+			token: bob.token,
+		});
+		expect(readBeforeLeave).toBe(200);
+
+		await apiRequest("POST", `/servers/${serverId}/leave`, { token: bob.token });
+
+		const { status: readAfterLeave } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+			token: bob.token,
+		});
+		expect(readAfterLeave).toBe(403);
+	});
 });
 
 // ── Read State Journey ───────────────────────────────────────────────────────
@@ -1215,6 +1488,139 @@ describe("E2E: Read States", () => {
 		expect(readStates[0]!.channelId).toBe(channelId);
 		expect(readStates[0]!.lastReadMessageId).toBe(secondMessageId);
 	});
+
+	it("read-state ACK cannot move backwards", async () => {
+		const alice = await registerUser("alice");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Read State Monotonicity" },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const channelId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { body: firstMsgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			body: { content: "Older" },
+		});
+		const firstMessageId = (firstMsgBody.message as Record<string, unknown>).id as string;
+
+		const { body: secondMsgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			body: { content: "Newer" },
+		});
+		const secondMessageId = (secondMsgBody.message as Record<string, unknown>).id as string;
+
+		await apiRequest("PUT", `/channels/${channelId}/ack`, {
+			token: alice.token,
+			body: { messageId: secondMessageId },
+		});
+		await apiRequest("PUT", `/channels/${channelId}/ack`, {
+			token: alice.token,
+			body: { messageId: firstMessageId },
+		});
+
+		const { body: listBody } = await apiRequest("GET", "/read-states", {
+			token: alice.token,
+		});
+		const readStates = listBody.readStates as Array<Record<string, unknown>>;
+		expect(readStates).toHaveLength(1);
+		expect(readStates[0]!.lastReadMessageId).toBe(secondMessageId);
+	});
+
+	it("ACK rejects message from another channel and preserves existing read state", async () => {
+		const alice = await registerUser("alice");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Cross Channel ACK" },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const generalId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { body: extraChannelBody } = await apiRequest("POST", `/servers/${serverId}/channels`, {
+			token: alice.token,
+			body: { name: "other", type: "text" },
+		});
+		const otherChannelId = (extraChannelBody.channel as Record<string, unknown>).id as string;
+
+		const { body: msgBody } = await apiRequest("POST", `/channels/${generalId}/messages`, {
+			token: alice.token,
+			body: { content: "belongs-to-general" },
+		});
+		const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+		await apiRequest("PUT", `/channels/${generalId}/ack`, {
+			token: alice.token,
+			body: { messageId },
+		});
+
+		const { status: crossAckStatus } = await apiRequest("PUT", `/channels/${otherChannelId}/ack`, {
+			token: alice.token,
+			body: { messageId },
+		});
+		expect(crossAckStatus).toBe(400);
+
+		const { body: listBody } = await apiRequest("GET", "/read-states", {
+			token: alice.token,
+		});
+		const readStates = listBody.readStates as Array<Record<string, unknown>>;
+		const generalState = readStates.find((state) => state.channelId === generalId);
+		const otherState = readStates.find((state) => state.channelId === otherChannelId);
+		expect(generalState).toBeDefined();
+		expect(generalState!.lastReadMessageId).toBe(messageId);
+		expect(otherState).toBeUndefined();
+	});
+
+	it("read states are isolated per user in shared channels", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Per User Read State", isPublic: true },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const channelId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			body: { content: "shared-message" },
+		});
+		const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+		await apiRequest("PUT", `/channels/${channelId}/ack`, {
+			token: alice.token,
+			body: { messageId },
+		});
+
+		const { body: bobBefore } = await apiRequest("GET", "/read-states", { token: bob.token });
+		expect(bobBefore.readStates).toEqual([]);
+
+		await apiRequest("PUT", `/channels/${channelId}/ack`, {
+			token: bob.token,
+			body: { messageId },
+		});
+		const { body: bobAfter } = await apiRequest("GET", "/read-states", { token: bob.token });
+		const bobStates = bobAfter.readStates as Array<Record<string, unknown>>;
+		expect(bobStates).toHaveLength(1);
+		expect(bobStates[0]!.channelId).toBe(channelId);
+		expect(bobStates[0]!.lastReadMessageId).toBe(messageId);
+	});
 });
 
 // ── Cross-feature Edge Cases ────────────────────────────────────────────────
@@ -1248,6 +1654,40 @@ describe("E2E: Cross-feature Edge Cases", () => {
 			token: alice.token,
 		});
 		expect(status).toBe(404);
+	});
+
+	it("deleting a server also removes read-state rows for its channels", async () => {
+		const alice = await registerUser("alice");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Read State Cleanup Server" },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const channelId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { body: messageBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			body: { content: "ack-me" },
+		});
+		const messageId = (messageBody.message as Record<string, unknown>).id as string;
+
+		await apiRequest("PUT", `/channels/${channelId}/ack`, {
+			token: alice.token,
+			body: { messageId },
+		});
+
+		const { body: beforeDelete } = await apiRequest("GET", "/read-states", { token: alice.token });
+		expect(beforeDelete.readStates as unknown[]).toHaveLength(1);
+
+		await apiRequest("DELETE", `/servers/${serverId}`, { token: alice.token });
+
+		const { body: afterDelete } = await apiRequest("GET", "/read-states", { token: alice.token });
+		expect(afterDelete.readStates).toEqual([]);
 	});
 
 	it("cannot double-join a server", async () => {

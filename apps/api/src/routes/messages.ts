@@ -49,10 +49,15 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
 
   await requireChannelMembership(channelId, user.id);
 
-  const beforeParam = c.req.query("before");
-  const limitParam = c.req.query("limit");
+	const beforeParam = c.req.query("before");
+	const limitParam = c.req.query("limit");
 
-  const limit = paginationLimitSchema.parse(limitParam ?? "50");
+	const parsedLimit = paginationLimitSchema.safeParse(limitParam ?? "50");
+	if (!parsedLimit.success) {
+		const issue = parsedLimit.error.issues[0];
+		throw new AppError("VALIDATION_ERROR", issue?.message ?? "Invalid limit parameter");
+	}
+	const limit = parsedLimit.data;
 
   let query = db
     .select({
@@ -74,12 +79,17 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
     .limit(limit)
     .$dynamic();
 
-  if (beforeParam) {
-    const before = snowflakeSchema.parse(beforeParam);
-    query = query.where(
-      and(eq(messages.channelId, BigInt(channelId)), lt(messages.id, BigInt(before))),
-    );
-  }
+	if (beforeParam) {
+		const parsedBefore = snowflakeSchema.safeParse(beforeParam);
+		if (!parsedBefore.success) {
+			const issue = parsedBefore.error.issues[0];
+			throw new AppError("VALIDATION_ERROR", issue?.message ?? "Invalid before parameter");
+		}
+		const before = parsedBefore.data;
+		query = query.where(
+			and(eq(messages.channelId, BigInt(channelId)), lt(messages.id, BigInt(before))),
+		);
+	}
 
   const results = await query;
 
