@@ -8,7 +8,7 @@ import {
   statusEmojiSchema,
   statusSchema,
 } from "@cove/shared";
-import { eq } from "drizzle-orm";
+import { eq, ilike } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -64,6 +64,37 @@ userRoutes.patch("/me", validate(updateProfileSchema), async (c) => {
   }
 
   return c.json({ user: { ...updated, id: String(updated.id) } });
+});
+
+// GET /users/search?q=username
+userRoutes.get("/search", async (c) => {
+  const query = c.req.query("q");
+
+  if (!query || query.length < 1) {
+    return c.json({ users: [] });
+  }
+
+  const results = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      avatarUrl: users.avatarUrl,
+      statusEmoji: users.statusEmoji,
+    })
+    .from(users)
+    .where(ilike(users.username, `${query}%`))
+    .limit(10);
+
+  return c.json({
+    users: results.map((u) => ({
+      id: String(u.id),
+      username: u.username,
+      displayName: u.displayName,
+      avatarUrl: u.avatarUrl,
+      statusEmoji: u.statusEmoji,
+    })),
+  });
 });
 
 // GET /users/:userId

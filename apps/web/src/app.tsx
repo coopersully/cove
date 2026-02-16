@@ -1,6 +1,8 @@
 import type { JSX } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { AuthGuard } from "./components/auth/auth-guard.js";
+import { DmView } from "./components/dms/dm-view.js";
+import { FriendsView } from "./components/friends/friends-view.js";
 import { AppLayout } from "./components/layout/app-layout.js";
 import { Logo } from "./components/logo.js";
 import { ServerView } from "./components/server/server-view.js";
@@ -23,6 +25,9 @@ export function App(): JSX.Element {
           <Route path="/servers" element={<ServerListPlaceholder />} />
           <Route path="/servers/:serverId" element={<ServerView />} />
           <Route path="/servers/:serverId/channels/:channelId" element={<ServerView />} />
+          <Route path="/friends" element={<FriendsView />} />
+          <Route path="/dms" element={<DmView />} />
+          <Route path="/dms/:channelId" element={<DmView />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace={true} />} />

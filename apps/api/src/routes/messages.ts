@@ -1,5 +1,5 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { channels, db, messages, serverMembers, servers, users } from "@cove/db";
+import { channels, db, dmMembers, messages, serverMembers, servers, users } from "@cove/db";
 import {
   AppError,
   Permissions,
@@ -13,6 +13,7 @@ import { and, desc, eq, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { emitMessageCreate, emitMessageDelete, emitMessageUpdate, emitTypingStart } from "../lib/events.js";
 import { getMemberPermissions } from "../lib/index.js";
 import { validate } from "../middleware/index.js";
 
@@ -30,7 +31,7 @@ messageRoutes.use(requireAuth());
 
 async function requireChannelMembership(channelId: string, userId: string) {
   const [channel] = await db
-    .select({ serverId: channels.serverId })
+    .select({ serverId: channels.serverId, type: channels.type })
     .from(channels)
     .where(eq(channels.id, BigInt(channelId)))
     .limit(1);
@@ -39,16 +40,37 @@ async function requireChannelMembership(channelId: string, userId: string) {
     throw new AppError("NOT_FOUND", "Channel not found");
   }
 
-  const [member] = await db
-    .select()
-    .from(serverMembers)
-    .where(
-      and(eq(serverMembers.serverId, channel.serverId), eq(serverMembers.userId, BigInt(userId))),
-    )
-    .limit(1);
+  if (channel.type === "dm") {
+    const [member] = await db
+      .select()
+      .from(dmMembers)
+      .where(
+        and(eq(dmMembers.channelId, BigInt(channelId)), eq(dmMembers.userId, BigInt(userId))),
+      )
+      .limit(1);
 
-  if (!member) {
-    throw new AppError("FORBIDDEN", "You are not a member of this server");
+    if (!member) {
+      throw new AppError("FORBIDDEN", "You are not a member of this DM");
+    }
+  } else {
+    if (!channel.serverId) {
+      throw new AppError("INTERNAL_ERROR", "Server channel has no server");
+    }
+
+    const [member] = await db
+      .select()
+      .from(serverMembers)
+      .where(
+        and(
+          eq(serverMembers.serverId, channel.serverId),
+          eq(serverMembers.userId, BigInt(userId)),
+        ),
+      )
+      .limit(1);
+
+    if (!member) {
+      throw new AppError("FORBIDDEN", "You are not a member of this server");
+    }
   }
 
   return channel;
@@ -121,19 +143,21 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
 
   const channel = await requireChannelMembership(channelId, user.id);
 
-  // Check SEND_MESSAGES permission
-  const serverId = String(channel.serverId);
-  const [server] = await db
-    .select({ ownerId: servers.ownerId })
-    .from(servers)
-    .where(eq(servers.id, channel.serverId))
-    .limit(1);
+  // DM members always have send permission; server channels check roles
+  if (channel.type !== "dm" && channel.serverId) {
+    const serverId = String(channel.serverId);
+    const [server] = await db
+      .select({ ownerId: servers.ownerId })
+      .from(servers)
+      .where(eq(servers.id, channel.serverId))
+      .limit(1);
 
-  const isOwner = server && String(server.ownerId) === user.id;
-  if (!isOwner) {
-    const perms = await getMemberPermissions(serverId, user.id);
-    if (!hasPermission(perms, Permissions.SEND_MESSAGES)) {
-      throw new AppError("FORBIDDEN", "You do not have permission to send messages");
+    const isOwner = server && String(server.ownerId) === user.id;
+    if (!isOwner) {
+      const perms = await getMemberPermissions(serverId, user.id);
+      if (!hasPermission(perms, Permissions.SEND_MESSAGES)) {
+        throw new AppError("FORBIDDEN", "You do not have permission to send messages");
+      }
     }
   }
 
@@ -153,25 +177,24 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     throw new AppError("INTERNAL_ERROR", "Failed to create message");
   }
 
-  return c.json(
-    {
-      message: {
-        id: String(created.id),
-        channelId: String(created.channelId),
-        content: created.content,
-        createdAt: created.createdAt,
-        editedAt: created.editedAt,
-        author: {
-          id: user.id,
-          username: user.username,
-          displayName: user.displayName,
-          avatarUrl: user.avatarUrl,
-          statusEmoji: user.statusEmoji,
-        },
-      },
+  const messagePayload = {
+    id: String(created.id),
+    channelId: String(created.channelId),
+    content: created.content,
+    createdAt: created.createdAt,
+    editedAt: created.editedAt,
+    author: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      statusEmoji: user.statusEmoji,
     },
-    201,
-  );
+  };
+
+  emitMessageCreate(channelId, messagePayload);
+
+  return c.json({ message: messagePayload }, 201);
 });
 
 // PATCH /messages/:id
@@ -204,16 +227,18 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
     throw new AppError("NOT_FOUND", "Message not found");
   }
 
-  return c.json({
-    message: {
-      id: String(updated.id),
-      channelId: String(updated.channelId),
-      authorId: String(updated.authorId),
-      content: updated.content,
-      createdAt: updated.createdAt,
-      editedAt: updated.editedAt,
-    },
-  });
+  const updatePayload = {
+    id: String(updated.id),
+    channelId: String(updated.channelId),
+    authorId: String(updated.authorId),
+    content: updated.content,
+    createdAt: updated.createdAt,
+    editedAt: updated.editedAt,
+  };
+
+  emitMessageUpdate(String(updated.channelId), updatePayload);
+
+  return c.json({ message: updatePayload });
 });
 
 // DELETE /messages/:id
@@ -234,15 +259,24 @@ messageRoutes.delete("/messages/:id", async (c) => {
   const isAuthor = String(message.authorId) === user.id;
 
   if (!isAuthor) {
-    // Check MANAGE_MESSAGES permission
     const [channel] = await db
-      .select({ serverId: channels.serverId })
+      .select({ serverId: channels.serverId, type: channels.type })
       .from(channels)
       .where(eq(channels.id, message.channelId))
       .limit(1);
 
     if (!channel) {
       throw new AppError("NOT_FOUND", "Channel not found");
+    }
+
+    if (channel.type === "dm") {
+      // In DMs, you can only delete your own messages
+      throw new AppError("FORBIDDEN", "You can only delete your own messages in DMs");
+    }
+
+    // Server channels: check MANAGE_MESSAGES permission
+    if (!channel.serverId) {
+      throw new AppError("INTERNAL_ERROR", "Server channel has no server");
     }
 
     const serverId = String(channel.serverId);
@@ -263,5 +297,19 @@ messageRoutes.delete("/messages/:id", async (c) => {
 
   await db.delete(messages).where(eq(messages.id, BigInt(messageId)));
 
+  emitMessageDelete(String(message.channelId), messageId);
+
   return c.json({ success: true });
+});
+
+// POST /channels/:channelId/typing
+messageRoutes.post("/channels/:channelId/typing", async (c) => {
+  const user = getUser(c);
+  const channelId = c.req.param("channelId");
+
+  await requireChannelMembership(channelId, user.id);
+
+  emitTypingStart(channelId, user.id, user.username);
+
+  return c.body(null, 204);
 });

@@ -5,7 +5,10 @@ import { errorHandler } from "./middleware/index.js";
 import {
   authRoutes,
   channelRoutes,
+  dmRoutes,
+  friendRoutes,
   messageRoutes,
+  readStateRoutes,
   serverRoutes,
   userRoutes,
 } from "./routes/index.js";
@@ -27,4 +30,7 @@ app.route("/auth", authRoutes);
 app.route("/users", userRoutes);
 app.route("/servers", serverRoutes);
 app.route("/", channelRoutes);
+app.route("/", dmRoutes);
+app.route("/", friendRoutes);
 app.route("/", messageRoutes);
+app.route("/", readStateRoutes);

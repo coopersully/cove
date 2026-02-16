@@ -1,8 +1,10 @@
 import type { Message } from "@cove/api-client";
 import type { JSX } from "react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import { useMessages } from "../../hooks/use-messages.js";
+import { useAckMessage } from "../../hooks/use-read-states.js";
+import { useTypingStore } from "../../stores/typing.js";
 import { Logo } from "../logo.js";
 import { MessageItem } from "./message-item.js";
 
@@ -49,9 +51,12 @@ function MessageSkeleton({ showAuthor }: { readonly showAuthor: boolean }): JSX.
 
 export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } = useMessages(channelId);
+  const { mutate: ackMessage } = useAckMessage(channelId);
+  const typingUsers = useTypingStore((s) => s.getTyping(channelId));
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const isInitialLoad = useRef(true);
+  const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { ref: loadMoreRef } = useInView({
     onChange: (inView) => {
@@ -63,6 +68,27 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
 
   // Flatten and reverse: API returns newest first, we render oldest first
   const allMessages = data?.pages.flatMap((page) => page.messages).reverse() ?? [];
+
+  // Auto-ACK: debounce 2s after new messages appear
+  const latestMessageId = data?.pages[0]?.messages[0]?.id;
+  const debouncedAck = useCallback(
+    (messageId: string) => {
+      if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+      ackTimerRef.current = setTimeout(() => {
+        ackMessage(messageId);
+      }, 2000);
+    },
+    [ackMessage],
+  );
+
+  useEffect(() => {
+    if (latestMessageId && !latestMessageId.startsWith("optimistic-")) {
+      debouncedAck(latestMessageId);
+    }
+    return () => {
+      if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+    };
+  }, [latestMessageId, debouncedAck]);
 
   // Scroll to bottom on initial load
   useEffect(() => {
@@ -143,6 +169,16 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
             <p className="font-display font-semibold text-foreground text-sm">No messages yet</p>
             <p className="mt-1 text-sm">Start the conversation!</p>
           </div>
+        </div>
+      )}
+
+      {/* Typing indicator */}
+      {typingUsers.length > 0 && (
+        <div className="shrink-0 px-4 py-1 text-muted-foreground text-xs">
+          <span className="font-medium">
+            {typingUsers.map((u) => u.username).join(", ")}
+          </span>
+          {typingUsers.length === 1 ? " is" : " are"} typing...
         </div>
       )}
 

@@ -23,7 +23,7 @@ export function EditChannelDialog({
   open,
   onOpenChange,
 }: EditChannelDialogProps): JSX.Element {
-  const updateChannel = useUpdateChannel(channel.serverId);
+  const updateChannel = useUpdateChannel(channel.serverId!);
 
   return (
     <ResponsiveFormModal

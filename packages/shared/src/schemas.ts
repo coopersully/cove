@@ -79,6 +79,12 @@ export const editChannelSchema = z.object({
   topic: channelTopicSchema.optional(),
 });
 
+// ── Friend Schemas ──────────────────────────────────────────────────────────
+
+export const sendFriendRequestSchema = z.object({
+  username: usernameSchema,
+});
+
 // ── User Schemas ────────────────────────────────────────────────────────────
 
 export const editProfileSchema = z.object({

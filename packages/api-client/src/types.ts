@@ -28,9 +28,9 @@ export interface Server {
 
 export interface Channel {
   readonly id: Snowflake;
-  readonly serverId: Snowflake;
+  readonly serverId: Snowflake | null;
   readonly name: string;
-  readonly type: "text" | "voice";
+  readonly type: "text" | "voice" | "dm";
   readonly position: number;
   readonly topic: string | null;
   readonly createdAt: string;
@@ -129,6 +129,10 @@ export interface UpdateMessageRequest {
   readonly content: string;
 }
 
+export interface CreateDmRequest {
+  readonly recipientId: Snowflake;
+}
+
 export interface ListMessagesParams {
   readonly before?: Snowflake | undefined;
   readonly limit?: number | undefined;
@@ -189,6 +193,68 @@ export interface SuccessResponse {
 
 export interface CheckAvailabilityResponse {
   readonly available: boolean;
+}
+
+export interface DmChannelWithRecipient extends Channel {
+  readonly recipient: MessageAuthor;
+}
+
+export interface DmChannelResponse {
+  readonly channel: Channel;
+  readonly members: readonly MessageAuthor[];
+}
+
+export interface DmChannelListResponse {
+  readonly channels: readonly DmChannelWithRecipient[];
+}
+
+export interface UserSearchResponse {
+  readonly users: readonly MessageAuthor[];
+}
+
+// ── Friend types ─────────────────────────────────────
+
+export interface FriendshipUser {
+  readonly id: Snowflake;
+  readonly username: string;
+  readonly displayName: string | null;
+  readonly avatarUrl: string | null;
+  readonly statusEmoji: string | null;
+}
+
+export interface FriendRequest {
+  readonly id: Snowflake;
+  readonly user: FriendshipUser;
+  readonly status: "pending" | "accepted";
+  readonly createdAt: string;
+}
+
+export interface SendFriendRequestRequest {
+  readonly username: string;
+}
+
+export interface FriendListResponse {
+  readonly friends: readonly FriendshipUser[];
+}
+
+export interface FriendRequestListResponse {
+  readonly requests: readonly FriendRequest[];
+}
+
+export interface FriendRequestResponse {
+  readonly request: FriendRequest;
+}
+
+// ── Read State types ─────────────────────────────────
+
+export interface ReadState {
+  readonly channelId: Snowflake;
+  readonly lastReadMessageId: Snowflake | null;
+  readonly updatedAt: string;
+}
+
+export interface ReadStateListResponse {
+  readonly readStates: readonly ReadState[];
 }
 
 export interface ApiErrorResponse {

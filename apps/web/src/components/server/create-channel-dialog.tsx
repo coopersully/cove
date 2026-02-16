@@ -43,7 +43,7 @@ export function CreateChannelDialog({ serverId }: CreateChannelDialogProps): JSX
         onSubmit={async (data) => {
           await createChannel.mutateAsync({
             name: data.name.toLowerCase().replaceAll(" ", "-"),
-            type: data.type,
+            type: data.type as "text" | "voice",
           });
           setOpen(false);
         }}

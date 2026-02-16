@@ -8,6 +8,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -48,11 +49,11 @@ export const channels = pgTable(
   "channels",
   {
     id: bigint({ mode: "bigint" }).primaryKey(),
-    serverId: bigint("server_id", { mode: "bigint" })
-      .notNull()
-      .references(() => servers.id, { onDelete: "cascade" }),
+    serverId: bigint("server_id", { mode: "bigint" }).references(() => servers.id, {
+      onDelete: "cascade",
+    }),
     name: varchar({ length: 100 }).notNull(),
-    type: varchar({ length: 10 }).notNull().$type<"text" | "voice">(),
+    type: varchar({ length: 10 }).notNull().$type<"text" | "voice" | "dm">(),
     position: integer().notNull().default(0),
     topic: varchar({ length: 1024 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -147,6 +148,67 @@ export const passwordResetTokens = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("password_reset_tokens_user_id_idx").on(t.userId)],
+);
+
+// ── DM Members ────────────────────────────────────────
+
+export const dmMembers = pgTable(
+  "dm_members",
+  {
+    channelId: bigint("channel_id", { mode: "bigint" })
+      .notNull()
+      .references(() => channels.id, { onDelete: "cascade" }),
+    userId: bigint("user_id", { mode: "bigint" })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.channelId, t.userId] }),
+    index("dm_members_user_id_idx").on(t.userId),
+  ],
+);
+
+// ── Friendships ──────────────────────────────────────
+
+export const friendships = pgTable(
+  "friendships",
+  {
+    id: bigint({ mode: "bigint" }).primaryKey(),
+    requesterId: bigint("requester_id", { mode: "bigint" })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    addresseeId: bigint("addressee_id", { mode: "bigint" })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: varchar({ length: 20 }).notNull().$type<"pending" | "accepted">().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("friendships_pair_idx").on(t.requesterId, t.addresseeId),
+    index("friendships_addressee_id_idx").on(t.addresseeId),
+  ],
+);
+
+// ── Channel Read States ──────────────────────────────
+
+export const channelReadStates = pgTable(
+	"channel_read_states",
+	{
+		userId: bigint("user_id", { mode: "bigint" })
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		channelId: bigint("channel_id", { mode: "bigint" })
+			.notNull()
+			.references(() => channels.id, { onDelete: "cascade" }),
+		lastReadMessageId: bigint("last_read_message_id", { mode: "bigint" }),
+		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(t) => [
+		primaryKey({ columns: [t.userId, t.channelId] }),
+		index("channel_read_states_channel_id_idx").on(t.channelId),
+	],
 );
 
 // ── Invite Codes ───────────────────────────────────────

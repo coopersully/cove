@@ -15,7 +15,7 @@ export function DeleteChannelDialog({
   open,
   onOpenChange,
 }: DeleteChannelDialogProps): JSX.Element {
-  const deleteChannel = useDeleteChannel(channel.serverId);
+  const deleteChannel = useDeleteChannel(channel.serverId!);
   const navigate = useNavigate();
   const { channelId } = useParams();
 
