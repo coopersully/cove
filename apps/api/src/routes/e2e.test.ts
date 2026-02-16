@@ -416,6 +416,36 @@ describe("E2E: DMs", () => {
 		expect(bobMsgs.messages as unknown[]).toHaveLength(2);
 	});
 
+	it("GET /dms/:channelId returns channel + members for DM participants", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+		const charlie = await registerUser("charlie");
+
+		await makeFriends(alice, "bob", bob);
+
+		const { body: dmBody } = await apiRequest("POST", "/dms", {
+			token: alice.token,
+			body: { recipientId: bob.id },
+		});
+		const channelId = (dmBody.channel as Record<string, unknown>).id as string;
+
+		const { status: getStatus, body: getBody } = await apiRequest("GET", `/dms/${channelId}`, {
+			token: alice.token,
+		});
+		expect(getStatus).toBe(200);
+		expect((getBody.channel as Record<string, unknown>).id).toBe(channelId);
+
+		const members = getBody.members as Array<Record<string, unknown>>;
+		expect(members).toHaveLength(2);
+		expect(members.some((member) => member.username === "alice")).toBe(true);
+		expect(members.some((member) => member.username === "bob")).toBe(true);
+
+		const { status: forbiddenStatus } = await apiRequest("GET", `/dms/${channelId}`, {
+			token: charlie.token,
+		});
+		expect(forbiddenStatus).toBe(403);
+	});
+
 	it("cannot DM before accepting friend request", async () => {
 		const alice = await registerUser("alice");
 		const bob = await registerUser("bob");
@@ -1102,6 +1132,88 @@ describe("E2E: Messages", () => {
 		const remaining = finalMsgs.messages as Array<Record<string, unknown>>;
 		expect(remaining).toHaveLength(1);
 		expect(remaining[0]!.content).toBe("Edited by Alice");
+	});
+
+	it("POST /channels/:channelId/typing returns 204 for members and 403 for non-members", async () => {
+		const alice = await registerUser("alice");
+		const bob = await registerUser("bob");
+		const charlie = await registerUser("charlie");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Typing Server", isPublic: true },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const channelId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { status: okStatus } = await apiRequest("POST", `/channels/${channelId}/typing`, {
+			token: bob.token,
+		});
+		expect(okStatus).toBe(204);
+
+		const { status: forbiddenStatus } = await apiRequest("POST", `/channels/${channelId}/typing`, {
+			token: charlie.token,
+		});
+		expect(forbiddenStatus).toBe(403);
+	});
+});
+
+// ── Read State Journey ───────────────────────────────────────────────────────
+
+describe("E2E: Read States", () => {
+	it("PUT /channels/:channelId/ack updates last-read and GET /read-states returns it", async () => {
+		const alice = await registerUser("alice");
+
+		const { body: serverBody } = await apiRequest("POST", "/servers", {
+			token: alice.token,
+			body: { name: "Read State Server" },
+		});
+		const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+		const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+			token: alice.token,
+		});
+		const channelId = ((channelsBody.channels as Record<string, unknown>[])[0]!).id as string;
+
+		const { body: firstMsgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			body: { content: "First" },
+		});
+		const firstMessageId = (firstMsgBody.message as Record<string, unknown>).id as string;
+
+		const { body: secondMsgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+			token: alice.token,
+			body: { content: "Second" },
+		});
+		const secondMessageId = (secondMsgBody.message as Record<string, unknown>).id as string;
+
+		const { status: ack1Status } = await apiRequest("PUT", `/channels/${channelId}/ack`, {
+			token: alice.token,
+			body: { messageId: firstMessageId },
+		});
+		expect(ack1Status).toBe(204);
+
+		const { status: ack2Status } = await apiRequest("PUT", `/channels/${channelId}/ack`, {
+			token: alice.token,
+			body: { messageId: secondMessageId },
+		});
+		expect(ack2Status).toBe(204);
+
+		const { status: listStatus, body: listBody } = await apiRequest("GET", "/read-states", {
+			token: alice.token,
+		});
+		expect(listStatus).toBe(200);
+
+		const readStates = listBody.readStates as Array<Record<string, unknown>>;
+		expect(readStates).toHaveLength(1);
+		expect(readStates[0]!.channelId).toBe(channelId);
+		expect(readStates[0]!.lastReadMessageId).toBe(secondMessageId);
 	});
 });
 
