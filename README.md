@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/logo.svg" alt="Cove" width="48" height="48" />
+  <img src="https://raw.githubusercontent.com/coopersully/cove/46cee58c5fa59927da729df15a8398b53707e1aa/apps/web/public/logo.svg" alt="Cove" width="48" height="48" />
   <h1 align="center">Cove</h1>
   <p align="center">A warm, open-source community platform — built for connection, not extraction.</p>
 </p>
