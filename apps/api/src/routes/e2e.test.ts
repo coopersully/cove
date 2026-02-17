@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { generatePasswordResetToken } from "@cove/auth";
+import { sql } from "drizzle-orm";
 
 import { createTestInviteCode } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
@@ -2457,11 +2458,14 @@ describe("E2E: Rich Media", () => {
     const attachmentId = generateSnowflake();
     await database.insert(attachmentsTable).values({
       id: BigInt(attachmentId),
-      messageId: null,
+      messageId: sql`NULL`,
+      channelId: BigInt(channelId),
+      uploaderId: BigInt(alice.id),
       filename: "screenshot.png",
       contentType: "image/png",
       size: 5000,
       url: "/uploads/screenshot.png",
+      storageKey: "attachments/e2e/screenshot.png",
     });
 
     // Send message with attachment
@@ -2568,6 +2572,7 @@ describe("E2E: Rich Media", () => {
       serverId: BigInt(serverId),
       name: "partyblob",
       imageUrl: "/uploads/emojis/partyblob.gif",
+      storageKey: "emojis/e2e/partyblob.gif",
       creatorId: BigInt(alice.id),
     });
 
@@ -2619,11 +2624,14 @@ describe("E2E: Rich Media", () => {
     const attachmentId = generateSnowflake();
     await database.insert(attachmentsTable).values({
       id: BigInt(attachmentId),
-      messageId: null,
+      messageId: sql`NULL`,
+      channelId: BigInt(channelId),
+      uploaderId: BigInt(alice.id),
       filename: "design.pdf",
       contentType: "application/pdf",
       size: 102400,
       url: "/uploads/design.pdf",
+      storageKey: "attachments/e2e/design.pdf",
     });
 
     // Send message with attachment

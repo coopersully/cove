@@ -1,5 +1,5 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { channels, db, messages, reactions } from "@cove/db";
+import { db, messages, reactions } from "@cove/db";
 import { AppError } from "@cove/shared";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
@@ -72,7 +72,18 @@ reactionRoutes.delete("/channels/:channelId/messages/:messageId/reactions/:emoji
   const messageId = c.req.param("messageId");
   const emoji = decodeURIComponent(c.req.param("emoji"));
 
-  await requireChannelMembership(channelId, user.id);
+  const channel = await requireChannelMembership(channelId, user.id);
+
+  // Verify message exists and belongs to this channel
+  const [message] = await db
+    .select({ id: messages.id })
+    .from(messages)
+    .where(and(eq(messages.id, BigInt(messageId)), eq(messages.channelId, BigInt(channelId))))
+    .limit(1);
+
+  if (!message) {
+    throw new AppError("NOT_FOUND", "Message not found");
+  }
 
   const removed = await db
     .delete(reactions)
@@ -86,25 +97,13 @@ reactionRoutes.delete("/channels/:channelId/messages/:messageId/reactions/:emoji
     .returning({ messageId: reactions.messageId });
 
   if (removed.length > 0) {
-    const [channel] = await db
-      .select({ serverId: channels.serverId, type: channels.type })
-      .from(channels)
-      .where(eq(channels.id, BigInt(channelId)))
-      .limit(1);
-
-    if (channel) {
-      const eventTargets = getEventTargets({
-        id: channelId,
-        type: channel.type,
-        serverId: channel.serverId ? String(channel.serverId) : null,
-      });
-      emitReactionRemove(eventTargets, {
-        channelId,
-        messageId,
-        userId: user.id,
-        emoji,
-      });
-    }
+    const eventTargets = getEventTargets(channel);
+    emitReactionRemove(eventTargets, {
+      channelId: channel.id,
+      messageId,
+      userId: user.id,
+      emoji,
+    });
   }
 
   return c.body(null, 204);

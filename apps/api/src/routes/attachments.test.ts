@@ -1,6 +1,6 @@
-import { attachments, db, messages } from "@cove/db";
+import { attachments, db, messages, serverMembers } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -21,13 +21,16 @@ async function createTestAttachment(
     .values({
       id: BigInt(id),
       messageId: BigInt(messageId),
+      channelId: sql`NULL`,
+      uploaderId: sql`NULL`,
       filename: overrides.filename ?? "test.png",
       contentType: overrides.contentType ?? "image/png",
       size: overrides.size ?? 1024,
       url: overrides.url ?? `/uploads/test/${id}.png`,
+      storageKey: sql`NULL`,
     })
     .returning();
-  return { id, ...created! };
+  return { ...created!, id: String(created!.id) };
 }
 
 describe("Attachment Routes", () => {
@@ -57,11 +60,14 @@ describe("Attachment Routes", () => {
       const attachmentId = generateSnowflake();
       await db.insert(attachments).values({
         id: BigInt(attachmentId),
-        messageId: null,
+        messageId: sql`NULL`,
+        channelId: BigInt(channel.id),
+        uploaderId: BigInt(alice.id),
         filename: "photo.jpg",
         contentType: "image/jpeg",
         size: 2048,
         url: "/uploads/test/photo.jpg",
+        storageKey: "attachments/test/photo.jpg",
       });
 
       const { status, body } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
@@ -119,6 +125,33 @@ describe("Attachment Routes", () => {
       });
 
       expect(status).toBe(409);
+    });
+
+    it("rejects linking an attachment uploaded by another user", async () => {
+      const alice = await createTestUser({ username: "att_alice_wrong_uploader" });
+      const bob = await createTestUser({ username: "att_bob_wrong_uploader" });
+      const server = await createTestServer(alice.id);
+      const channel = await createTestChannel(server.id);
+
+      const attachmentId = generateSnowflake();
+      await db.insert(attachments).values({
+        id: BigInt(attachmentId),
+        messageId: sql`NULL`,
+        channelId: BigInt(channel.id),
+        uploaderId: BigInt(bob.id),
+        filename: "other-user.png",
+        contentType: "image/png",
+        size: 100,
+        url: "/uploads/test/other-user.png",
+        storageKey: "attachments/test/other-user.png",
+      });
+
+      const { status } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+        token: alice.token,
+        body: { content: "Should fail", attachmentIds: [attachmentId] },
+      });
+
+      expect(status).toBe(403);
     });
   });
 
@@ -251,6 +284,57 @@ describe("Attachment Routes", () => {
       });
 
       expect(status).toBe(404);
+    });
+
+    it("forbids attachment access for non-members", async () => {
+      const alice = await createTestUser({ username: "att_alice_nonmember_1" });
+      const bob = await createTestUser({ username: "att_bob_nonmember_1" });
+      const server = await createTestServer(alice.id);
+      const channel = await createTestChannel(server.id);
+
+      const { body: createBody } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+        token: alice.token,
+        body: { content: "Msg with private att" },
+      });
+      const messageId = (createBody.message as Record<string, unknown>).id as string;
+      const att = await createTestAttachment(messageId);
+
+      const { status } = await apiRequest("GET", `/attachments/${att.id}`, {
+        token: bob.token,
+      });
+
+      expect(status).toBe(403);
+    });
+
+    it("forbids unlinked attachment access for other members", async () => {
+      const alice = await createTestUser({ username: "att_alice_unlinked_1" });
+      const bob = await createTestUser({ username: "att_bob_unlinked_1" });
+      const server = await createTestServer(alice.id);
+      const channel = await createTestChannel(server.id);
+
+      await db.insert(serverMembers).values({
+        serverId: BigInt(server.id),
+        userId: BigInt(bob.id),
+      });
+
+      const attachmentId = generateSnowflake();
+      await db.insert(attachments).values({
+        id: BigInt(attachmentId),
+        messageId: sql`NULL`,
+        channelId: BigInt(channel.id),
+        uploaderId: BigInt(alice.id),
+        filename: "draft.png",
+        contentType: "image/png",
+        size: 500,
+        url: "/uploads/test/draft.png",
+        storageKey: "attachments/test/draft.png",
+      });
+
+      const { status } = await apiRequest("GET", `/attachments/${attachmentId}`, {
+        token: bob.token,
+      });
+
+      expect(status).toBe(403);
     });
   });
 

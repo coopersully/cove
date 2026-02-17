@@ -187,6 +187,23 @@ describe("Reaction Routes", () => {
       expect(status).toBe(204);
     });
 
+    it("returns 404 when message does not belong to the provided channel", async () => {
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
+      const channelA = await createTestChannel(server.id);
+      const channelB = await createTestChannel(server.id);
+      const message = await createTestMessage(channelA.id, user.id);
+
+      const emoji = encodeURIComponent("👍");
+      const { status } = await apiRequest(
+        "DELETE",
+        `/channels/${channelB.id}/messages/${message.id}/reactions/${emoji}`,
+        { token: user.token },
+      );
+
+      expect(status).toBe(404);
+    });
+
     it("removing a reaction decrements the count in GET messages", async () => {
       const owner = await createTestUser();
       const member = await createTestUser();

@@ -117,6 +117,12 @@ export function useGatewayEventRouter(): void {
           };
         },
       );
+
+      if ("pinnedAt" in data || "pinnedBy" in data) {
+        void queryClient.invalidateQueries({
+          queryKey: ["channels", data.channelId, "pins"],
+        });
+      }
     }
 
     function handleMessageDelete(data: { id: string; channelId: string }) {

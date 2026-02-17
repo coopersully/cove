@@ -1,6 +1,8 @@
 import { db, embeds } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
 import { inArray } from "drizzle-orm";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 
 interface EmbedData {
   id: string;
@@ -13,6 +15,16 @@ interface EmbedData {
 }
 
 const URL_REGEX = /https?:\/\/[^\s<>]+/g;
+const MAX_REDIRECTS = 3;
+const MAX_HTML_SIZE_BYTES = 2 * 1024 * 1024;
+const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
+
+const EMPTY_OG_METADATA: OgMetadata = {
+  title: undefined,
+  description: undefined,
+  image: undefined,
+  siteName: undefined,
+};
 
 // Extract URLs from message content
 export function extractUrls(content: string): string[] {
@@ -71,24 +83,151 @@ export async function generateEmbedsForMessage(
   return results;
 }
 
+function isPrivateIpv4(address: string): boolean {
+  const parts = address.split(".").map((part) => Number(part));
+  if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) {
+    return true;
+  }
+
+  const a = parts[0] ?? -1;
+  const b = parts[1] ?? -1;
+  if (a === 10) return true;
+  if (a === 127) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 0) return true;
+  return false;
+}
+
+function isPrivateIpv6(address: string): boolean {
+  const normalized = address.toLowerCase();
+  if (normalized === "::1") return true;
+  if (normalized.startsWith("fc") || normalized.startsWith("fd")) return true; // ULA
+  if (normalized.startsWith("fe80")) return true; // Link-local
+  if (normalized.startsWith("::ffff:")) {
+    return isPrivateIpv4(normalized.replace("::ffff:", ""));
+  }
+  return false;
+}
+
+function isPrivateAddress(address: string): boolean {
+  const ipVersion = isIP(address);
+  if (ipVersion === 4) return isPrivateIpv4(address);
+  if (ipVersion === 6) return isPrivateIpv6(address);
+  return true;
+}
+
+function isBlockedHostname(hostname: string): boolean {
+  const normalized = hostname.toLowerCase();
+  return (
+    normalized === "localhost" ||
+    normalized.endsWith(".localhost") ||
+    normalized.endsWith(".local")
+  );
+}
+
+async function resolvesToPrivateAddress(hostname: string): Promise<boolean> {
+  if (isBlockedHostname(hostname)) {
+    return true;
+  }
+
+  if (isIP(hostname)) {
+    return isPrivateAddress(hostname);
+  }
+
+  try {
+    const addresses = await lookup(hostname, { all: true, verbatim: true });
+    if (addresses.length === 0) {
+      return true;
+    }
+    return addresses.some((entry) => isPrivateAddress(entry.address));
+  } catch {
+    return true;
+  }
+}
+
+function isAllowedExternalUrl(url: URL): boolean {
+  if (!(url.protocol === "http:" || url.protocol === "https:")) {
+    return false;
+  }
+  if (url.username || url.password) {
+    return false;
+  }
+  return true;
+}
+
+async function fetchSafeHtml(url: string, signal: AbortSignal): Promise<string | null> {
+  let currentUrl: URL;
+  try {
+    currentUrl = new URL(url);
+  } catch {
+    return null;
+  }
+
+  for (let i = 0; i <= MAX_REDIRECTS; i++) {
+    if (!isAllowedExternalUrl(currentUrl)) {
+      return null;
+    }
+
+    if (await resolvesToPrivateAddress(currentUrl.hostname)) {
+      return null;
+    }
+
+    const response = await fetch(currentUrl, {
+      signal,
+      headers: { "User-Agent": "CoveBot/1.0 (Link Preview)" },
+      redirect: "manual",
+    });
+
+    if (REDIRECT_STATUS_CODES.has(response.status)) {
+      const location = response.headers.get("location");
+      if (!location) {
+        return null;
+      }
+
+      try {
+        currentUrl = new URL(location, currentUrl);
+      } catch {
+        return null;
+      }
+      continue;
+    }
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("text/html")) {
+      return null;
+    }
+
+    const contentLength = response.headers.get("content-length");
+    if (contentLength && Number(contentLength) > MAX_HTML_SIZE_BYTES) {
+      return null;
+    }
+
+    const html = await response.text();
+    if (html.length > MAX_HTML_SIZE_BYTES) {
+      return null;
+    }
+    return html;
+  }
+
+  return null;
+}
+
 // Fetch Open Graph metadata from a URL
 async function fetchOpenGraphMetadata(url: string): Promise<OgMetadata> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
 
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: { "User-Agent": "CoveBot/1.0 (Link Preview)" },
-      redirect: "follow",
-    });
-
-    if (!response.ok) return { title: undefined, description: undefined, image: undefined, siteName: undefined };
-
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/html")) return { title: undefined, description: undefined, image: undefined, siteName: undefined };
-
-    const html = await response.text();
+    const html = await fetchSafeHtml(url, controller.signal);
+    if (!html) {
+      return EMPTY_OG_METADATA;
+    }
     return parseOpenGraphTags(html);
   } finally {
     clearTimeout(timeout);

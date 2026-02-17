@@ -1,10 +1,11 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { customEmojis, db, serverMembers } from "@cove/db";
-import { AppError, generateSnowflake } from "@cove/shared";
-import { and, eq } from "drizzle-orm";
+import { customEmojis, db, serverMembers, servers } from "@cove/db";
+import { AppError, Permissions, generateSnowflake, hasPermission } from "@cove/shared";
+import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { getMemberPermissions } from "../lib/index.js";
 import { getStorage } from "../lib/storage.js";
 
 const createEmojiSchema = z.object({
@@ -19,19 +20,16 @@ export const customEmojiRoutes = new Hono();
 
 customEmojiRoutes.use(requireAuth());
 
-// GET /servers/:serverId/emojis
-customEmojiRoutes.get("/servers/:serverId/emojis", async (c) => {
-  const user = getUser(c);
-  const serverId = c.req.param("serverId");
+const MAX_CUSTOM_EMOJIS_PER_SERVER = 50;
 
-  // Check membership
+async function requireServerMembership(serverId: string, userId: string): Promise<void> {
   const [membership] = await db
     .select()
     .from(serverMembers)
     .where(
       and(
         eq(serverMembers.serverId, BigInt(serverId)),
-        eq(serverMembers.userId, BigInt(user.id)),
+        eq(serverMembers.userId, BigInt(userId)),
       ),
     )
     .limit(1);
@@ -39,6 +37,38 @@ customEmojiRoutes.get("/servers/:serverId/emojis", async (c) => {
   if (!membership) {
     throw new AppError("FORBIDDEN", "You are not a member of this server");
   }
+}
+
+async function requireManageServer(serverId: string, userId: string): Promise<void> {
+  await requireServerMembership(serverId, userId);
+
+  const [server] = await db
+    .select({ ownerId: servers.ownerId })
+    .from(servers)
+    .where(eq(servers.id, BigInt(serverId)))
+    .limit(1);
+
+  if (!server) {
+    throw new AppError("NOT_FOUND", "Server not found");
+  }
+
+  const isOwner = String(server.ownerId) === userId;
+  if (isOwner) {
+    return;
+  }
+
+  const perms = await getMemberPermissions(serverId, userId);
+  if (!hasPermission(perms, Permissions.MANAGE_SERVER)) {
+    throw new AppError("FORBIDDEN", "You do not have permission to manage emoji");
+  }
+}
+
+// GET /servers/:serverId/emojis
+customEmojiRoutes.get("/servers/:serverId/emojis", async (c) => {
+  const user = getUser(c);
+  const serverId = c.req.param("serverId");
+
+  await requireServerMembership(serverId, user.id);
 
   const emojis = await db
     .select()
@@ -61,21 +91,7 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
   const user = getUser(c);
   const serverId = c.req.param("serverId");
 
-  // Check membership
-  const [membership] = await db
-    .select()
-    .from(serverMembers)
-    .where(
-      and(
-        eq(serverMembers.serverId, BigInt(serverId)),
-        eq(serverMembers.userId, BigInt(user.id)),
-      ),
-    )
-    .limit(1);
-
-  if (!membership) {
-    throw new AppError("FORBIDDEN", "You are not a member of this server");
-  }
+  await requireManageServer(serverId, user.id);
 
   const formData = await c.req.formData();
   const file = formData.get("file");
@@ -119,26 +135,52 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
     throw new AppError("CONFLICT", "An emoji with this name already exists");
   }
 
+  const countRows = await db
+    .select({ count: sql<number>`count(*)::int`.as("count") })
+    .from(customEmojis)
+    .where(eq(customEmojis.serverId, BigInt(serverId)));
+  const emojiCount = countRows[0]?.count ?? 0;
+
+  if (emojiCount >= MAX_CUSTOM_EMOJIS_PER_SERVER) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      `Maximum of ${MAX_CUSTOM_EMOJIS_PER_SERVER} custom emoji per server`,
+    );
+  }
+
   const emojiId = generateSnowflake();
   const ext = file.name.split(".").pop() ?? "png";
   const key = `emojis/${serverId}/${emojiId}.${ext}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const storage = getStorage();
-  const imageUrl = await storage.upload(key, buffer, file.type);
+  let imageUrl: string;
+  try {
+    imageUrl = await storage.upload(key, buffer, file.type);
+  } catch {
+    throw new AppError("INTERNAL_ERROR", "Failed to upload emoji");
+  }
 
-  const [created] = await db
-    .insert(customEmojis)
-    .values({
-      id: BigInt(emojiId),
-      serverId: BigInt(serverId),
-      name: parsed.data.name,
-      imageUrl,
-      creatorId: BigInt(user.id),
-    })
-    .returning();
+  let created: typeof customEmojis.$inferSelect | undefined;
+  try {
+    [created] = await db
+      .insert(customEmojis)
+      .values({
+        id: BigInt(emojiId),
+        serverId: BigInt(serverId),
+        name: parsed.data.name,
+        imageUrl,
+        creatorId: BigInt(user.id),
+        storageKey: key,
+      })
+      .returning();
+  } catch {
+    await storage.delete(key).catch(() => {});
+    throw new AppError("INTERNAL_ERROR", "Failed to create emoji");
+  }
 
   if (!created) {
+    await storage.delete(key).catch(() => {});
     throw new AppError("INTERNAL_ERROR", "Failed to create emoji");
   }
 
@@ -162,21 +204,7 @@ customEmojiRoutes.delete("/servers/:serverId/emojis/:emojiId", async (c) => {
   const serverId = c.req.param("serverId");
   const emojiId = c.req.param("emojiId");
 
-  // Check membership
-  const [membership] = await db
-    .select()
-    .from(serverMembers)
-    .where(
-      and(
-        eq(serverMembers.serverId, BigInt(serverId)),
-        eq(serverMembers.userId, BigInt(user.id)),
-      ),
-    )
-    .limit(1);
-
-  if (!membership) {
-    throw new AppError("FORBIDDEN", "You are not a member of this server");
-  }
+  await requireManageServer(serverId, user.id);
 
   const [emoji] = await db
     .select()
@@ -194,6 +222,15 @@ customEmojiRoutes.delete("/servers/:serverId/emojis/:emojiId", async (c) => {
   }
 
   await db.delete(customEmojis).where(eq(customEmojis.id, BigInt(emojiId)));
+
+  if (emoji.storageKey) {
+    const storage = getStorage();
+    try {
+      await storage.delete(emoji.storageKey);
+    } catch (err) {
+      console.error("[custom-emojis] Failed to delete emoji from storage:", err);
+    }
+  }
 
   return c.json({ success: true });
 });

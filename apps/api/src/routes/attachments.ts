@@ -1,7 +1,7 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { attachments, db } from "@cove/db";
+import { attachments, db, messages } from "@cove/db";
 import { AppError, generateSnowflake, snowflakeSchema } from "@cove/shared";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { requireChannelMembership } from "../lib/channel-membership.js";
@@ -65,21 +65,36 @@ attachmentRoutes.post("/channels/:channelId/attachments", async (c) => {
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const storage = getStorage();
-  const url = await storage.upload(key, buffer, file.type);
+  let url: string;
+  try {
+    url = await storage.upload(key, buffer, file.type);
+  } catch {
+    throw new AppError("INTERNAL_ERROR", "Failed to upload attachment");
+  }
 
-  const [created] = await db
-    .insert(attachments)
-    .values({
-      id: BigInt(attachmentId),
-      messageId: null, // Unlinked until message creation
-      filename: file.name,
-      contentType: file.type,
-      size: file.size,
-      url,
-    })
-    .returning();
+  let created: typeof attachments.$inferSelect | undefined;
+  try {
+    [created] = await db
+      .insert(attachments)
+      .values({
+        id: BigInt(attachmentId),
+        messageId: sql`NULL`, // Unlinked until message creation
+        channelId: BigInt(channelId),
+        uploaderId: BigInt(user.id),
+        filename: file.name,
+        contentType: file.type,
+        size: file.size,
+        url,
+        storageKey: key,
+      })
+      .returning();
+  } catch {
+    await storage.delete(key).catch(() => {});
+    throw new AppError("INTERNAL_ERROR", "Failed to create attachment");
+  }
 
   if (!created) {
+    await storage.delete(key).catch(() => {});
     throw new AppError("INTERNAL_ERROR", "Failed to create attachment");
   }
 
@@ -99,6 +114,7 @@ attachmentRoutes.post("/channels/:channelId/attachments", async (c) => {
 
 // GET /attachments/:id
 attachmentRoutes.get("/attachments/:id", async (c) => {
+  const user = getUser(c);
   const parsed = snowflakeSchema.safeParse(c.req.param("id"));
   if (!parsed.success) {
     throw new AppError("VALIDATION_ERROR", "Invalid attachment ID");
@@ -112,6 +128,30 @@ attachmentRoutes.get("/attachments/:id", async (c) => {
 
   if (!attachment) {
     throw new AppError("NOT_FOUND", "Attachment not found");
+  }
+
+  let attachmentChannelId = attachment.channelId ? String(attachment.channelId) : null;
+  if (!attachmentChannelId && attachment.messageId) {
+    const [message] = await db
+      .select({ channelId: messages.channelId })
+      .from(messages)
+      .where(eq(messages.id, attachment.messageId))
+      .limit(1);
+    attachmentChannelId = message?.channelId ? String(message.channelId) : null;
+  }
+
+  if (!attachmentChannelId) {
+    throw new AppError("FORBIDDEN", "Attachment is not accessible");
+  }
+
+  await requireChannelMembership(attachmentChannelId, user.id);
+
+  // Unlinked attachments remain private to the uploader.
+  if (
+    attachment.messageId === null &&
+    (!attachment.uploaderId || String(attachment.uploaderId) !== user.id)
+  ) {
+    throw new AppError("FORBIDDEN", "You do not have access to this attachment");
   }
 
   return c.json({
@@ -132,12 +172,16 @@ attachmentRoutes.get("/attachments/:id", async (c) => {
 export async function linkAttachmentsToMessage(
   attachmentIds: string[],
   messageId: string,
+  channelId: string,
+  uploaderId: string,
   queryDb: AttachmentQueryDb = db,
 ): Promise<AttachmentResponse[]> {
   if (attachmentIds.length === 0) return [];
 
   const uniqueIds = [...new Set(attachmentIds)];
   const attachmentBigInts = uniqueIds.map((id) => BigInt(id));
+  const normalizedChannelId = BigInt(channelId);
+  const normalizedUploaderId = BigInt(uploaderId);
 
   const existing = await queryDb
     .select()
@@ -152,6 +196,18 @@ export async function linkAttachmentsToMessage(
     throw new AppError("CONFLICT", "One or more attachments are already linked");
   }
 
+  if (
+    existing.some(
+      (attachment) =>
+        attachment.channelId === null ||
+        attachment.uploaderId === null ||
+        attachment.channelId !== normalizedChannelId ||
+        attachment.uploaderId !== normalizedUploaderId,
+    )
+  ) {
+    throw new AppError("FORBIDDEN", "One or more attachments cannot be linked");
+  }
+
   const linked = await queryDb
     .update(attachments)
     .set({ messageId: BigInt(messageId) })
@@ -159,6 +215,8 @@ export async function linkAttachmentsToMessage(
       and(
         inArray(attachments.id, attachmentBigInts),
         isNull(attachments.messageId),
+        eq(attachments.channelId, normalizedChannelId),
+        eq(attachments.uploaderId, normalizedUploaderId),
       ),
     )
     .returning();

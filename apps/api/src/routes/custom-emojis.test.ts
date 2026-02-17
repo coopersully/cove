@@ -1,6 +1,6 @@
 import { customEmojis, db, serverMembers } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -19,10 +19,11 @@ async function createTestEmoji(serverId: string, creatorId: string, name: string
       serverId: BigInt(serverId),
       name,
       imageUrl: `/uploads/emojis/${serverId}/${id}.png`,
+      storageKey: `emojis/${serverId}/${id}.png`,
       creatorId: BigInt(creatorId),
     })
     .returning();
-  return { id, ...created! };
+  return { ...created!, id: String(created!.id) };
 }
 
 describe("Custom Emoji Routes", () => {
@@ -136,6 +137,26 @@ describe("Custom Emoji Routes", () => {
         "DELETE",
         `/servers/${server.id}/emojis/${emoji.id}`,
         { token: bob.token },
+      );
+
+      expect(status).toBe(403);
+    });
+
+    it("rejects member deletion without MANAGE_SERVER", async () => {
+      const owner = await createTestUser({ username: "emo_owner_manage" });
+      const member = await createTestUser({ username: "emo_member_manage" });
+      const server = await createTestServer(owner.id);
+      const emoji = await createTestEmoji(server.id, owner.id, "locked");
+
+      await db.insert(serverMembers).values({
+        serverId: BigInt(server.id),
+        userId: BigInt(member.id),
+      });
+
+      const { status } = await apiRequest(
+        "DELETE",
+        `/servers/${server.id}/emojis/${emoji.id}`,
+        { token: member.token },
       );
 
       expect(status).toBe(403);

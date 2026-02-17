@@ -1,5 +1,5 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { channels, db, messages, reactions, servers, users } from "@cove/db";
+import { attachments, channels, db, messages, reactions, servers, users } from "@cove/db";
 import {
   AppError,
   Permissions,
@@ -22,6 +22,7 @@ import {
   emitTypingStart,
 } from "../lib/events.js";
 import { getMemberPermissions } from "../lib/index.js";
+import { getStorage } from "../lib/storage.js";
 import { validate } from "../middleware/index.js";
 import { getAttachmentsForMessages, linkAttachmentsToMessage } from "./attachments.js";
 import { generateEmbedsForMessage, getEmbedsForMessages } from "./embeds.js";
@@ -325,7 +326,7 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     }
 
     const linked = body.attachmentIds
-      ? await linkAttachmentsToMessage(body.attachmentIds, messageId, tx)
+      ? await linkAttachmentsToMessage(body.attachmentIds, messageId, channelId, user.id, tx)
       : [];
 
     return { created: inserted, linkedAttachments: linked };
@@ -513,7 +514,32 @@ messageRoutes.delete("/messages/:id", async (c) => {
     }
   }
 
+  const messageAttachmentRows = await db
+    .select({ storageKey: attachments.storageKey })
+    .from(attachments)
+    .where(eq(attachments.messageId, BigInt(messageId)));
+
   await db.delete(messages).where(eq(messages.id, BigInt(messageId)));
+
+  const storageKeys = [
+    ...new Set(
+      messageAttachmentRows
+        .map((row) => row.storageKey)
+        .filter((key): key is string => typeof key === "string" && key.length > 0),
+    ),
+  ];
+  if (storageKeys.length > 0) {
+    const storage = getStorage();
+    await Promise.allSettled(
+      storageKeys.map(async (key) => {
+        try {
+          await storage.delete(key);
+        } catch (err) {
+          console.error("[messages] Failed to delete attachment from storage:", err);
+        }
+      }),
+    );
+  }
 
   emitMessageDelete(eventTargets, channelInfo.id, messageId);
 

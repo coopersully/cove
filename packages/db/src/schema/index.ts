@@ -266,15 +266,24 @@ export const attachments = pgTable(
     id: bigint({ mode: "bigint" }).primaryKey(),
     messageId: bigint("message_id", { mode: "bigint" })
       .references(() => messages.id, { onDelete: "cascade" }),
+    channelId: bigint("channel_id", { mode: "bigint" })
+      .references(() => channels.id, { onDelete: "cascade" }),
+    uploaderId: bigint("uploader_id", { mode: "bigint" })
+      .references(() => users.id, { onDelete: "set null" }),
     filename: varchar({ length: 255 }).notNull(),
     contentType: varchar("content_type", { length: 127 }).notNull(),
     size: integer().notNull(),
     url: text().notNull(),
+    storageKey: text("storage_key"),
     width: integer(),
     height: integer(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("attachments_message_id_idx").on(t.messageId)],
+  (t) => [
+    index("attachments_message_id_idx").on(t.messageId),
+    index("attachments_channel_id_idx").on(t.channelId),
+    index("attachments_uploader_id_idx").on(t.uploaderId),
+  ],
 );
 
 // ── Embeds ────────────────────────────────────────────
@@ -311,6 +320,7 @@ export const customEmojis = pgTable(
       .references(() => servers.id, { onDelete: "cascade" }),
     name: varchar({ length: 32 }).notNull(),
     imageUrl: text("image_url").notNull(),
+    storageKey: text("storage_key"),
     creatorId: bigint("creator_id", { mode: "bigint" })
       .notNull()
       .references(() => users.id),
