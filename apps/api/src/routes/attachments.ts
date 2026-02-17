@@ -47,7 +47,7 @@ attachmentRoutes.post("/channels/:channelId/attachments", async (c) => {
   const formData = await c.req.formData();
   const file = formData.get("file");
 
-  if (!file || !(file instanceof File)) {
+  if (!(file && file instanceof File)) {
     throw new AppError("VALIDATION_ERROR", "No file provided");
   }
 
@@ -176,7 +176,9 @@ export async function linkAttachmentsToMessage(
   uploaderId: string,
   queryDb: AttachmentQueryDb = db,
 ): Promise<AttachmentResponse[]> {
-  if (attachmentIds.length === 0) return [];
+  if (attachmentIds.length === 0) {
+    return [];
+  }
 
   const uniqueIds = [...new Set(attachmentIds)];
   const attachmentBigInts = uniqueIds.map((id) => BigInt(id));
@@ -237,9 +239,7 @@ export async function linkAttachmentsToMessage(
 }
 
 // Helper: fetch attachments for a list of message IDs
-export async function getAttachmentsForMessages(
-  messageIds: bigint[],
-): Promise<
+export async function getAttachmentsForMessages(messageIds: bigint[]): Promise<
   Map<
     string,
     {
@@ -253,7 +253,9 @@ export async function getAttachmentsForMessages(
     }[]
   >
 > {
-  if (messageIds.length === 0) return new Map();
+  if (messageIds.length === 0) {
+    return new Map();
+  }
 
   const rows = await db
     .select()
@@ -278,7 +280,7 @@ export async function getAttachmentsForMessages(
     if (!byMessage.has(key)) {
       byMessage.set(key, []);
     }
-    byMessage.get(key)!.push({
+    byMessage.get(key)?.push({
       id: String(row.id),
       filename: row.filename,
       contentType: row.contentType,

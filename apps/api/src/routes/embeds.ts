@@ -1,8 +1,8 @@
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 import { db, embeds } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
 import { inArray } from "drizzle-orm";
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 
 interface EmbedData {
   id: string;
@@ -29,7 +29,9 @@ const EMPTY_OG_METADATA: OgMetadata = {
 // Extract URLs from message content
 export function extractUrls(content: string): string[] {
   const matches = content.match(URL_REGEX);
-  if (!matches) return [];
+  if (!matches) {
+    return [];
+  }
   // Deduplicate and limit to 5 embeds per message
   return [...new Set(matches)].slice(0, 5);
 }
@@ -40,14 +42,18 @@ export async function generateEmbedsForMessage(
   content: string,
 ): Promise<EmbedData[]> {
   const urls = extractUrls(content);
-  if (urls.length === 0) return [];
+  if (urls.length === 0) {
+    return [];
+  }
 
   const results: EmbedData[] = [];
 
   for (const url of urls) {
     try {
       const metadata = await fetchOpenGraphMetadata(url);
-      if (!metadata.title && !metadata.description) continue;
+      if (!(metadata.title || metadata.description)) {
+        continue;
+      }
 
       const embedId = generateSnowflake();
       const [created] = await db
@@ -91,20 +97,38 @@ function isPrivateIpv4(address: string): boolean {
 
   const a = parts[0] ?? -1;
   const b = parts[1] ?? -1;
-  if (a === 10) return true;
-  if (a === 127) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 0) return true;
+  if (a === 10) {
+    return true;
+  }
+  if (a === 127) {
+    return true;
+  }
+  if (a === 169 && b === 254) {
+    return true;
+  }
+  if (a === 172 && b >= 16 && b <= 31) {
+    return true;
+  }
+  if (a === 192 && b === 168) {
+    return true;
+  }
+  if (a === 0) {
+    return true;
+  }
   return false;
 }
 
 function isPrivateIpv6(address: string): boolean {
   const normalized = address.toLowerCase();
-  if (normalized === "::1") return true;
-  if (normalized.startsWith("fc") || normalized.startsWith("fd")) return true; // ULA
-  if (normalized.startsWith("fe80")) return true; // Link-local
+  if (normalized === "::1") {
+    return true;
+  }
+  if (normalized.startsWith("fc") || normalized.startsWith("fd")) {
+    return true; // ULA
+  }
+  if (normalized.startsWith("fe80")) {
+    return true; // Link-local
+  }
   if (normalized.startsWith("::ffff:")) {
     return isPrivateIpv4(normalized.replace("::ffff:", ""));
   }
@@ -113,17 +137,19 @@ function isPrivateIpv6(address: string): boolean {
 
 function isPrivateAddress(address: string): boolean {
   const ipVersion = isIP(address);
-  if (ipVersion === 4) return isPrivateIpv4(address);
-  if (ipVersion === 6) return isPrivateIpv6(address);
+  if (ipVersion === 4) {
+    return isPrivateIpv4(address);
+  }
+  if (ipVersion === 6) {
+    return isPrivateIpv6(address);
+  }
   return true;
 }
 
 function isBlockedHostname(hostname: string): boolean {
   const normalized = hostname.toLowerCase();
   return (
-    normalized === "localhost" ||
-    normalized.endsWith(".localhost") ||
-    normalized.endsWith(".local")
+    normalized === "localhost" || normalized.endsWith(".localhost") || normalized.endsWith(".local")
   );
 }
 
@@ -245,33 +271,52 @@ interface OgMetadata {
 function parseOpenGraphTags(html: string): OgMetadata {
   const result: Record<string, string> = {};
 
-  const metaRegex = /<meta\s+(?:[^>]*?\s+)?(?:property|name)=["']og:(\w+)["']\s+content=["']([^"']*)["']/gi;
-  let match: RegExpExecArray | null;
-  while ((match = metaRegex.exec(html)) !== null) {
-    result[match[1]!] = match[2]!;
+  const metaRegex =
+    /<meta\s+(?:[^>]*?\s+)?(?:property|name)=["']og:(\w+)["']\s+content=["']([^"']*)["']/gi;
+  let match = metaRegex.exec(html);
+  while (match !== null) {
+    const key = match[1];
+    const value = match[2];
+    if (key && value) {
+      result[key] = value;
+    }
+    match = metaRegex.exec(html);
   }
 
   // Also try reversed attribute order: content before property
-  const metaRegex2 = /<meta\s+(?:[^>]*?\s+)?content=["']([^"']*)["']\s+(?:property|name)=["']og:(\w+)["']/gi;
-  while ((match = metaRegex2.exec(html)) !== null) {
-    if (!result[match[2]!]) {
-      result[match[2]!] = match[1]!;
+  const metaRegex2 =
+    /<meta\s+(?:[^>]*?\s+)?content=["']([^"']*)["']\s+(?:property|name)=["']og:(\w+)["']/gi;
+  match = metaRegex2.exec(html);
+  while (match !== null) {
+    const value = match[1];
+    const key = match[2];
+    if (key && value && !result[key]) {
+      result[key] = value;
     }
+    match = metaRegex2.exec(html);
   }
 
   // Fallback to <title> tag if no og:title
   if (!result.title) {
     const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
     if (titleMatch) {
-      result.title = titleMatch[1]!.trim();
+      const title = titleMatch[1];
+      if (title) {
+        result.title = title.trim();
+      }
     }
   }
 
   // Fallback to meta description if no og:description
   if (!result.description) {
-    const descMatch = html.match(/<meta\s+(?:[^>]*?\s+)?name=["']description["']\s+content=["']([^"']*)["']/i);
+    const descMatch = html.match(
+      /<meta\s+(?:[^>]*?\s+)?name=["']description["']\s+content=["']([^"']*)["']/i,
+    );
     if (descMatch) {
-      result.description = descMatch[1]!;
+      const description = descMatch[1];
+      if (description) {
+        result.description = description;
+      }
     }
   }
 
@@ -287,12 +332,11 @@ function parseOpenGraphTags(html: string): OgMetadata {
 export async function getEmbedsForMessages(
   messageIds: bigint[],
 ): Promise<Map<string, EmbedData[]>> {
-  if (messageIds.length === 0) return new Map();
+  if (messageIds.length === 0) {
+    return new Map();
+  }
 
-  const rows = await db
-    .select()
-    .from(embeds)
-    .where(inArray(embeds.messageId, messageIds));
+  const rows = await db.select().from(embeds).where(inArray(embeds.messageId, messageIds));
 
   const byMessage = new Map<string, EmbedData[]>();
 
@@ -301,7 +345,7 @@ export async function getEmbedsForMessages(
     if (!byMessage.has(key)) {
       byMessage.set(key, []);
     }
-    byMessage.get(key)!.push({
+    byMessage.get(key)?.push({
       id: String(row.id),
       url: row.url,
       title: row.title,

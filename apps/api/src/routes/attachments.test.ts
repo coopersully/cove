@@ -3,11 +3,7 @@ import { generateSnowflake } from "@cove/shared";
 import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import {
-  createTestChannel,
-  createTestServer,
-  createTestUser,
-} from "../test-utils/factories.js";
+import { createTestChannel, createTestServer, createTestUser } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
 
 // Helper: insert an attachment directly for tests that need to skip upload
@@ -30,7 +26,10 @@ async function createTestAttachment(
       storageKey: sql`NULL`,
     })
     .returning();
-  return { ...created!, id: String(created!.id) };
+  if (!created) {
+    throw new Error("Failed to create test attachment");
+  }
+  return { ...created, id: String(created.id) };
 }
 
 describe("Attachment Routes", () => {
@@ -77,12 +76,12 @@ describe("Attachment Routes", () => {
 
       expect(status).toBe(201);
       const msg = body.message as Record<string, unknown>;
-      const msgAttachments = msg.attachments as Array<Record<string, unknown>>;
+      const msgAttachments = msg.attachments as Record<string, unknown>[];
       expect(msgAttachments).toHaveLength(1);
-      expect(msgAttachments[0]!.filename).toBe("photo.jpg");
-      expect(msgAttachments[0]!.contentType).toBe("image/jpeg");
-      expect(msgAttachments[0]!.size).toBe(2048);
-      expect(msgAttachments[0]!.url).toBe("/uploads/test/photo.jpg");
+      expect(msgAttachments[0]?.filename).toBe("photo.jpg");
+      expect(msgAttachments[0]?.contentType).toBe("image/jpeg");
+      expect(msgAttachments[0]?.size).toBe(2048);
+      expect(msgAttachments[0]?.url).toBe("/uploads/test/photo.jpg");
     });
 
     it("rejects message creation if any attachment ID is missing", async () => {
@@ -179,13 +178,13 @@ describe("Attachment Routes", () => {
       });
 
       expect(status).toBe(200);
-      const messages = body.messages as Array<Record<string, unknown>>;
+      const messages = body.messages as Record<string, unknown>[];
       expect(messages).toHaveLength(1);
-      const attachmentList = messages[0]!.attachments as Array<Record<string, unknown>>;
+      const attachmentList = messages[0]?.attachments as Record<string, unknown>[];
       expect(attachmentList).toHaveLength(1);
-      expect(attachmentList[0]!.filename).toBe("doc.pdf");
-      expect(attachmentList[0]!.contentType).toBe("application/pdf");
-      expect(attachmentList[0]!.size).toBe(5000);
+      expect(attachmentList[0]?.filename).toBe("doc.pdf");
+      expect(attachmentList[0]?.contentType).toBe("application/pdf");
+      expect(attachmentList[0]?.size).toBe(5000);
     });
 
     it("returns empty attachments array for messages without attachments", async () => {
@@ -203,8 +202,8 @@ describe("Attachment Routes", () => {
       });
 
       expect(status).toBe(200);
-      const messages = body.messages as Array<Record<string, unknown>>;
-      expect(messages[0]!.attachments).toEqual([]);
+      const messages = body.messages as Record<string, unknown>[];
+      expect(messages[0]?.attachments).toEqual([]);
     });
 
     it("returns attachments for multiple messages in batch", async () => {
@@ -233,14 +232,10 @@ describe("Attachment Routes", () => {
         token: alice.token,
       });
 
-      const messages = body.messages as Array<Record<string, unknown>>;
+      const messages = body.messages as Record<string, unknown>[];
       // Messages are sorted DESC
-      const secondMsg = messages.find(
-        (m) => m.content === "Second",
-      ) as Record<string, unknown>;
-      const firstMsg = messages.find(
-        (m) => m.content === "First",
-      ) as Record<string, unknown>;
+      const secondMsg = messages.find((m) => m.content === "Second") as Record<string, unknown>;
+      const firstMsg = messages.find((m) => m.content === "First") as Record<string, unknown>;
 
       expect((secondMsg.attachments as unknown[]).length).toBe(2);
       expect((firstMsg.attachments as unknown[]).length).toBe(1);

@@ -29,7 +29,9 @@ export function ChannelView({ channelId, channelName }: ChannelViewProps): JSX.E
 
       <div className="relative z-10 flex h-12 items-center gap-2 border-border border-b px-4">
         <Hash className="size-4 text-muted-foreground" />
-        <span className="flex-1 font-semibold text-foreground text-sm">{channelName ?? "channel"}</span>
+        <span className="flex-1 font-semibold text-foreground text-sm">
+          {channelName ?? "channel"}
+        </span>
         <PinnedMessages channelId={channelId} />
       </div>
       <MessageFeed channelId={channelId} />

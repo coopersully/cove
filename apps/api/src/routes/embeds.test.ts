@@ -3,11 +3,7 @@ import { generateSnowflake } from "@cove/shared";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import {
-  createTestChannel,
-  createTestServer,
-  createTestUser,
-} from "../test-utils/factories.js";
+import { createTestChannel, createTestServer, createTestUser } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
 import { extractUrls } from "./embeds.js";
 
@@ -49,8 +45,8 @@ describe("Embed Routes - GET /messages with embeds", () => {
     });
 
     expect(status).toBe(200);
-    const messages = body.messages as Array<Record<string, unknown>>;
-    expect(messages[0]!.embeds).toEqual([]);
+    const messages = body.messages as Record<string, unknown>[];
+    expect(messages[0]?.embeds).toEqual([]);
   });
 
   it("includes pre-existing embeds in message listing", async () => {
@@ -81,13 +77,13 @@ describe("Embed Routes - GET /messages with embeds", () => {
     });
 
     expect(status).toBe(200);
-    const messages = body.messages as Array<Record<string, unknown>>;
-    const embedList = messages[0]!.embeds as Array<Record<string, unknown>>;
+    const messages = body.messages as Record<string, unknown>[];
+    const embedList = messages[0]?.embeds as Record<string, unknown>[];
     expect(embedList).toHaveLength(1);
-    expect(embedList[0]!.url).toBe("https://example.com");
-    expect(embedList[0]!.title).toBe("Example Site");
-    expect(embedList[0]!.description).toBe("An example website");
-    expect(embedList[0]!.siteName).toBe("Example");
+    expect(embedList[0]?.url).toBe("https://example.com");
+    expect(embedList[0]?.title).toBe("Example Site");
+    expect(embedList[0]?.description).toBe("An example website");
+    expect(embedList[0]?.siteName).toBe("Example");
   });
 
   it("cascades embed deletion when message is deleted", async () => {
@@ -113,7 +109,10 @@ describe("Embed Routes - GET /messages with embeds", () => {
       token: alice.token,
     });
 
-    const rows = await db.select().from(embeds).where(eq(embeds.id, BigInt(embedId)));
+    const rows = await db
+      .select()
+      .from(embeds)
+      .where(eq(embeds.id, BigInt(embedId)));
     expect(rows).toHaveLength(0);
   });
 
@@ -147,8 +146,8 @@ describe("Embed Routes - GET /messages with embeds", () => {
       token: alice.token,
     });
 
-    const messages = body.messages as Array<Record<string, unknown>>;
-    const embedList = messages[0]!.embeds as Array<Record<string, unknown>>;
+    const messages = body.messages as Record<string, unknown>[];
+    const embedList = messages[0]?.embeds as Record<string, unknown>[];
     expect(embedList).toHaveLength(2);
   });
 });

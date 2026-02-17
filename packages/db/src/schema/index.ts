@@ -264,12 +264,15 @@ export const attachments = pgTable(
   "attachments",
   {
     id: bigint({ mode: "bigint" }).primaryKey(),
-    messageId: bigint("message_id", { mode: "bigint" })
-      .references(() => messages.id, { onDelete: "cascade" }),
-    channelId: bigint("channel_id", { mode: "bigint" })
-      .references(() => channels.id, { onDelete: "cascade" }),
-    uploaderId: bigint("uploader_id", { mode: "bigint" })
-      .references(() => users.id, { onDelete: "set null" }),
+    messageId: bigint("message_id", { mode: "bigint" }).references(() => messages.id, {
+      onDelete: "cascade",
+    }),
+    channelId: bigint("channel_id", { mode: "bigint" }).references(() => channels.id, {
+      onDelete: "cascade",
+    }),
+    uploaderId: bigint("uploader_id", { mode: "bigint" }).references(() => users.id, {
+      onDelete: "set null",
+    }),
     filename: varchar({ length: 255 }).notNull(),
     contentType: varchar("content_type", { length: 127 }).notNull(),
     size: integer().notNull(),

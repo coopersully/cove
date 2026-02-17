@@ -10,11 +10,8 @@ export interface PinResource {
 
 export function createPinResource(http: HttpClient): PinResource {
   return {
-    pin: (channelId, messageId) =>
-      http.put<void>(`/channels/${channelId}/pins/${messageId}`, {}),
-    unpin: (channelId, messageId) =>
-      http.delete<void>(`/channels/${channelId}/pins/${messageId}`),
-    list: (channelId) =>
-      http.get<MessageListResponse>(`/channels/${channelId}/pins`),
+    pin: (channelId, messageId) => http.put<void>(`/channels/${channelId}/pins/${messageId}`, {}),
+    unpin: (channelId, messageId) => http.delete<void>(`/channels/${channelId}/pins/${messageId}`),
+    list: (channelId) => http.get<MessageListResponse>(`/channels/${channelId}/pins`),
   };
 }

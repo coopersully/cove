@@ -75,7 +75,7 @@ describe("Pin Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
         token: owner.token,
       });
-      const pins = body.messages as Array<Record<string, unknown>>;
+      const pins = body.messages as Record<string, unknown>[];
       expect(pins).toHaveLength(1);
     });
 
@@ -153,7 +153,7 @@ describe("Pin Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
         token: owner.token,
       });
-      const pins = body.messages as Array<Record<string, unknown>>;
+      const pins = body.messages as Record<string, unknown>[];
       expect(pins).toHaveLength(0);
     });
 
@@ -215,7 +215,7 @@ describe("Pin Routes", () => {
       });
 
       expect(status).toBe(200);
-      const pins = body.messages as Array<Record<string, unknown>>;
+      const pins = body.messages as Record<string, unknown>[];
       expect(pins).toHaveLength(2);
     });
 
@@ -229,7 +229,7 @@ describe("Pin Routes", () => {
       });
 
       expect(status).toBe(200);
-      const pins = body.messages as Array<Record<string, unknown>>;
+      const pins = body.messages as Record<string, unknown>[];
       expect(pins).toHaveLength(0);
     });
 
@@ -259,10 +259,14 @@ describe("Pin Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
         token: owner.token,
       });
-      const pins = body.messages as Array<Record<string, unknown>>;
+      const pins = body.messages as Record<string, unknown>[];
       expect(pins).toHaveLength(1);
 
-      const pin = pins[0]!;
+      const pin = pins[0];
+      expect(pin).toBeDefined();
+      if (!pin) {
+        throw new Error("Expected at least one pinned message");
+      }
       expect(pin.id).toBe(message.id);
       expect(pin.content).toBe("Pinned with details");
       expect(pin.pinnedAt).toBeDefined();
@@ -285,12 +289,12 @@ describe("Pin Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: owner.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs.find((m) => m.id === message.id);
       expect(msg).toBeDefined();
-      expect(msg!.pinnedAt).toBeDefined();
-      expect(msg!.pinnedAt).not.toBeNull();
-      expect(msg!.pinnedBy).toBe(owner.id);
+      expect(msg?.pinnedAt).toBeDefined();
+      expect(msg?.pinnedAt).not.toBeNull();
+      expect(msg?.pinnedBy).toBe(owner.id);
     });
 
     it("unpinned messages have null pinnedAt/pinnedBy in GET messages response", async () => {
@@ -309,11 +313,11 @@ describe("Pin Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: owner.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs.find((m) => m.id === message.id);
       expect(msg).toBeDefined();
-      expect(msg!.pinnedAt).toBeNull();
-      expect(msg!.pinnedBy).toBeNull();
+      expect(msg?.pinnedAt).toBeNull();
+      expect(msg?.pinnedBy).toBeNull();
     });
   });
 });

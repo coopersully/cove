@@ -2,11 +2,7 @@ import { db, messages } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
 import { describe, expect, it } from "vitest";
 
-import {
-  createTestChannel,
-  createTestServer,
-  createTestUser,
-} from "../test-utils/factories.js";
+import { createTestChannel, createTestServer, createTestUser } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
 
 async function createTestMessage(channelId: string, authorId: string, content = "test") {
@@ -91,13 +87,11 @@ describe("Reply Routes", () => {
         token: alice.token,
       });
 
-      const msgs = body.messages as Array<Record<string, unknown>>;
-      const reply = msgs.find(
-        (m) => m.id === (replyBody.message as Record<string, unknown>).id,
-      );
+      const msgs = body.messages as Record<string, unknown>[];
+      const reply = msgs.find((m) => m.id === (replyBody.message as Record<string, unknown>).id);
       expect(reply).toBeDefined();
-      expect(reply!.replyToId).toBeNull(); // SET NULL on delete
-      expect(reply!.referencedMessage).toBeNull();
+      expect(reply?.replyToId).toBeNull(); // SET NULL on delete
+      expect(reply?.referencedMessage).toBeNull();
     });
   });
 
@@ -123,11 +117,11 @@ describe("Reply Routes", () => {
       });
 
       expect(status).toBe(200);
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const reply = msgs.find((m) => m.content === "Reply");
       expect(reply).toBeDefined();
-      expect(reply!.replyToId).toBe(origId);
-      const ref = reply!.referencedMessage as Record<string, unknown>;
+      expect(reply?.replyToId).toBe(origId);
+      const ref = reply?.referencedMessage as Record<string, unknown>;
       expect(ref.content).toBe("Original");
     });
   });

@@ -1688,24 +1688,22 @@ describe("E2E: Replies & Mentions", () => {
 
     const bobReply = msgs.find((m) => m.content === "Yes, it works great!");
     expect(bobReply).toBeDefined();
-    expect(bobReply!.replyToId).toBe(origId);
-    const ref = bobReply!.referencedMessage as Record<string, unknown>;
+    expect(bobReply?.replyToId).toBe(origId);
+    const ref = bobReply?.referencedMessage as Record<string, unknown>;
     expect(ref.content).toBe("Has anyone tried the new feature?");
 
     // Alice deletes her original message
     await apiRequest("DELETE", `/messages/${origId}`, { token: alice.token });
 
     // Bob's reply now shows null referencedMessage (SET NULL on FK)
-    const { body: afterDeleteBody } = await apiRequest(
-      "GET",
-      `/channels/${channelId}/messages`,
-      { token: bob.token },
-    );
+    const { body: afterDeleteBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: bob.token,
+    });
     const afterMsgs = afterDeleteBody.messages as Record<string, unknown>[];
     expect(afterMsgs).toHaveLength(1);
-    expect(afterMsgs[0]!.content).toBe("Yes, it works great!");
-    expect(afterMsgs[0]!.replyToId).toBeNull();
-    expect(afterMsgs[0]!.referencedMessage).toBeNull();
+    expect(afterMsgs[0]?.content).toBe("Yes, it works great!");
+    expect(afterMsgs[0]?.replyToId).toBeNull();
+    expect(afterMsgs[0]?.referencedMessage).toBeNull();
   });
 
   it("reply to message in different channel returns 404", async () => {
@@ -1781,7 +1779,7 @@ describe("E2E: Replies & Mentions", () => {
     });
     const msgs = listBody.messages as Record<string, unknown>[];
     expect(msgs).toHaveLength(1);
-    const listMentions = msgs[0]!.mentions as string[];
+    const listMentions = msgs[0]?.mentions as string[];
     expect(listMentions).toContain(bob.id);
     expect(listMentions).toContain(charlie.id);
   });
@@ -1887,7 +1885,7 @@ describe("E2E: Replies & Mentions", () => {
     const msgs = listBody.messages as Record<string, unknown>[];
     expect(msgs).toHaveLength(2);
     const reply = msgs.find((m) => m.content === "Sure, 12:30?");
-    expect(reply!.replyToId).toBe(origId);
+    expect(reply?.replyToId).toBe(origId);
   });
 });
 
@@ -1944,23 +1942,21 @@ describe("E2E: Reactions", () => {
     });
     const bobMsgs = bobList.messages as Record<string, unknown>[];
     const bobMsg = bobMsgs.find((m) => m.id === messageId);
-    const bobReactions = bobMsg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+    const bobReactions = bobMsg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
     expect(bobReactions).toHaveLength(2);
 
     const bobThumbs = bobReactions.find((r) => r.emoji === "👍");
-    expect(bobThumbs!.count).toBe(3);
-    expect(bobThumbs!.me).toBe(true);
+    expect(bobThumbs?.count).toBe(3);
+    expect(bobThumbs?.me).toBe(true);
 
     const bobFire = bobReactions.find((r) => r.emoji === "🔥");
-    expect(bobFire!.count).toBe(1);
-    expect(bobFire!.me).toBe(false);
+    expect(bobFire?.count).toBe(1);
+    expect(bobFire?.me).toBe(false);
 
     // Bob removes his 👍 reaction
-    await apiRequest(
-      "DELETE",
-      `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`,
-      { token: bob.token },
-    );
+    await apiRequest("DELETE", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: bob.token,
+    });
 
     // Verify count decreased
     const { body: afterRemove } = await apiRequest("GET", `/channels/${channelId}/messages`, {
@@ -1968,14 +1964,14 @@ describe("E2E: Reactions", () => {
     });
     const afterMsgs = afterRemove.messages as Record<string, unknown>[];
     const afterMsg = afterMsgs.find((m) => m.id === messageId);
-    const afterReactions = afterMsg!.reactions as Array<{
+    const afterReactions = afterMsg?.reactions as Array<{
       emoji: string;
       count: number;
       me: boolean;
     }>;
     const afterThumbs = afterReactions.find((r) => r.emoji === "👍");
-    expect(afterThumbs!.count).toBe(2);
-    expect(afterThumbs!.me).toBe(false);
+    expect(afterThumbs?.count).toBe(2);
+    expect(afterThumbs?.me).toBe(false);
   });
 
   it("deleting a message cascades its reactions", async () => {
@@ -2055,10 +2051,10 @@ describe("E2E: Reactions", () => {
     });
     const msgs = listBody.messages as Record<string, unknown>[];
     const msg = msgs.find((m) => m.id === messageId);
-    const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+    const reactions = msg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
     expect(reactions).toHaveLength(1);
-    expect(reactions[0]!.count).toBe(2);
-    expect(reactions[0]!.me).toBe(true);
+    expect(reactions[0]?.count).toBe(2);
+    expect(reactions[0]?.me).toBe(true);
   });
 
   it("newly created messages have empty reactions array", async () => {
@@ -2122,9 +2118,9 @@ describe("E2E: Pinning", () => {
     });
     const pins = pinsBody.messages as Record<string, unknown>[];
     expect(pins).toHaveLength(1);
-    expect(pins[0]!.content).toBe("Important announcement");
-    expect(pins[0]!.pinnedAt).not.toBeNull();
-    expect(pins[0]!.pinnedBy).toBe(alice.id);
+    expect(pins[0]?.content).toBe("Important announcement");
+    expect(pins[0]?.pinnedAt).not.toBeNull();
+    expect(pins[0]?.pinnedBy).toBe(alice.id);
 
     // Verify pinnedAt/pinnedBy appear in messages list
     const { body: msgsBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
@@ -2132,8 +2128,8 @@ describe("E2E: Pinning", () => {
     });
     const msgs = msgsBody.messages as Record<string, unknown>[];
     const msg = msgs.find((m) => m.id === messageId);
-    expect(msg!.pinnedAt).not.toBeNull();
-    expect(msg!.pinnedBy).toBe(alice.id);
+    expect(msg?.pinnedAt).not.toBeNull();
+    expect(msg?.pinnedBy).toBe(alice.id);
 
     // Unpin
     const { status: unpinStatus } = await apiRequest(
@@ -2156,8 +2152,8 @@ describe("E2E: Pinning", () => {
     const afterMsg = (afterUnpin.messages as Record<string, unknown>[]).find(
       (m) => m.id === messageId,
     );
-    expect(afterMsg!.pinnedAt).toBeNull();
-    expect(afterMsg!.pinnedBy).toBeNull();
+    expect(afterMsg?.pinnedAt).toBeNull();
+    expect(afterMsg?.pinnedBy).toBeNull();
   });
 
   it("non-privileged member cannot pin, owner can", async () => {
@@ -2334,13 +2330,13 @@ describe("E2E: Pinning", () => {
     });
     const msgs = listBody.messages as Record<string, unknown>[];
     const msg = msgs.find((m) => m.id === messageId);
-    expect(msg!.pinnedAt).not.toBeNull();
-    expect(msg!.pinnedBy).toBe(alice.id);
+    expect(msg?.pinnedAt).not.toBeNull();
+    expect(msg?.pinnedBy).toBe(alice.id);
 
-    const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+    const reactions = msg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
     expect(reactions).toHaveLength(1);
-    expect(reactions[0]!.count).toBe(2);
-    expect(reactions[0]!.me).toBe(true); // bob reacted
+    expect(reactions[0]?.count).toBe(2);
+    expect(reactions[0]?.me).toBe(true); // bob reacted
   });
 });
 
@@ -2480,9 +2476,9 @@ describe("E2E: Rich Media", () => {
 
     expect(createStatus).toBe(201);
     const createdMsg = createBody.message as Record<string, unknown>;
-    const createdAttachments = createdMsg.attachments as Array<Record<string, unknown>>;
+    const createdAttachments = createdMsg.attachments as Record<string, unknown>[];
     expect(createdAttachments).toHaveLength(1);
-    expect(createdAttachments[0]!.filename).toBe("screenshot.png");
+    expect(createdAttachments[0]?.filename).toBe("screenshot.png");
 
     const messageId = createdMsg.id as string;
 
@@ -2490,7 +2486,7 @@ describe("E2E: Rich Media", () => {
     const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
       token: alice.token,
     });
-    const messages = listBody.messages as Array<Record<string, unknown>>;
+    const messages = listBody.messages as Record<string, unknown>[];
     const found = messages.find((m) => m.id === messageId) as Record<string, unknown>;
     expect((found.attachments as unknown[]).length).toBe(1);
 
@@ -2545,12 +2541,12 @@ describe("E2E: Rich Media", () => {
     const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
       token: alice.token,
     });
-    const messages = listBody.messages as Array<Record<string, unknown>>;
+    const messages = listBody.messages as Record<string, unknown>[];
     const found = messages.find((m) => m.id === messageId) as Record<string, unknown>;
-    const embedList = found.embeds as Array<Record<string, unknown>>;
+    const embedList = found.embeds as Record<string, unknown>[];
     expect(embedList).toHaveLength(1);
-    expect(embedList[0]!.title).toBe("Example Domain");
-    expect(embedList[0]!.url).toBe("https://example.com");
+    expect(embedList[0]?.title).toBe("Example Domain");
+    expect(embedList[0]?.url).toBe("https://example.com");
   });
 
   it("custom emojis: create → list → delete lifecycle", async () => {
@@ -2583,9 +2579,9 @@ describe("E2E: Rich Media", () => {
       { token: alice.token },
     );
     expect(listStatus).toBe(200);
-    const emojis = listBody.emojis as Array<Record<string, unknown>>;
+    const emojis = listBody.emojis as Record<string, unknown>[];
     expect(emojis).toHaveLength(1);
-    expect(emojis[0]!.name).toBe("partyblob");
+    expect(emojis[0]?.name).toBe("partyblob");
 
     // Delete emoji
     const { status: deleteStatus } = await apiRequest(
@@ -2603,7 +2599,11 @@ describe("E2E: Rich Media", () => {
   });
 
   it("full rich message flow: create message → add attachment + embed → list → verify all fields", async () => {
-    const { attachments: attachmentsTable, embeds: embedsTable, db: database } = await import("@cove/db");
+    const {
+      attachments: attachmentsTable,
+      embeds: embedsTable,
+      db: database,
+    } = await import("@cove/db");
     const { generateSnowflake } = await import("@cove/shared");
 
     const alice = await registerUser("rich_alice4");
@@ -2662,9 +2662,13 @@ describe("E2E: Rich Media", () => {
       token: alice.token,
     });
 
-    const messages = listBody.messages as Array<Record<string, unknown>>;
+    const messages = listBody.messages as Record<string, unknown>[];
     expect(messages).toHaveLength(1);
-    const msg = messages[0]!;
+    const msg = messages[0];
+    expect(msg).toBeDefined();
+    if (!msg) {
+      throw new Error("Expected at least one message");
+    }
 
     // Content
     expect(msg.content).toBe("New design spec https://figma.com/file/abc");
@@ -2674,19 +2678,19 @@ describe("E2E: Rich Media", () => {
     expect(author.id).toBe(alice.id);
 
     // Attachments
-    const msgAttachments = msg.attachments as Array<Record<string, unknown>>;
+    const msgAttachments = msg.attachments as Record<string, unknown>[];
     expect(msgAttachments).toHaveLength(1);
-    expect(msgAttachments[0]!.filename).toBe("design.pdf");
-    expect(msgAttachments[0]!.contentType).toBe("application/pdf");
-    expect(msgAttachments[0]!.size).toBe(102400);
+    expect(msgAttachments[0]?.filename).toBe("design.pdf");
+    expect(msgAttachments[0]?.contentType).toBe("application/pdf");
+    expect(msgAttachments[0]?.size).toBe(102400);
 
     // Embeds
-    const msgEmbeds = msg.embeds as Array<Record<string, unknown>>;
+    const msgEmbeds = msg.embeds as Record<string, unknown>[];
     expect(msgEmbeds).toHaveLength(1);
-    expect(msgEmbeds[0]!.title).toBe("Design Spec - Figma");
-    expect(msgEmbeds[0]!.url).toBe("https://figma.com/file/abc");
-    expect(msgEmbeds[0]!.siteName).toBe("Figma");
-    expect(msgEmbeds[0]!.thumbnailUrl).toBe("https://figma.com/thumbnail.png");
+    expect(msgEmbeds[0]?.title).toBe("Design Spec - Figma");
+    expect(msgEmbeds[0]?.url).toBe("https://figma.com/file/abc");
+    expect(msgEmbeds[0]?.siteName).toBe("Figma");
+    expect(msgEmbeds[0]?.thumbnailUrl).toBe("https://figma.com/thumbnail.png");
 
     // Also verify the message has the standard fields
     expect(msg.reactions).toEqual([]);

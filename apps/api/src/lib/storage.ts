@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export interface StorageService {
   upload(key: string, buffer: Buffer, contentType: string): Promise<string>;
@@ -6,18 +6,18 @@ export interface StorageService {
 }
 
 function createS3Storage(): StorageService {
-  const hasStaticCredentials =
-    Boolean(process.env.S3_ACCESS_KEY) &&
-    Boolean(process.env.S3_SECRET_KEY);
+  const accessKeyId = process.env.S3_ACCESS_KEY;
+  const secretAccessKey = process.env.S3_SECRET_KEY;
+  const hasStaticCredentials = Boolean(accessKeyId) && Boolean(secretAccessKey);
 
   const client = new S3Client({
     region: process.env.S3_REGION ?? "us-east-1",
     ...(process.env.S3_ENDPOINT ? { endpoint: process.env.S3_ENDPOINT } : {}),
-    ...(hasStaticCredentials
+    ...(hasStaticCredentials && accessKeyId && secretAccessKey
       ? {
           credentials: {
-            accessKeyId: process.env.S3_ACCESS_KEY!,
-            secretAccessKey: process.env.S3_SECRET_KEY!,
+            accessKeyId,
+            secretAccessKey,
           },
         }
       : {}),
@@ -43,9 +43,7 @@ function createS3Storage(): StorageService {
       return `https://${bucket}.s3.${process.env.S3_REGION ?? "us-east-1"}.amazonaws.com/${key}`;
     },
     async delete(key) {
-      await client.send(
-        new DeleteObjectCommand({ Bucket: bucket, Key: key }),
-      );
+      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
     },
   };
 }
@@ -79,9 +77,7 @@ let storageInstance: StorageService | undefined;
 export function getStorage(): StorageService {
   if (!storageInstance) {
     storageInstance =
-      process.env.STORAGE_BACKEND === "s3"
-        ? createS3Storage()
-        : createLocalStorage();
+      process.env.STORAGE_BACKEND === "s3" ? createS3Storage() : createLocalStorage();
   }
   return storageInstance;
 }

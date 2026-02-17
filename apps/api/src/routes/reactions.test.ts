@@ -112,9 +112,13 @@ describe("Reaction Routes", () => {
       const fire = encodeURIComponent("🔥");
       const heart = encodeURIComponent("❤️");
 
-      await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`, {
-        token: user.token,
-      });
+      await apiRequest(
+        "PUT",
+        `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`,
+        {
+          token: user.token,
+        },
+      );
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${fire}`, {
         token: user.token,
       });
@@ -125,9 +129,9 @@ describe("Reaction Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: user.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs.find((m) => m.id === message.id);
-      const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+      const reactions = msg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(reactions).toHaveLength(3);
       for (const r of reactions) {
         expect(r.count).toBe(1);
@@ -236,12 +240,12 @@ describe("Reaction Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: owner.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs.find((m) => m.id === message.id);
-      const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+      const reactions = msg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(reactions).toHaveLength(1);
-      expect(reactions[0]!.count).toBe(1);
-      expect(reactions[0]!.me).toBe(false);
+      expect(reactions[0]?.count).toBe(1);
+      expect(reactions[0]?.me).toBe(false);
     });
 
     it("removing the last reaction results in empty reactions array", async () => {
@@ -263,9 +267,9 @@ describe("Reaction Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: user.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs.find((m) => m.id === message.id);
-      const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+      const reactions = msg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(reactions).toHaveLength(0);
     });
   });
@@ -296,33 +300,31 @@ describe("Reaction Routes", () => {
         `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`,
         { token: member.token },
       );
-      await apiRequest(
-        "PUT",
-        `/channels/${channel.id}/messages/${message.id}/reactions/${fire}`,
-        { token: owner.token },
-      );
+      await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${fire}`, {
+        token: owner.token,
+      });
 
       const { status, body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: owner.token,
       });
 
       expect(status).toBe(200);
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs.find((m) => m.id === message.id);
       expect(msg).toBeDefined();
 
-      const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+      const reactions = msg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(reactions).toHaveLength(2);
 
       const thumbsReaction = reactions.find((r) => r.emoji === "👍");
       expect(thumbsReaction).toBeDefined();
-      expect(thumbsReaction!.count).toBe(2);
-      expect(thumbsReaction!.me).toBe(true);
+      expect(thumbsReaction?.count).toBe(2);
+      expect(thumbsReaction?.me).toBe(true);
 
       const fireReaction = reactions.find((r) => r.emoji === "🔥");
       expect(fireReaction).toBeDefined();
-      expect(fireReaction!.count).toBe(1);
-      expect(fireReaction!.me).toBe(true);
+      expect(fireReaction?.count).toBe(1);
+      expect(fireReaction?.me).toBe(true);
     });
 
     it("me field is false when viewing as a user who has not reacted", async () => {
@@ -348,13 +350,13 @@ describe("Reaction Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: member.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs.find((m) => m.id === message.id);
-      const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+      const reactions = msg?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(reactions).toHaveLength(1);
-      expect(reactions[0]!.emoji).toBe("👍");
-      expect(reactions[0]!.count).toBe(1);
-      expect(reactions[0]!.me).toBe(false);
+      expect(reactions[0]?.emoji).toBe("👍");
+      expect(reactions[0]?.count).toBe(1);
+      expect(reactions[0]?.me).toBe(false);
     });
 
     it("returns empty reactions array for messages with no reactions", async () => {
@@ -366,9 +368,9 @@ describe("Reaction Routes", () => {
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: user.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       expect(msgs).toHaveLength(1);
-      expect(msgs[0]!.reactions).toEqual([]);
+      expect(msgs[0]?.reactions).toEqual([]);
     });
 
     it("reactions from multiple users are correctly aggregated across messages", async () => {
@@ -389,43 +391,35 @@ describe("Reaction Routes", () => {
       const thumbs = encodeURIComponent("👍");
 
       // All three react to msg1, only owner reacts to msg2
-      await apiRequest(
-        "PUT",
-        `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`,
-        { token: owner.token },
-      );
-      await apiRequest(
-        "PUT",
-        `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`,
-        { token: memberA.token },
-      );
-      await apiRequest(
-        "PUT",
-        `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`,
-        { token: memberB.token },
-      );
-      await apiRequest(
-        "PUT",
-        `/channels/${channel.id}/messages/${msg2.id}/reactions/${thumbs}`,
-        { token: owner.token },
-      );
+      await apiRequest("PUT", `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`, {
+        token: owner.token,
+      });
+      await apiRequest("PUT", `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`, {
+        token: memberA.token,
+      });
+      await apiRequest("PUT", `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`, {
+        token: memberB.token,
+      });
+      await apiRequest("PUT", `/channels/${channel.id}/messages/${msg2.id}/reactions/${thumbs}`, {
+        token: owner.token,
+      });
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
         token: memberA.token,
       });
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
 
       const m1 = msgs.find((m) => m.id === msg1.id);
-      const m1Reactions = m1!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+      const m1Reactions = m1?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(m1Reactions).toHaveLength(1);
-      expect(m1Reactions[0]!.count).toBe(3);
-      expect(m1Reactions[0]!.me).toBe(true); // memberA reacted
+      expect(m1Reactions[0]?.count).toBe(3);
+      expect(m1Reactions[0]?.me).toBe(true); // memberA reacted
 
       const m2 = msgs.find((m) => m.id === msg2.id);
-      const m2Reactions = m2!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+      const m2Reactions = m2?.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(m2Reactions).toHaveLength(1);
-      expect(m2Reactions[0]!.count).toBe(1);
-      expect(m2Reactions[0]!.me).toBe(false); // memberA did not react to msg2
+      expect(m2Reactions[0]?.count).toBe(1);
+      expect(m2Reactions[0]?.me).toBe(false); // memberA did not react to msg2
     });
   });
 });

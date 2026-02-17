@@ -3,10 +3,7 @@ import { generateSnowflake } from "@cove/shared";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import {
-  createTestServer,
-  createTestUser,
-} from "../test-utils/factories.js";
+import { createTestServer, createTestUser } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
 
 // Helper: insert custom emoji directly for testing
@@ -23,7 +20,10 @@ async function createTestEmoji(serverId: string, creatorId: string, name: string
       creatorId: BigInt(creatorId),
     })
     .returning();
-  return { ...created!, id: String(created!.id) };
+  if (!created) {
+    throw new Error("Failed to create test emoji");
+  }
+  return { ...created, id: String(created.id) };
 }
 
 describe("Custom Emoji Routes", () => {
@@ -40,7 +40,7 @@ describe("Custom Emoji Routes", () => {
       });
 
       expect(status).toBe(200);
-      const emojis = body.emojis as Array<Record<string, unknown>>;
+      const emojis = body.emojis as Record<string, unknown>[];
       expect(emojis).toHaveLength(2);
       expect(emojis.map((e) => e.name)).toContain("party");
       expect(emojis.map((e) => e.name)).toContain("fire");
@@ -80,8 +80,12 @@ describe("Custom Emoji Routes", () => {
         token: alice.token,
       });
 
-      const emojis = body.emojis as Array<Record<string, unknown>>;
-      const emoji = emojis[0]!;
+      const emojis = body.emojis as Record<string, unknown>[];
+      const emoji = emojis[0];
+      expect(emoji).toBeDefined();
+      if (!emoji) {
+        throw new Error("Expected at least one emoji");
+      }
       expect(emoji.id).toBeDefined();
       expect(emoji.name).toBe("wave");
       expect(emoji.imageUrl).toBeDefined();
@@ -97,11 +101,9 @@ describe("Custom Emoji Routes", () => {
 
       const emoji = await createTestEmoji(server.id, alice.id, "old");
 
-      const { status } = await apiRequest(
-        "DELETE",
-        `/servers/${server.id}/emojis/${emoji.id}`,
-        { token: alice.token },
-      );
+      const { status } = await apiRequest("DELETE", `/servers/${server.id}/emojis/${emoji.id}`, {
+        token: alice.token,
+      });
 
       expect(status).toBe(200);
 
@@ -133,11 +135,9 @@ describe("Custom Emoji Routes", () => {
 
       const emoji = await createTestEmoji(server.id, alice.id, "private_emoji");
 
-      const { status } = await apiRequest(
-        "DELETE",
-        `/servers/${server.id}/emojis/${emoji.id}`,
-        { token: bob.token },
-      );
+      const { status } = await apiRequest("DELETE", `/servers/${server.id}/emojis/${emoji.id}`, {
+        token: bob.token,
+      });
 
       expect(status).toBe(403);
     });
@@ -153,11 +153,9 @@ describe("Custom Emoji Routes", () => {
         userId: BigInt(member.id),
       });
 
-      const { status } = await apiRequest(
-        "DELETE",
-        `/servers/${server.id}/emojis/${emoji.id}`,
-        { token: member.token },
-      );
+      const { status } = await apiRequest("DELETE", `/servers/${server.id}/emojis/${emoji.id}`, {
+        token: member.token,
+      });
 
       expect(status).toBe(403);
     });

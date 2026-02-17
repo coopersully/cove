@@ -27,10 +27,7 @@ async function requireServerMembership(serverId: string, userId: string): Promis
     .select()
     .from(serverMembers)
     .where(
-      and(
-        eq(serverMembers.serverId, BigInt(serverId)),
-        eq(serverMembers.userId, BigInt(userId)),
-      ),
+      and(eq(serverMembers.serverId, BigInt(serverId)), eq(serverMembers.userId, BigInt(userId))),
     )
     .limit(1);
 
@@ -97,7 +94,7 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
   const file = formData.get("file");
   const name = formData.get("name");
 
-  if (!file || !(file instanceof File)) {
+  if (!(file && file instanceof File)) {
     throw new AppError("VALIDATION_ERROR", "No image file provided");
   }
 
@@ -124,10 +121,7 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
     .select()
     .from(customEmojis)
     .where(
-      and(
-        eq(customEmojis.serverId, BigInt(serverId)),
-        eq(customEmojis.name, parsed.data.name),
-      ),
+      and(eq(customEmojis.serverId, BigInt(serverId)), eq(customEmojis.name, parsed.data.name)),
     )
     .limit(1);
 
@@ -209,12 +203,7 @@ customEmojiRoutes.delete("/servers/:serverId/emojis/:emojiId", async (c) => {
   const [emoji] = await db
     .select()
     .from(customEmojis)
-    .where(
-      and(
-        eq(customEmojis.id, BigInt(emojiId)),
-        eq(customEmojis.serverId, BigInt(serverId)),
-      ),
-    )
+    .where(and(eq(customEmojis.id, BigInt(emojiId)), eq(customEmojis.serverId, BigInt(serverId))))
     .limit(1);
 
   if (!emoji) {

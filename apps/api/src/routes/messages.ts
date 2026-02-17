@@ -115,9 +115,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
   const results = await query;
 
   // Batch-fetch referenced messages for replies
-  const replyToIds = results
-    .map((m) => m.replyToId)
-    .filter((id): id is bigint => id !== null);
+  const replyToIds = results.map((m) => m.replyToId).filter((id): id is bigint => id !== null);
 
   const referencedMessages = new Map<
     string,
@@ -188,7 +186,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
     if (!reactionsByMessage.has(key)) {
       reactionsByMessage.set(key, []);
     }
-    reactionsByMessage.get(key)!.push({
+    reactionsByMessage.get(key)?.push({
       emoji: row.emoji,
       count: row.count,
       me: row.me,
@@ -209,9 +207,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       pinnedAt: m.pinnedAt ?? null,
       pinnedBy: m.pinnedBy ? String(m.pinnedBy) : null,
       replyToId: m.replyToId ? String(m.replyToId) : null,
-      referencedMessage: m.replyToId
-        ? referencedMessages.get(String(m.replyToId)) ?? null
-        : null,
+      referencedMessage: m.replyToId ? (referencedMessages.get(String(m.replyToId)) ?? null) : null,
       mentions: parseMentions(m.content).userIds,
       author: {
         id: String(m.authorId),
@@ -284,10 +280,7 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
       .from(messages)
       .innerJoin(users, eq(messages.authorId, users.id))
       .where(
-        and(
-          eq(messages.id, BigInt(body.replyToId)),
-          eq(messages.channelId, BigInt(channelId)),
-        ),
+        and(eq(messages.id, BigInt(body.replyToId)), eq(messages.channelId, BigInt(channelId))),
       )
       .limit(1);
 

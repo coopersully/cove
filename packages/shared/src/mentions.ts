@@ -18,12 +18,18 @@ export function parseMentions(content: string): ParsedMentions {
 
   // Match user mentions: <@123>
   for (const match of withoutInlineCode.matchAll(/<@(\d+)>/g)) {
-    userIds.add(match[1]!);
+    const userId = match[1];
+    if (userId) {
+      userIds.add(userId);
+    }
   }
 
   // Match role mentions: <@&123>
   for (const match of withoutInlineCode.matchAll(/<@&(\d+)>/g)) {
-    roleIds.add(match[1]!);
+    const roleId = match[1];
+    if (roleId) {
+      roleIds.add(roleId);
+    }
   }
 
   return {

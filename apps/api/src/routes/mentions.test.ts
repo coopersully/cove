@@ -1,11 +1,7 @@
 import { db, serverMembers } from "@cove/db";
 import { describe, expect, it } from "vitest";
 
-import {
-  createTestChannel,
-  createTestServer,
-  createTestUser,
-} from "../test-utils/factories.js";
+import { createTestChannel, createTestServer, createTestUser } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
 
 describe("Mention Routes", () => {
@@ -110,9 +106,9 @@ describe("Mention Routes", () => {
         token: alice.token,
       });
 
-      const msgs = body.messages as Array<Record<string, unknown>>;
+      const msgs = body.messages as Record<string, unknown>[];
       const msg = msgs[0];
-      expect((msg!.mentions as string[])).toContain(bob.id);
+      expect(msg?.mentions as string[]).toContain(bob.id);
     });
   });
 });
