@@ -17,10 +17,7 @@
     "format": "biome format --write ."
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "@biomejs/biome",
-      "esbuild"
-    ]
+    "onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

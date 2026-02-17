@@ -1,3 +1,4 @@
+import type { Server } from "@cove/api-client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,8 +12,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@cove/ui";
-import type { Server } from "@cove/api-client";
-import { ArrowDownToLine, LogOut, MessageSquare, Monitor, Moon, Sun, UserPen, Users } from "lucide-react";
+import {
+  ArrowDownToLine,
+  LogOut,
+  MessageSquare,
+  Monitor,
+  Moon,
+  Sun,
+  UserPen,
+  Users,
+} from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
@@ -36,7 +45,7 @@ export function ServerSidebar(): JSX.Element {
   const isFriendsActive = location.pathname.startsWith("/friends");
 
   return (
-    <aside className="flex w-[72px] flex-col items-center border-r border-sidebar-border bg-sidebar">
+    <aside className="flex w-[72px] flex-col items-center border-sidebar-border border-r bg-sidebar">
       <ScrollArea className="w-full flex-1">
         <nav className="flex flex-col items-center gap-2 px-3 py-3">
           <Tooltip>

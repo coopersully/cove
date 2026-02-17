@@ -20,19 +20,12 @@ export interface FriendsResource {
 export function createFriendsResource(http: HttpClient): FriendsResource {
   return {
     list: () => http.get<FriendListResponse>("/friends"),
-    incomingRequests: () =>
-      http.get<FriendRequestListResponse>("/friends/requests/incoming"),
-    outgoingRequests: () =>
-      http.get<FriendRequestListResponse>("/friends/requests/outgoing"),
-    sendRequest: (data) =>
-      http.post<FriendRequestResponse>("/friends/requests", data),
+    incomingRequests: () => http.get<FriendRequestListResponse>("/friends/requests/incoming"),
+    outgoingRequests: () => http.get<FriendRequestListResponse>("/friends/requests/outgoing"),
+    sendRequest: (data) => http.post<FriendRequestResponse>("/friends/requests", data),
     acceptRequest: (requestId) =>
-      http.post<FriendRequestResponse>(
-        `/friends/requests/${requestId}/accept`,
-        {},
-      ),
-    declineRequest: (requestId) =>
-      http.delete<void>(`/friends/requests/${requestId}`),
+      http.post<FriendRequestResponse>(`/friends/requests/${requestId}/accept`, {}),
+    declineRequest: (requestId) => http.delete<void>(`/friends/requests/${requestId}`),
     remove: (userId) => http.delete<void>(`/friends/${userId}`),
   };
 }

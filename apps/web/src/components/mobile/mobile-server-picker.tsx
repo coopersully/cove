@@ -55,7 +55,7 @@ export function MobileServerPicker({ open, onOpenChange }: MobileServerPickerPro
                       />
                       <AvatarFallback
                         className={cn(
-                          "text-xs font-semibold",
+                          "font-semibold text-xs",
                           isActive
                             ? "bg-primary text-primary-foreground"
                             : "bg-secondary text-muted-foreground",

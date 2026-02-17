@@ -14,11 +14,11 @@ const dispatcher = new Dispatcher(redis);
 const wss = new WebSocketServer({ port });
 
 wss.on("connection", (ws) => {
-	handleConnection(ws, dispatcher, redis);
+  handleConnection(ws, dispatcher, redis);
 });
 
 void subscribeToEvents(subscriber, (event) => {
-	dispatcher.dispatch(event);
+  dispatcher.dispatch(event);
 });
 
 console.info(`Cove WebSocket gateway listening on port ${String(port)}`);

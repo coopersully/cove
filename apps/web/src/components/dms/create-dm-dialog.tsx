@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@cove/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@cove/ui";
 import { Users } from "lucide-react";
 import type { JSX } from "react";
 import { useCreateDm } from "../../hooks/use-dms.js";

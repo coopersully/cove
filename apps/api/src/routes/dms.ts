@@ -75,11 +75,7 @@ dmRoutes.post("/dms", validate(createDmSchema), async (c) => {
 
     if (otherMember) {
       // DM already exists, return it
-      const [channel] = await db
-        .select()
-        .from(channels)
-        .where(eq(channels.id, channelId))
-        .limit(1);
+      const [channel] = await db.select().from(channels).where(eq(channels.id, channelId)).limit(1);
 
       if (channel) {
         const members = await getDmMembers(channelId);
@@ -140,7 +136,9 @@ dmRoutes.get("/dms", async (c) => {
       .where(and(eq(channels.id, channelId), eq(channels.type, "dm")))
       .limit(1);
 
-    if (!channel) continue;
+    if (!channel) {
+      continue;
+    }
 
     // Get the other member (recipient)
     const [otherMember] = await db
@@ -156,7 +154,9 @@ dmRoutes.get("/dms", async (c) => {
       .where(and(eq(dmMembers.channelId, channelId), ne(dmMembers.userId, BigInt(user.id))))
       .limit(1);
 
-    if (!otherMember) continue;
+    if (!otherMember) {
+      continue;
+    }
 
     results.push({
       ...formatChannel(channel),

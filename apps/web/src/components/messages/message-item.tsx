@@ -144,11 +144,11 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
         rows={1}
       />
       <div className="mt-1 text-muted-foreground text-xs">
-        Escape to{" "}
+        Escape to
         <button type="button" onClick={cancelEditing} className="text-foreground hover:underline">
           cancel
-        </button>{" "}
-        · Enter to{" "}
+        </button>
+        · Enter to
         <button type="button" onClick={saveEdit} className="text-foreground hover:underline">
           save
         </button>

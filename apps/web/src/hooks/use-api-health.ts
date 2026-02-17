@@ -19,11 +19,17 @@ export function useApiHealth(): ApiHealth {
     async function check() {
       try {
         const res = await fetch(HEALTH_URL, { method: "GET" });
-        if (!cancelled) setIsReachable(res.ok);
+        if (!cancelled) {
+          setIsReachable(res.ok);
+        }
       } catch {
-        if (!cancelled) setIsReachable(false);
+        if (!cancelled) {
+          setIsReachable(false);
+        }
       } finally {
-        if (!cancelled) setIsChecking(false);
+        if (!cancelled) {
+          setIsChecking(false);
+        }
       }
     }
 
@@ -33,7 +39,9 @@ export function useApiHealth(): ApiHealth {
 
     return () => {
       cancelled = true;
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, []);
 

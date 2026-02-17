@@ -64,7 +64,9 @@ export function ResetPasswordForm(): JSX.Element {
   }, [token]);
 
   async function onSubmit(data: z.infer<typeof resetPasswordSchema>) {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
     setError(null);
     try {
       await api.auth.resetPassword({ token, password: data.password });

@@ -70,7 +70,7 @@ userRoutes.patch("/me", validate(updateProfileSchema), async (c) => {
 userRoutes.get("/search", async (c) => {
   const query = c.req.query("q");
 
-  if (!query || query.length < 1) {
+  if (!query || query.length === 0) {
     return c.json({ users: [] });
   }
 

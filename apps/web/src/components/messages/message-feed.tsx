@@ -73,7 +73,9 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
   const latestMessageId = data?.pages[0]?.messages[0]?.id;
   const debouncedAck = useCallback(
     (messageId: string) => {
-      if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+      if (ackTimerRef.current) {
+        clearTimeout(ackTimerRef.current);
+      }
       ackTimerRef.current = setTimeout(() => {
         ackMessage(messageId);
       }, 2000);
@@ -86,7 +88,9 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
       debouncedAck(latestMessageId);
     }
     return () => {
-      if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+      if (ackTimerRef.current) {
+        clearTimeout(ackTimerRef.current);
+      }
     };
   }, [latestMessageId, debouncedAck]);
 
@@ -175,9 +179,7 @@ export function MessageFeed({ channelId }: MessageFeedProps): JSX.Element {
       {/* Typing indicator */}
       {typingUsers.length > 0 && (
         <div className="shrink-0 px-4 py-1 text-muted-foreground text-xs">
-          <span className="font-medium">
-            {typingUsers.map((u) => u.username).join(", ")}
-          </span>
+          <span className="font-medium">{typingUsers.map((u) => u.username).join(", ")}</span>
           {typingUsers.length === 1 ? " is" : " are"} typing...
         </div>
       )}

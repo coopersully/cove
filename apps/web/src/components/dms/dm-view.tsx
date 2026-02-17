@@ -3,9 +3,9 @@ import { useParams } from "react-router";
 import { useDm } from "../../hooks/use-dms.js";
 import { useDocumentTitle } from "../../hooks/use-document-title.js";
 import { useAuthStore } from "../../stores/auth.js";
-import { UserAvatar } from "../user-avatar.js";
 import { MessageComposer } from "../messages/message-composer.js";
 import { MessageFeed } from "../messages/message-feed.js";
+import { UserAvatar } from "../user-avatar.js";
 import { DmList } from "./dm-list.js";
 
 export function DmView(): JSX.Element {
@@ -47,9 +47,7 @@ function DmConversation({
 }): JSX.Element {
   const { data } = useDm(channelId);
 
-  const recipient = currentUserId
-    ? data?.members.find((m) => m.id !== currentUserId)
-    : undefined;
+  const recipient = currentUserId ? data?.members.find((m) => m.id !== currentUserId) : undefined;
   const recipientName = recipient?.displayName ?? recipient?.username ?? "User";
   useDocumentTitle(recipientName);
 

@@ -194,21 +194,21 @@ export const friendships = pgTable(
 // ── Channel Read States ──────────────────────────────
 
 export const channelReadStates = pgTable(
-	"channel_read_states",
-	{
-		userId: bigint("user_id", { mode: "bigint" })
-			.notNull()
-			.references(() => users.id, { onDelete: "cascade" }),
-		channelId: bigint("channel_id", { mode: "bigint" })
-			.notNull()
-			.references(() => channels.id, { onDelete: "cascade" }),
-		lastReadMessageId: bigint("last_read_message_id", { mode: "bigint" }),
-		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-	},
-	(t) => [
-		primaryKey({ columns: [t.userId, t.channelId] }),
-		index("channel_read_states_channel_id_idx").on(t.channelId),
-	],
+  "channel_read_states",
+  {
+    userId: bigint("user_id", { mode: "bigint" })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    channelId: bigint("channel_id", { mode: "bigint" })
+      .notNull()
+      .references(() => channels.id, { onDelete: "cascade" }),
+    lastReadMessageId: bigint("last_read_message_id", { mode: "bigint" }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.channelId] }),
+    index("channel_read_states_channel_id_idx").on(t.channelId),
+  ],
 );
 
 // ── Invite Codes ───────────────────────────────────────

@@ -1,6 +1,11 @@
 import { getUser, requireAuth } from "@cove/auth";
 import { db, friendships, users } from "@cove/db";
-import { AppError, generateSnowflake, sendFriendRequestSchema, snowflakeSchema } from "@cove/shared";
+import {
+  AppError,
+  generateSnowflake,
+  sendFriendRequestSchema,
+  snowflakeSchema,
+} from "@cove/shared";
 import { and, eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 
@@ -96,7 +101,10 @@ friendRoutes.post("/friends/requests", validate(sendFriendRequestSchema), async 
     if (existing.status === "accepted") {
       throw new AppError("VALIDATION_ERROR", "You are already friends with this user");
     }
-    throw new AppError("VALIDATION_ERROR", "A friend request already exists between you and this user");
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "A friend request already exists between you and this user",
+    );
   }
 
   const requestId = generateSnowflake();
@@ -149,7 +157,9 @@ friendRoutes.get("/friends", async (c) => {
   const friends = [];
   for (const otherId of otherIds) {
     const [u] = await db.select(userFields).from(users).where(eq(users.id, otherId)).limit(1);
-    if (u) friends.push(formatUser(u));
+    if (u) {
+      friends.push(formatUser(u));
+    }
   }
 
   return c.json({ friends });
@@ -167,9 +177,7 @@ friendRoutes.get("/friends/requests/incoming", async (c) => {
       createdAt: friendships.createdAt,
     })
     .from(friendships)
-    .where(
-      and(eq(friendships.addresseeId, BigInt(user.id)), eq(friendships.status, "pending")),
-    );
+    .where(and(eq(friendships.addresseeId, BigInt(user.id)), eq(friendships.status, "pending")));
 
   const requests = [];
   for (const row of rows) {
@@ -178,7 +186,9 @@ friendRoutes.get("/friends/requests/incoming", async (c) => {
       .from(users)
       .where(eq(users.id, row.requesterId))
       .limit(1);
-    if (sender) requests.push(formatRequest(row, sender));
+    if (sender) {
+      requests.push(formatRequest(row, sender));
+    }
   }
 
   return c.json({ requests });
@@ -196,9 +206,7 @@ friendRoutes.get("/friends/requests/outgoing", async (c) => {
       createdAt: friendships.createdAt,
     })
     .from(friendships)
-    .where(
-      and(eq(friendships.requesterId, BigInt(user.id)), eq(friendships.status, "pending")),
-    );
+    .where(and(eq(friendships.requesterId, BigInt(user.id)), eq(friendships.status, "pending")));
 
   const requests = [];
   for (const row of rows) {
@@ -207,7 +215,9 @@ friendRoutes.get("/friends/requests/outgoing", async (c) => {
       .from(users)
       .where(eq(users.id, row.addresseeId))
       .limit(1);
-    if (recipient) requests.push(formatRequest(row, recipient));
+    if (recipient) {
+      requests.push(formatRequest(row, recipient));
+    }
   }
 
   return c.json({ requests });

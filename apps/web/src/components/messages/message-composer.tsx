@@ -64,7 +64,9 @@ export function MessageComposer({ channelId }: MessageComposerProps): JSX.Elemen
             tabIndex={0}
             onClick={() => setPreviewOpen(false)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") setPreviewOpen(false);
+              if (e.key === "Enter" || e.key === " ") {
+                setPreviewOpen(false);
+              }
             }}
             className="max-h-24 min-h-5 flex-1 cursor-text overflow-y-auto text-foreground text-sm leading-5"
           >

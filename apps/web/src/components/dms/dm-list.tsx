@@ -14,7 +14,7 @@ export function DmList(): JSX.Element {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <div className="flex w-[260px] flex-col border-r border-sidebar-border bg-sidebar">
+    <div className="flex w-[260px] flex-col border-sidebar-border border-r bg-sidebar">
       <div className="flex h-12 items-center justify-between border-border border-b px-4">
         <h2 className="font-display font-semibold text-foreground text-sm">Direct Messages</h2>
         <button

@@ -13,8 +13,13 @@ import { and, desc, eq, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
-import { emitMessageCreate, emitMessageDelete, emitMessageUpdate, emitTypingStart } from "../lib/events.js";
 import { requireChannelMembership } from "../lib/channel-membership.js";
+import {
+  emitMessageCreate,
+  emitMessageDelete,
+  emitMessageUpdate,
+  emitTypingStart,
+} from "../lib/events.js";
 import { getMemberPermissions } from "../lib/index.js";
 import { validate } from "../middleware/index.js";
 
@@ -49,15 +54,15 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
 
   await requireChannelMembership(channelId, user.id);
 
-	const beforeParam = c.req.query("before");
-	const limitParam = c.req.query("limit");
+  const beforeParam = c.req.query("before");
+  const limitParam = c.req.query("limit");
 
-	const parsedLimit = paginationLimitSchema.safeParse(limitParam ?? "50");
-	if (!parsedLimit.success) {
-		const issue = parsedLimit.error.issues[0];
-		throw new AppError("VALIDATION_ERROR", issue?.message ?? "Invalid limit parameter");
-	}
-	const limit = parsedLimit.data;
+  const parsedLimit = paginationLimitSchema.safeParse(limitParam ?? "50");
+  if (!parsedLimit.success) {
+    const issue = parsedLimit.error.issues[0];
+    throw new AppError("VALIDATION_ERROR", issue?.message ?? "Invalid limit parameter");
+  }
+  const limit = parsedLimit.data;
 
   let query = db
     .select({
@@ -79,17 +84,17 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
     .limit(limit)
     .$dynamic();
 
-	if (beforeParam) {
-		const parsedBefore = snowflakeSchema.safeParse(beforeParam);
-		if (!parsedBefore.success) {
-			const issue = parsedBefore.error.issues[0];
-			throw new AppError("VALIDATION_ERROR", issue?.message ?? "Invalid before parameter");
-		}
-		const before = parsedBefore.data;
-		query = query.where(
-			and(eq(messages.channelId, BigInt(channelId)), lt(messages.id, BigInt(before))),
-		);
-	}
+  if (beforeParam) {
+    const parsedBefore = snowflakeSchema.safeParse(beforeParam);
+    if (!parsedBefore.success) {
+      const issue = parsedBefore.error.issues[0];
+      throw new AppError("VALIDATION_ERROR", issue?.message ?? "Invalid before parameter");
+    }
+    const before = parsedBefore.data;
+    query = query.where(
+      and(eq(messages.channelId, BigInt(channelId)), lt(messages.id, BigInt(before))),
+    );
+  }
 
   const results = await query;
 

@@ -2,6 +2,7 @@ import { Button, ScrollArea } from "@cove/ui";
 import { Check, MessageSquare, Plus, UserMinus, Users, X } from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
+import { useCreateDm } from "../../hooks/use-dms.js";
 import {
   useAcceptFriendRequest,
   useDeclineFriendRequest,
@@ -10,7 +11,6 @@ import {
   useOutgoingRequests,
   useRemoveFriend,
 } from "../../hooks/use-friends.js";
-import { useCreateDm } from "../../hooks/use-dms.js";
 import { UserAvatar } from "../user-avatar.js";
 import { AddFriendDialog } from "./add-friend-dialog.js";
 
@@ -21,7 +21,7 @@ export function FriendsList(): JSX.Element {
   const [addOpen, setAddOpen] = useState(false);
 
   return (
-    <div className="flex w-[260px] flex-col border-r border-sidebar-border bg-sidebar">
+    <div className="flex w-[260px] flex-col border-sidebar-border border-r bg-sidebar">
       <div className="flex h-12 items-center justify-between border-border border-b px-4">
         <h2 className="font-display font-semibold text-foreground text-sm">Friends</h2>
         <button
@@ -37,7 +37,7 @@ export function FriendsList(): JSX.Element {
         <button
           type="button"
           onClick={() => setTab("all")}
-          className={`flex-1 py-2 text-xs font-medium transition-colors ${
+          className={`flex-1 py-2 font-medium text-xs transition-colors ${
             tab === "all"
               ? "border-primary border-b-2 text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -48,7 +48,7 @@ export function FriendsList(): JSX.Element {
         <button
           type="button"
           onClick={() => setTab("pending")}
-          className={`flex-1 py-2 text-xs font-medium transition-colors ${
+          className={`flex-1 py-2 font-medium text-xs transition-colors ${
             tab === "pending"
               ? "border-primary border-b-2 text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -74,9 +74,7 @@ function AllFriends(): JSX.Element {
   const createDm = useCreateDm();
 
   if (isLoading) {
-    return (
-      <div className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</div>
-    );
+    return <div className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</div>;
   }
 
   if (friends.length === 0) {
@@ -93,10 +91,7 @@ function AllFriends(): JSX.Element {
       {friends.map((friend) => {
         const name = friend.displayName ?? friend.username;
         return (
-          <div
-            key={friend.id}
-            className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm"
-          >
+          <div key={friend.id} className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm">
             <UserAvatar
               user={{
                 id: friend.id,
@@ -143,9 +138,7 @@ function PendingRequests(): JSX.Element {
   const declineRequest = useDeclineFriendRequest();
 
   if (incomingLoading || outgoingLoading) {
-    return (
-      <div className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</div>
-    );
+    return <div className="px-4 py-8 text-center text-muted-foreground text-xs">Loading...</div>;
   }
 
   if (incoming.length === 0 && outgoing.length === 0) {
@@ -167,10 +160,7 @@ function PendingRequests(): JSX.Element {
           {incoming.map((req) => {
             const name = req.user.displayName ?? req.user.username;
             return (
-              <div
-                key={req.id}
-                className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm"
-              >
+              <div key={req.id} className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm">
                 <UserAvatar
                   user={{
                     id: req.user.id,
@@ -214,10 +204,7 @@ function PendingRequests(): JSX.Element {
           {outgoing.map((req) => {
             const name = req.user.displayName ?? req.user.username;
             return (
-              <div
-                key={req.id}
-                className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm"
-              >
+              <div key={req.id} className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm">
                 <UserAvatar
                   user={{
                     id: req.user.id,
