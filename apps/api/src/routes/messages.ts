@@ -7,6 +7,7 @@ import {
   hasPermission,
   messageContentSchema,
   paginationLimitSchema,
+  parseMentions,
   snowflakeSchema,
 } from "@cove/shared";
 import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
@@ -22,10 +23,13 @@ import {
 } from "../lib/events.js";
 import { getMemberPermissions } from "../lib/index.js";
 import { validate } from "../middleware/index.js";
+import { getAttachmentsForMessages, linkAttachmentsToMessage } from "./attachments.js";
+import { getEmbedsForMessages } from "./embeds.js";
 
 const createMessageSchema = z.object({
   content: messageContentSchema,
   replyToId: snowflakeSchema.optional(),
+  attachmentIds: z.array(snowflakeSchema).max(10).optional(),
 });
 
 const updateMessageSchema = z.object({
@@ -183,6 +187,10 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
     });
   }
 
+  // Batch-fetch attachments and embeds
+  const attachmentsByMessage = await getAttachmentsForMessages(messageIds);
+  const embedsByMessage = await getEmbedsForMessages(messageIds);
+
   return c.json({
     messages: results.map((m) => ({
       id: String(m.id),
@@ -196,7 +204,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       referencedMessage: m.replyToId
         ? referencedMessages.get(String(m.replyToId)) ?? null
         : null,
-      mentions: [] as string[],
+      mentions: parseMentions(m.content).userIds,
       author: {
         id: String(m.authorId),
         username: m.authorUsername,
@@ -205,6 +213,8 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
         statusEmoji: m.authorStatusEmoji,
       },
       reactions: reactionsByMessage.get(String(m.id)) ?? [],
+      attachments: attachmentsByMessage.get(String(m.id)) ?? [],
+      embeds: embedsByMessage.get(String(m.id)) ?? [],
     })),
   });
 });
@@ -306,6 +316,11 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     throw new AppError("INTERNAL_ERROR", "Failed to create message");
   }
 
+  // Link attachments if provided
+  const linkedAttachments = body.attachmentIds
+    ? await linkAttachmentsToMessage(body.attachmentIds, messageId)
+    : [];
+
   const messagePayload = {
     id: String(created.id),
     channelId: String(created.channelId),
@@ -314,7 +329,7 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     editedAt: created.editedAt,
     replyToId: replyToId,
     referencedMessage: referencedMessage,
-    mentions: [] as string[],
+    mentions: parseMentions(body.content).userIds,
     author: {
       id: user.id,
       username: user.username,
@@ -323,6 +338,8 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
       statusEmoji: user.statusEmoji,
     },
     reactions: [],
+    attachments: linkedAttachments,
+    embeds: [],
   };
 
   emitMessageCreate(eventTargets, messagePayload);
