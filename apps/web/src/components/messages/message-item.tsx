@@ -1,14 +1,17 @@
 import type { Message } from "@cove/api-client";
 import { ResponsiveConfirmModal, Textarea } from "@cove/ui";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Smile, Trash2 } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useDeleteMessage, useUpdateMessage } from "../../hooks/use-messages.js";
+import { useAddReaction } from "../../hooks/use-reactions.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { ProfileCard } from "../layout/profile-card.js";
 import { UserAvatar } from "../user-avatar.js";
+import { EmojiPicker } from "./emoji-picker.js";
 import { MarkdownContent } from "./markdown-content.js";
+import { ReactionBar } from "./reaction-bar.js";
 
 interface MessageItemProps {
   readonly message: Message;
@@ -48,10 +51,12 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const editRef = useRef<HTMLTextAreaElement>(null);
 
   const updateMessage = useUpdateMessage(channelId ?? "");
   const deleteMessage = useDeleteMessage(channelId ?? "");
+  const addReaction = useAddReaction(channelId ?? "");
 
   const displayName = message.author.displayName ?? message.author.username;
 
@@ -99,25 +104,54 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
     });
   }
 
-  const actionBar = isOwn && !editing && (
+  const actionBar = !editing && (
     <div className="-top-3 absolute right-2 hidden rounded-md border bg-card shadow-sm group-hover:flex">
       <button
         type="button"
-        onClick={startEditing}
+        onClick={() => setPickerOpen(true)}
         className="p-1.5 text-muted-foreground transition-colors hover:text-foreground"
-        aria-label="Edit message"
+        aria-label="Add reaction"
       >
-        <Pencil className="size-3.5" />
+        <Smile className="size-3.5" />
       </button>
-      <button
-        type="button"
-        onClick={() => setDeleteOpen(true)}
-        className="p-1.5 text-muted-foreground transition-colors hover:text-destructive"
-        aria-label="Delete message"
-      >
-        <Trash2 className="size-3.5" />
-      </button>
+      {isOwn && (
+        <>
+          <button
+            type="button"
+            onClick={startEditing}
+            className="p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Edit message"
+          >
+            <Pencil className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="p-1.5 text-muted-foreground transition-colors hover:text-destructive"
+            aria-label="Delete message"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </>
+      )}
     </div>
+  );
+
+  const reactionBar = (
+    <ReactionBar
+      messageId={message.id}
+      reactions={message.reactions ?? []}
+      onOpenPicker={() => setPickerOpen(true)}
+    />
+  );
+
+  const emojiPicker = pickerOpen && (
+    <EmojiPicker
+      onSelect={(emoji) => {
+        addReaction.mutate({ messageId: message.id, emoji });
+      }}
+      onClose={() => setPickerOpen(false)}
+    />
   );
 
   const deleteDialog = (
@@ -164,13 +198,17 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
     return (
       <div className="group relative py-0.5 pr-4 pl-[68px] transition-colors hover:bg-secondary/50">
         {actionBar}
+        {emojiPicker}
         <span className="absolute left-0 flex h-5 w-[68px] items-center justify-center text-muted-foreground text-xs opacity-0 group-hover:opacity-100">
           {new Date(message.createdAt).toLocaleTimeString(undefined, {
             hour: "2-digit",
             minute: "2-digit",
           })}
         </span>
-        <div className="min-w-0">{contentOrEditor}</div>
+        <div className="min-w-0">
+          {contentOrEditor}
+          {reactionBar}
+        </div>
         {deleteDialog}
       </div>
     );
@@ -213,7 +251,9 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
           {message.editedAt && <span className="text-muted-foreground text-xs">(edited)</span>}
         </div>
         {contentOrEditor}
+        {reactionBar}
       </div>
+      {emojiPicker}
       {deleteDialog}
     </div>
   );
