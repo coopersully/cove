@@ -12,7 +12,8 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@cove/shared": "workspace:*"
+    "@cove/shared": "workspace:*",
+    "ioredis": "^5.9.3"
   },
   "devDependencies": {
     "@cove/config": "workspace:*"

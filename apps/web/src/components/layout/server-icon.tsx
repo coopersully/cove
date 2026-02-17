@@ -14,9 +14,10 @@ import { getServerAvatarUrl } from "../../lib/avatar.js";
 
 interface ServerIconProps {
   readonly server: Server;
+  readonly hasUnread?: boolean;
 }
 
-export function ServerIcon({ server }: ServerIconProps): JSX.Element {
+export function ServerIcon({ server, hasUnread }: ServerIconProps): JSX.Element {
   const { serverId } = useParams();
   const isActive = serverId === server.id;
 
@@ -40,6 +41,9 @@ export function ServerIcon({ server }: ServerIconProps): JSX.Element {
           </Avatar>
           {isActive && (
             <div className="-translate-x-2 -translate-y-1/2 absolute top-1/2 left-0 h-5 w-1 rounded-r-full bg-foreground" />
+          )}
+          {hasUnread && !isActive && (
+            <div className="-translate-x-2 -translate-y-1/2 absolute top-1/2 left-0 size-2 rounded-full bg-foreground" />
           )}
         </Link>
       </TooltipTrigger>

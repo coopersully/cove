@@ -4,11 +4,11 @@ import {
   bioSchema,
   channelNameSchema,
   channelTopicSchema,
-  channelTypeSchema,
   displayNameSchema,
   emailSchema,
   passwordSchema,
   pronounsSchema,
+  serverChannelTypeSchema,
   serverDescriptionSchema,
   serverNameSchema,
   snowflakeSchema,
@@ -71,12 +71,18 @@ export const serverSettingsSchema = z.object({
 
 export const createChannelSchema = z.object({
   name: channelNameSchema,
-  type: channelTypeSchema,
+  type: serverChannelTypeSchema,
 });
 
 export const editChannelSchema = z.object({
   name: channelNameSchema,
   topic: channelTopicSchema.optional(),
+});
+
+// ── Friend Schemas ──────────────────────────────────────────────────────────
+
+export const sendFriendRequestSchema = z.object({
+  username: usernameSchema,
 });
 
 // ── User Schemas ────────────────────────────────────────────────────────────

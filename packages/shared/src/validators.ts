@@ -94,7 +94,8 @@ export const channelTopicSchema = z
     `Channel topic must be at most ${String(MAX_CHANNEL_TOPIC_LENGTH)} characters`,
   );
 
-export const channelTypeSchema = z.enum(["text", "voice"]);
+export const channelTypeSchema = z.enum(["text", "voice", "dm"]);
+export const serverChannelTypeSchema = z.enum(["text", "voice"]);
 
 export const messageContentSchema = z
   .string()

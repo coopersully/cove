@@ -29,7 +29,9 @@ export function propagateUserUpdate(user: User): void {
   queryClient.setQueriesData<InfiniteData<MessageListResponse>>(
     { queryKey: ["channels"] },
     (old) => {
-      if (!old) return old;
+      if (!old) {
+        return old;
+      }
       return {
         ...old,
         pages: old.pages.map((page) => ({
@@ -46,7 +48,9 @@ export function propagateUserUpdate(user: User): void {
 
   // 2. Update the user profile query cache (used by ProfileCard popover)
   queryClient.setQueryData<UserProfileResponse>(["users", user.id], (old) => {
-    if (!old) return old;
+    if (!old) {
+      return old;
+    }
     return { user: { ...old.user, ...user } };
   });
 }

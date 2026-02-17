@@ -22,6 +22,27 @@
       "when": 1771181050455,
       "tag": "0002_mute_silverclaw",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771188950563,
+      "tag": "0003_mysterious_network",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771190249813,
+      "tag": "0004_nostalgic_blazing_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771280051282,
+      "tag": "0005_yellow_purifiers",
+      "breakpoints": true
     }
   ]
 }

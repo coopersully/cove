@@ -83,7 +83,9 @@ export function RegisterForm(): JSX.Element {
                         onBlur={async (e) => {
                           field.onBlur();
                           const value = e.target.value;
-                          if (!usernameSchema.safeParse(value).success) return;
+                          if (!usernameSchema.safeParse(value).success) {
+                            return;
+                          }
                           try {
                             const { available } = await api.auth.checkUsernameAvailability(value);
                             if (!available) {
@@ -165,7 +167,7 @@ export function RegisterForm(): JSX.Element {
           Create account
         </SubmitButton>
         <div className="text-muted-foreground text-sm">
-          Already have an account?{" "}
+          Already have an account?
           <Link to="/login" className="text-primary underline-offset-4 hover:underline">
             Sign in
           </Link>

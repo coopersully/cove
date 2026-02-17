@@ -5,20 +5,21 @@ import {
   Permissions,
   channelNameSchema,
   channelTopicSchema,
-  channelTypeSchema,
   generateSnowflake,
   hasPermission,
+  serverChannelTypeSchema,
 } from "@cove/shared";
 import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { emitChannelCreate, emitChannelDelete, emitChannelUpdate } from "../lib/events.js";
 import { getMemberPermissions } from "../lib/index.js";
 import { validate } from "../middleware/index.js";
 
 const createChannelSchema = z.object({
   name: channelNameSchema,
-  type: channelTypeSchema,
+  type: serverChannelTypeSchema,
   topic: channelTopicSchema.optional(),
 });
 
@@ -107,16 +108,15 @@ channelRoutes.post("/servers/:serverId/channels", validate(createChannelSchema),
     throw new AppError("INTERNAL_ERROR", "Failed to create channel");
   }
 
-  return c.json(
-    {
-      channel: {
-        ...created,
-        id: String(created.id),
-        serverId: String(created.serverId),
-      },
-    },
-    201,
-  );
+  const channelPayload = {
+    ...created,
+    id: String(created.id),
+    serverId: String(created.serverId),
+  };
+
+  emitChannelCreate(serverId, channelPayload);
+
+  return c.json({ channel: channelPayload }, 201);
 });
 
 // PATCH /channels/:id
@@ -132,6 +132,10 @@ channelRoutes.patch("/channels/:id", validate(updateChannelSchema), async (c) =>
 
   if (!channel) {
     throw new AppError("NOT_FOUND", "Channel not found");
+  }
+
+  if (!channel.serverId) {
+    throw new AppError("FORBIDDEN", "Cannot modify this channel");
   }
 
   const serverId = String(channel.serverId);
@@ -161,13 +165,15 @@ channelRoutes.patch("/channels/:id", validate(updateChannelSchema), async (c) =>
     throw new AppError("NOT_FOUND", "Channel not found");
   }
 
-  return c.json({
-    channel: {
-      ...updated,
-      id: String(updated.id),
-      serverId: String(updated.serverId),
-    },
-  });
+  const updatePayload = {
+    ...updated,
+    id: String(updated.id),
+    serverId: String(updated.serverId),
+  };
+
+  emitChannelUpdate(serverId, updatePayload);
+
+  return c.json({ channel: updatePayload });
 });
 
 // DELETE /channels/:id
@@ -183,6 +189,10 @@ channelRoutes.delete("/channels/:id", async (c) => {
 
   if (!channel) {
     throw new AppError("NOT_FOUND", "Channel not found");
+  }
+
+  if (!channel.serverId) {
+    throw new AppError("FORBIDDEN", "Cannot modify this channel");
   }
 
   const serverId = String(channel.serverId);
@@ -201,6 +211,8 @@ channelRoutes.delete("/channels/:id", async (c) => {
   }
 
   await db.delete(channels).where(eq(channels.id, BigInt(channelId)));
+
+  emitChannelDelete(serverId, channelId);
 
   return c.json({ success: true });
 });

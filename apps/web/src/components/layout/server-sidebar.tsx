@@ -1,3 +1,4 @@
+import type { Server } from "@cove/api-client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +12,22 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@cove/ui";
-import { ArrowDownToLine, LogOut, Monitor, Moon, Sun, UserPen } from "lucide-react";
+import {
+  ArrowDownToLine,
+  LogOut,
+  MessageSquare,
+  Monitor,
+  Moon,
+  Sun,
+  UserPen,
+  Users,
+} from "lucide-react";
 import type { JSX } from "react";
 import { useState } from "react";
+import { Link, useLocation } from "react-router";
+import { useChannels } from "../../hooks/use-channels.js";
 import { useServers } from "../../hooks/use-servers.js";
+import { useServerUnread } from "../../hooks/use-unread.js";
 import { useAuthStore } from "../../stores/auth.js";
 import { useThemeStore } from "../../stores/theme.js";
 import { UserAvatar } from "../user-avatar.js";
@@ -27,13 +40,53 @@ export function ServerSidebar(): JSX.Element {
   const { data } = useServers();
   const servers = data?.servers ?? [];
   const [joinOpen, setJoinOpen] = useState(false);
+  const location = useLocation();
+  const isDmActive = location.pathname.startsWith("/dms");
+  const isFriendsActive = location.pathname.startsWith("/friends");
 
   return (
-    <aside className="flex w-[72px] flex-col items-center border-r border-sidebar-border bg-sidebar">
+    <aside className="flex w-[72px] flex-col items-center border-sidebar-border border-r bg-sidebar">
       <ScrollArea className="w-full flex-1">
         <nav className="flex flex-col items-center gap-2 px-3 py-3">
+          <Tooltip>
+            <TooltipTrigger asChild={true}>
+              <Link
+                to="/dms"
+                className={`group relative flex size-12 items-center justify-center rounded-full transition-colors ${
+                  isDmActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-sidebar-accent text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+                }`}
+                aria-label="Direct Messages"
+              >
+                <MessageSquare className="size-5" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Direct Messages
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild={true}>
+              <Link
+                to="/friends"
+                className={`group relative flex size-12 items-center justify-center rounded-full transition-colors ${
+                  isFriendsActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-sidebar-accent text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+                }`}
+                aria-label="Friends"
+              >
+                <Users className="size-5" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Friends
+            </TooltipContent>
+          </Tooltip>
+          <Separator className="mx-auto w-8 bg-sidebar" />
           {servers.map((server) => (
-            <ServerIcon key={server.id} server={server} />
+            <ServerIconWithUnread key={server.id} server={server} />
           ))}
           <Separator className="mx-auto w-8 bg-sidebar" />
           <CreateServerDialog />
@@ -61,6 +114,14 @@ export function ServerSidebar(): JSX.Element {
       </div>
     </aside>
   );
+}
+
+function ServerIconWithUnread({ server }: { readonly server: Server }): JSX.Element {
+  const { data } = useChannels(server.id);
+  const channelIds = (data?.channels ?? []).map((channel) => channel.id);
+  const hasUnread = useServerUnread(channelIds);
+
+  return <ServerIcon server={server} hasUnread={hasUnread} />;
 }
 
 function UserButton(): JSX.Element {

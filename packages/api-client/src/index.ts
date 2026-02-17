@@ -7,8 +7,17 @@ export type { AuthResource } from "./resources/auth.js";
 export { createChannelResource } from "./resources/channels.js";
 export type { ChannelResource } from "./resources/channels.js";
 
+export { createDmResource } from "./resources/dms.js";
+export type { DmResource } from "./resources/dms.js";
+
+export { createFriendsResource } from "./resources/friends.js";
+export type { FriendsResource } from "./resources/friends.js";
+
 export { createMessageResource } from "./resources/messages.js";
 export type { MessageResource } from "./resources/messages.js";
+
+export { createReadStateResource } from "./resources/read-states.js";
+export type { ReadStateResource } from "./resources/read-states.js";
 
 export { createServerResource } from "./resources/servers.js";
 export type { ServerResource } from "./resources/servers.js";
@@ -22,7 +31,10 @@ import { HttpClient } from "./http.js";
 import type { HttpClientConfig } from "./http.js";
 import { createAuthResource } from "./resources/auth.js";
 import { createChannelResource } from "./resources/channels.js";
+import { createDmResource } from "./resources/dms.js";
+import { createFriendsResource } from "./resources/friends.js";
 import { createMessageResource } from "./resources/messages.js";
+import { createReadStateResource } from "./resources/read-states.js";
 import { createServerResource } from "./resources/servers.js";
 import { createUserResource } from "./resources/users.js";
 
@@ -31,7 +43,10 @@ export interface ApiClient {
   readonly users: ReturnType<typeof createUserResource>;
   readonly servers: ReturnType<typeof createServerResource>;
   readonly channels: ReturnType<typeof createChannelResource>;
+  readonly dms: ReturnType<typeof createDmResource>;
+  readonly friends: ReturnType<typeof createFriendsResource>;
   readonly messages: ReturnType<typeof createMessageResource>;
+  readonly readStates: ReturnType<typeof createReadStateResource>;
 }
 
 export function createApiClient(config: HttpClientConfig): ApiClient {
@@ -41,6 +56,9 @@ export function createApiClient(config: HttpClientConfig): ApiClient {
     users: createUserResource(http),
     servers: createServerResource(http),
     channels: createChannelResource(http),
+    dms: createDmResource(http),
+    friends: createFriendsResource(http),
     messages: createMessageResource(http),
+    readStates: createReadStateResource(http),
   };
 }

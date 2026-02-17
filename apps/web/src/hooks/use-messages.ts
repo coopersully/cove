@@ -7,6 +7,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 import { useAuthStore } from "../stores/auth.js";
+import { useGatewayStore } from "../stores/gateway.js";
 
 const MESSAGE_LIMIT = 50;
 
@@ -89,9 +90,11 @@ export function useSendMessage(channelId: string) {
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ["channels", channelId, "messages"],
-      });
+      if (useGatewayStore.getState().status !== "connected") {
+        void queryClient.invalidateQueries({
+          queryKey: ["channels", channelId, "messages"],
+        });
+      }
     },
   });
 }
@@ -143,9 +146,11 @@ export function useUpdateMessage(channelId: string) {
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ["channels", channelId, "messages"],
-      });
+      if (useGatewayStore.getState().status !== "connected") {
+        void queryClient.invalidateQueries({
+          queryKey: ["channels", channelId, "messages"],
+        });
+      }
     },
   });
 }
@@ -192,9 +197,11 @@ export function useDeleteMessage(channelId: string) {
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ["channels", channelId, "messages"],
-      });
+      if (useGatewayStore.getState().status !== "connected") {
+        void queryClient.invalidateQueries({
+          queryKey: ["channels", channelId, "messages"],
+        });
+      }
     },
   });
 }

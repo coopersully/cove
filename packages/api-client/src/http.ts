@@ -59,6 +59,15 @@ export class HttpClient {
     return this.request<T>(url, init);
   }
 
+  async put<T>(path: string, body: unknown): Promise<T> {
+    const url = this.buildUrl(path);
+    return this.request<T>(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
   async patch<T>(path: string, body: unknown): Promise<T> {
     const url = this.buildUrl(path);
     return this.request<T>(url, {

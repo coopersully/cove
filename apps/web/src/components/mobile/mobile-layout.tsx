@@ -123,7 +123,7 @@ export function MobileLayout(): JSX.Element {
       {/* Bottom pill */}
       {channelId && (
         <div className="relative z-20 shrink-0 px-3 pb-2">
-          <div className="[&>div]:border-0 [&>div]:p-0 [&>div>div]:rounded-2xl [&>div>div]:shadow-sm [&>div>div]:ring-1 [&>div>div]:ring-border/40">
+          <div className="[&>div>div]:rounded-2xl [&>div>div]:shadow-sm [&>div>div]:ring-1 [&>div>div]:ring-border/40 [&>div]:border-0 [&>div]:p-0">
             <MessageComposer channelId={channelId} />
           </div>
         </div>

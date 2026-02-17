@@ -38,7 +38,7 @@ function StatusEmojiPicker({
   return (
     <div className="flex items-center gap-1.5">
       <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-        <PopoverTrigger asChild>
+        <PopoverTrigger asChild={true}>
           <button
             type="button"
             className="flex size-9 items-center justify-center rounded-md border bg-background text-lg transition-colors hover:bg-accent"

@@ -116,7 +116,7 @@ export function LoginForm(): JSX.Element {
           Sign in
         </SubmitButton>
         <div className="text-muted-foreground text-sm">
-          Don&apos;t have an account?{" "}
+          Don&apos;t have an account?
           <Link to="/register" className="text-primary underline-offset-4 hover:underline">
             Sign up
           </Link>

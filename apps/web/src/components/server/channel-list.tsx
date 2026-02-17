@@ -47,7 +47,7 @@ export function ChannelList({ serverId }: ChannelListProps): JSX.Element {
     .sort((a, b) => a.position - b.position);
 
   return (
-    <div className="flex w-60 flex-col border-r border-sidebar-border bg-sidebar">
+    <div className="flex w-60 flex-col border-sidebar-border border-r bg-sidebar">
       {/* Server header with dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>

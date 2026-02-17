@@ -23,7 +23,12 @@ export function EditChannelDialog({
   open,
   onOpenChange,
 }: EditChannelDialogProps): JSX.Element {
-  const updateChannel = useUpdateChannel(channel.serverId);
+  const serverId = channel.serverId ?? "";
+  const updateChannel = useUpdateChannel(serverId);
+
+  if (!serverId) {
+    throw new Error("EditChannelDialog requires a server channel");
+  }
 
   return (
     <ResponsiveFormModal

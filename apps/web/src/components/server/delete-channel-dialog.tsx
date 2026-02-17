@@ -15,9 +15,14 @@ export function DeleteChannelDialog({
   open,
   onOpenChange,
 }: DeleteChannelDialogProps): JSX.Element {
-  const deleteChannel = useDeleteChannel(channel.serverId);
+  const serverId = channel.serverId ?? "";
+  const deleteChannel = useDeleteChannel(serverId);
   const navigate = useNavigate();
   const { channelId } = useParams();
+
+  if (!serverId) {
+    throw new Error("DeleteChannelDialog requires a server channel");
+  }
 
   async function handleConfirm() {
     await new Promise<void>((resolve, reject) => {
@@ -25,7 +30,7 @@ export function DeleteChannelDialog({
         onSuccess: () => {
           onOpenChange(false);
           if (channelId === channel.id) {
-            void navigate(`/servers/${channel.serverId}`);
+            void navigate(`/servers/${serverId}`);
           }
           resolve();
         },
