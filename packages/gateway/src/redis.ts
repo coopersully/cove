@@ -66,6 +66,7 @@ export async function getSession(client: Redis, sessionId: string): Promise<Sess
 
 export async function refreshSessionTTL(client: Redis, sessionId: string): Promise<void> {
   await client.expire(`${SESSION_PREFIX}${sessionId}`, SESSION_TTL);
+  await client.expire(`${REPLAY_PREFIX}${sessionId}`, SESSION_TTL);
 }
 
 export async function deleteSession(client: Redis, sessionId: string): Promise<void> {

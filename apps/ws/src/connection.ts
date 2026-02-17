@@ -209,7 +209,7 @@ export function handleConnection(ws: WebSocket, dispatcher: Dispatcher, redis: R
             replaySeq = parsed.s;
           }
         } catch {
-          break;
+          // Skip corrupt payload
         }
       }
       client.seq = replaySeq;

@@ -132,6 +132,10 @@ export function useGatewayEventRouter(): void {
         void queryClient.invalidateQueries({
           queryKey: ["servers", data.serverId, "channels"],
         });
+      } else {
+        void queryClient.invalidateQueries({
+          queryKey: ["dms"],
+        });
       }
     }
 
