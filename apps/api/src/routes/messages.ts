@@ -1,5 +1,5 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { channels, db, messages, servers, users } from "@cove/db";
+import { channels, db, messages, reactions, servers, users } from "@cove/db";
 import {
   AppError,
   Permissions,
@@ -9,7 +9,7 @@ import {
   paginationLimitSchema,
   snowflakeSchema,
 } from "@cove/shared";
-import { and, desc, eq, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -150,6 +150,37 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
     }
   }
 
+  // Batch-fetch reactions for this page
+  const messageIds = results.map((m) => m.id);
+  let reactionRows: { messageId: bigint; emoji: string; count: number; me: boolean }[] = [];
+
+  if (messageIds.length > 0) {
+    reactionRows = await db
+      .select({
+        messageId: reactions.messageId,
+        emoji: reactions.emoji,
+        count: sql<number>`count(*)::int`.as("count"),
+        me: sql<boolean>`bool_or(${reactions.userId} = ${BigInt(user.id)})`.as("me"),
+      })
+      .from(reactions)
+      .where(inArray(reactions.messageId, messageIds))
+      .groupBy(reactions.messageId, reactions.emoji);
+  }
+
+  // Group reactions by messageId
+  const reactionsByMessage = new Map<string, { emoji: string; count: number; me: boolean }[]>();
+  for (const row of reactionRows) {
+    const key = String(row.messageId);
+    if (!reactionsByMessage.has(key)) {
+      reactionsByMessage.set(key, []);
+    }
+    reactionsByMessage.get(key)!.push({
+      emoji: row.emoji,
+      count: row.count,
+      me: row.me,
+    });
+  }
+
   return c.json({
     messages: results.map((m) => ({
       id: String(m.id),
@@ -169,6 +200,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
         avatarUrl: m.authorAvatarUrl,
         statusEmoji: m.authorStatusEmoji,
       },
+      reactions: reactionsByMessage.get(String(m.id)) ?? [],
     })),
   });
 });
@@ -340,6 +372,16 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
     throw new AppError("NOT_FOUND", "Message not found");
   }
 
+  const messageReactions = await db
+    .select({
+      emoji: reactions.emoji,
+      count: sql<number>`count(*)::int`.as("count"),
+      me: sql<boolean>`bool_or(${reactions.userId} = ${BigInt(user.id)})`.as("me"),
+    })
+    .from(reactions)
+    .where(eq(reactions.messageId, BigInt(messageId)))
+    .groupBy(reactions.emoji);
+
   const updatePayload = {
     id: String(updated.id),
     channelId: String(updated.channelId),
@@ -353,6 +395,7 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
       avatarUrl: user.avatarUrl,
       statusEmoji: user.statusEmoji,
     },
+    reactions: messageReactions,
   };
 
   emitMessageUpdate(eventTargets, updatePayload);
