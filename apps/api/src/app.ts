@@ -8,6 +8,7 @@ import {
   dmRoutes,
   friendRoutes,
   messageRoutes,
+  reactionRoutes,
   readStateRoutes,
   serverRoutes,
   userRoutes,
@@ -33,4 +34,5 @@ app.route("/", channelRoutes);
 app.route("/", dmRoutes);
 app.route("/", friendRoutes);
 app.route("/", messageRoutes);
+app.route("/", reactionRoutes);
 app.route("/", readStateRoutes);
