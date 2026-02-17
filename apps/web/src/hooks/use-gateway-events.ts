@@ -57,9 +57,7 @@ export function useGatewayEventRouter(): void {
           }
 
           // Skip if message already exists in cache (e.g. replayed on resume)
-          const alreadyExists = old.pages.some((p) =>
-            p.messages.some((m) => m.id === message.id),
-          );
+          const alreadyExists = old.pages.some((p) => p.messages.some((m) => m.id === message.id));
           if (alreadyExists) {
             return old;
           }

@@ -108,7 +108,7 @@ export async function getReplayEvents(
         results.push(entry.payload);
       }
     } catch {
-      continue;
+      // Skip corrupt entries
     }
   }
   return results;

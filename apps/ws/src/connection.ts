@@ -51,7 +51,11 @@ export function handleConnection(ws: WebSocket, dispatcher: Dispatcher, redis: R
 
     switch (msg.op) {
       case GatewayOpcodes.Identify:
-        if (msg.d && typeof msg.d === "object" && typeof (msg.d as Record<string, unknown>).token === "string") {
+        if (
+          msg.d &&
+          typeof msg.d === "object" &&
+          typeof (msg.d as Record<string, unknown>).token === "string"
+        ) {
           void handleIdentify(msg.d as { token: string });
         }
         break;
@@ -60,7 +64,8 @@ export function handleConnection(ws: WebSocket, dispatcher: Dispatcher, redis: R
         break;
       case GatewayOpcodes.Resume:
         if (
-          msg.d && typeof msg.d === "object" &&
+          msg.d &&
+          typeof msg.d === "object" &&
           typeof (msg.d as Record<string, unknown>).token === "string" &&
           typeof (msg.d as Record<string, unknown>).sessionId === "string" &&
           typeof (msg.d as Record<string, unknown>).seq === "number"
