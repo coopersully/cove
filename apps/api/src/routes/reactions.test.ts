@@ -24,75 +24,75 @@ async function createTestMessage(channelId: string, authorId: string, content = 
 describe("Reaction Routes", () => {
   describe("PUT /channels/:channelId/messages/:messageId/reactions/:emoji", () => {
     it("adds a reaction to a message", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, user.id);
 
       const { status } = await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${message.id}/reactions/${encodeURIComponent("👍")}`,
-        { token: alice.token },
+        { token: user.token },
       );
 
       expect(status).toBe(204);
     });
 
     it("is idempotent — adding same reaction twice succeeds", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, user.id);
 
       const emoji = encodeURIComponent("🔥");
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`, {
-        token: alice.token,
+        token: user.token,
       });
 
       const { status } = await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`,
-        { token: alice.token },
+        { token: user.token },
       );
 
       expect(status).toBe(204);
     });
 
     it("rejects reaction from non-member", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const outsider = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, owner.id);
 
       const { status } = await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${message.id}/reactions/${encodeURIComponent("👍")}`,
-        { token: bob.token },
+        { token: outsider.token },
       );
 
       expect(status).toBe(403);
     });
 
     it("returns 404 for nonexistent message", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
 
       const { status } = await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/999999999999999999/reactions/${encodeURIComponent("👍")}`,
-        { token: alice.token },
+        { token: user.token },
       );
 
       expect(status).toBe(404);
     });
 
     it("rejects reaction without authentication", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, user.id);
 
       const { status } = await apiRequest(
         "PUT",
@@ -103,27 +103,27 @@ describe("Reaction Routes", () => {
     });
 
     it("allows multiple different emojis from the same user", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, user.id);
 
       const thumbs = encodeURIComponent("👍");
       const fire = encodeURIComponent("🔥");
       const heart = encodeURIComponent("❤️");
 
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`, {
-        token: alice.token,
+        token: user.token,
       });
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${fire}`, {
-        token: alice.token,
+        token: user.token,
       });
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${heart}`, {
-        token: alice.token,
+        token: user.token,
       });
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: alice.token,
+        token: user.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
       const msg = msgs.find((m) => m.id === message.id);
@@ -136,15 +136,15 @@ describe("Reaction Routes", () => {
     });
 
     it("allows reactions in DM channels", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const dm = await createTestDm(alice.id, bob.id);
-      const message = await createTestMessage(dm.channelId, alice.id, "DM message");
+      const userA = await createTestUser();
+      const userB = await createTestUser();
+      const dm = await createTestDm(userA.id, userB.id);
+      const message = await createTestMessage(dm.channelId, userA.id, "DM message");
 
       const { status } = await apiRequest(
         "PUT",
         `/channels/${dm.channelId}/messages/${message.id}/reactions/${encodeURIComponent("👍")}`,
-        { token: bob.token },
+        { token: userB.token },
       );
 
       expect(status).toBe(204);
@@ -153,71 +153,71 @@ describe("Reaction Routes", () => {
 
   describe("DELETE /channels/:channelId/messages/:messageId/reactions/:emoji", () => {
     it("removes own reaction", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, user.id);
 
       const emoji = encodeURIComponent("👍");
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`, {
-        token: alice.token,
+        token: user.token,
       });
 
       const { status } = await apiRequest(
         "DELETE",
         `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`,
-        { token: alice.token },
+        { token: user.token },
       );
 
       expect(status).toBe(204);
     });
 
     it("returns 204 even if reaction does not exist (idempotent)", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, user.id);
 
       const { status } = await apiRequest(
         "DELETE",
         `/channels/${channel.id}/messages/${message.id}/reactions/${encodeURIComponent("👍")}`,
-        { token: alice.token },
+        { token: user.token },
       );
 
       expect(status).toBe(204);
     });
 
     it("removing a reaction decrements the count in GET messages", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const member = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
 
       await db.insert(serverMembers).values({
         serverId: BigInt(server.id),
-        userId: BigInt(bob.id),
+        userId: BigInt(member.id),
       });
 
-      const message = await createTestMessage(channel.id, alice.id, "React to me");
+      const message = await createTestMessage(channel.id, owner.id, "React to me");
 
       const emoji = encodeURIComponent("👍");
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`, {
-        token: alice.token,
+        token: owner.token,
       });
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`, {
-        token: bob.token,
+        token: member.token,
       });
 
-      // Alice removes her reaction
+      // Owner removes their reaction
       await apiRequest(
         "DELETE",
         `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`,
-        { token: alice.token },
+        { token: owner.token },
       );
 
-      // Verify count is now 1 and me=false for alice
+      // Verify count is now 1 and me=false for owner
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: alice.token,
+        token: owner.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
       const msg = msgs.find((m) => m.id === message.id);
@@ -228,23 +228,23 @@ describe("Reaction Routes", () => {
     });
 
     it("removing the last reaction results in empty reactions array", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id);
+      const message = await createTestMessage(channel.id, user.id);
 
       const emoji = encodeURIComponent("👍");
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`, {
-        token: alice.token,
+        token: user.token,
       });
       await apiRequest(
         "DELETE",
         `/channels/${channel.id}/messages/${message.id}/reactions/${emoji}`,
-        { token: alice.token },
+        { token: user.token },
       );
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: alice.token,
+        token: user.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
       const msg = msgs.find((m) => m.id === message.id);
@@ -255,38 +255,38 @@ describe("Reaction Routes", () => {
 
   describe("GET /channels/:channelId/messages (with reactions)", () => {
     it("returns aggregated reactions on messages", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const member = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
 
       await db.insert(serverMembers).values({
         serverId: BigInt(server.id),
-        userId: BigInt(bob.id),
+        userId: BigInt(member.id),
       });
 
-      const message = await createTestMessage(channel.id, alice.id, "React to me!");
+      const message = await createTestMessage(channel.id, owner.id, "React to me!");
 
       const thumbs = encodeURIComponent("👍");
       const fire = encodeURIComponent("🔥");
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`,
-        { token: alice.token },
+        { token: owner.token },
       );
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`,
-        { token: bob.token },
+        { token: member.token },
       );
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${message.id}/reactions/${fire}`,
-        { token: alice.token },
+        { token: owner.token },
       );
 
       const { status, body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       expect(status).toBe(200);
@@ -309,27 +309,27 @@ describe("Reaction Routes", () => {
     });
 
     it("me field is false when viewing as a user who has not reacted", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const member = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
 
       await db.insert(serverMembers).values({
         serverId: BigInt(server.id),
-        userId: BigInt(bob.id),
+        userId: BigInt(member.id),
       });
 
-      const message = await createTestMessage(channel.id, alice.id, "React to me!");
+      const message = await createTestMessage(channel.id, owner.id, "React to me!");
 
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${message.id}/reactions/${encodeURIComponent("👍")}`,
-        { token: alice.token },
+        { token: owner.token },
       );
 
-      // Fetch as bob — should see me=false
+      // Fetch as member — should see me=false
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: bob.token,
+        token: member.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
       const msg = msgs.find((m) => m.id === message.id);
@@ -341,13 +341,13 @@ describe("Reaction Routes", () => {
     });
 
     it("returns empty reactions array for messages with no reactions", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
       const channel = await createTestChannel(server.id);
-      await createTestMessage(channel.id, alice.id, "No reactions here");
+      await createTestMessage(channel.id, user.id, "No reactions here");
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: alice.token,
+        token: user.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
       expect(msgs).toHaveLength(1);
@@ -355,46 +355,46 @@ describe("Reaction Routes", () => {
     });
 
     it("reactions from multiple users are correctly aggregated across messages", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const charlie = await createTestUser({ username: "charlie" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const memberA = await createTestUser();
+      const memberB = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
 
       await db.insert(serverMembers).values([
-        { serverId: BigInt(server.id), userId: BigInt(bob.id) },
-        { serverId: BigInt(server.id), userId: BigInt(charlie.id) },
+        { serverId: BigInt(server.id), userId: BigInt(memberA.id) },
+        { serverId: BigInt(server.id), userId: BigInt(memberB.id) },
       ]);
 
-      const msg1 = await createTestMessage(channel.id, alice.id, "Message 1");
-      const msg2 = await createTestMessage(channel.id, alice.id, "Message 2");
+      const msg1 = await createTestMessage(channel.id, owner.id, "Message 1");
+      const msg2 = await createTestMessage(channel.id, owner.id, "Message 2");
 
       const thumbs = encodeURIComponent("👍");
 
-      // All three react to msg1, only alice reacts to msg2
+      // All three react to msg1, only owner reacts to msg2
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`,
-        { token: alice.token },
+        { token: owner.token },
       );
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`,
-        { token: bob.token },
+        { token: memberA.token },
       );
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${msg1.id}/reactions/${thumbs}`,
-        { token: charlie.token },
+        { token: memberB.token },
       );
       await apiRequest(
         "PUT",
         `/channels/${channel.id}/messages/${msg2.id}/reactions/${thumbs}`,
-        { token: alice.token },
+        { token: owner.token },
       );
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: bob.token,
+        token: memberA.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
 
@@ -402,13 +402,13 @@ describe("Reaction Routes", () => {
       const m1Reactions = m1!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(m1Reactions).toHaveLength(1);
       expect(m1Reactions[0]!.count).toBe(3);
-      expect(m1Reactions[0]!.me).toBe(true); // bob reacted
+      expect(m1Reactions[0]!.me).toBe(true); // memberA reacted
 
       const m2 = msgs.find((m) => m.id === msg2.id);
       const m2Reactions = m2!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
       expect(m2Reactions).toHaveLength(1);
       expect(m2Reactions[0]!.count).toBe(1);
-      expect(m2Reactions[0]!.me).toBe(false); // bob did not react to msg2
+      expect(m2Reactions[0]!.me).toBe(false); // memberA did not react to msg2
     });
   });
 });

@@ -24,80 +24,80 @@ async function createTestMessage(channelId: string, authorId: string, content = 
 describe("Pin Routes", () => {
   describe("PUT /channels/:channelId/pins/:messageId", () => {
     it("pins a message as server owner", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin me!");
+      const message = await createTestMessage(channel.id, owner.id, "Pin me!");
 
       const { status } = await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       expect(status).toBe(204);
     });
 
     it("rejects pin from member without MANAGE_MESSAGES", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const member = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin me!");
+      const message = await createTestMessage(channel.id, owner.id, "Pin me!");
 
       await db.insert(serverMembers).values({
         serverId: BigInt(server.id),
-        userId: BigInt(bob.id),
+        userId: BigInt(member.id),
       });
 
       const { status } = await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: bob.token,
+        token: member.token,
       });
 
       expect(status).toBe(403);
     });
 
     it("pinning an already-pinned message is idempotent", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin me!");
+      const message = await createTestMessage(channel.id, owner.id, "Pin me!");
 
       await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       const { status } = await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       expect(status).toBe(204);
 
       // Verify it only appears once in the pins list
       const { body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
-        token: alice.token,
+        token: owner.token,
       });
       const pins = body.messages as Array<Record<string, unknown>>;
       expect(pins).toHaveLength(1);
     });
 
     it("returns 404 for nonexistent message", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
 
       const { status } = await apiRequest(
         "PUT",
         `/channels/${channel.id}/pins/999999999999999999`,
-        { token: alice.token },
+        { token: owner.token },
       );
 
       expect(status).toBe(404);
     });
 
     it("rejects pin without authentication", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin me!");
+      const message = await createTestMessage(channel.id, owner.id, "Pin me!");
 
       const { status } = await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`);
 
@@ -105,27 +105,27 @@ describe("Pin Routes", () => {
     });
 
     it("rejects pin from non-member", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const outsider = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin me!");
+      const message = await createTestMessage(channel.id, owner.id, "Pin me!");
 
       const { status } = await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: bob.token,
+        token: outsider.token,
       });
 
       expect(status).toBe(403);
     });
 
     it("allows pinning in DM channels by either participant", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const dm = await createTestDm(alice.id, bob.id);
-      const message = await createTestMessage(dm.channelId, alice.id, "Pin this DM");
+      const userA = await createTestUser();
+      const userB = await createTestUser();
+      const dm = await createTestDm(userA.id, userB.id);
+      const message = await createTestMessage(dm.channelId, userA.id, "Pin this DM");
 
       const { status } = await apiRequest("PUT", `/channels/${dm.channelId}/pins/${message.id}`, {
-        token: bob.token,
+        token: userB.token,
       });
 
       expect(status).toBe(204);
@@ -134,60 +134,60 @@ describe("Pin Routes", () => {
 
   describe("DELETE /channels/:channelId/pins/:messageId", () => {
     it("unpins a pinned message", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin me!");
+      const message = await createTestMessage(channel.id, owner.id, "Pin me!");
 
       await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       const { status } = await apiRequest("DELETE", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       expect(status).toBe(204);
 
       // Verify it's removed from the pins list
       const { body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
-        token: alice.token,
+        token: owner.token,
       });
       const pins = body.messages as Array<Record<string, unknown>>;
       expect(pins).toHaveLength(0);
     });
 
     it("unpinning a non-pinned message succeeds (idempotent)", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Not pinned");
+      const message = await createTestMessage(channel.id, owner.id, "Not pinned");
 
       const { status } = await apiRequest("DELETE", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       expect(status).toBe(204);
     });
 
     it("rejects unpin from member without MANAGE_MESSAGES", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const member = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin me!");
+      const message = await createTestMessage(channel.id, owner.id, "Pin me!");
 
       await db.insert(serverMembers).values({
         serverId: BigInt(server.id),
-        userId: BigInt(bob.id),
+        userId: BigInt(member.id),
       });
 
       await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       const { status } = await apiRequest("DELETE", `/channels/${channel.id}/pins/${message.id}`, {
-        token: bob.token,
+        token: member.token,
       });
 
       expect(status).toBe(403);
@@ -196,22 +196,22 @@ describe("Pin Routes", () => {
 
   describe("GET /channels/:channelId/pins", () => {
     it("lists pinned messages", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const msg1 = await createTestMessage(channel.id, alice.id, "First pinned");
-      const msg2 = await createTestMessage(channel.id, alice.id, "Second pinned");
-      await createTestMessage(channel.id, alice.id, "Not pinned");
+      const msg1 = await createTestMessage(channel.id, owner.id, "First pinned");
+      const msg2 = await createTestMessage(channel.id, owner.id, "Second pinned");
+      await createTestMessage(channel.id, owner.id, "Not pinned");
 
       await apiRequest("PUT", `/channels/${channel.id}/pins/${msg1.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
       await apiRequest("PUT", `/channels/${channel.id}/pins/${msg2.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       const { status, body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       expect(status).toBe(200);
@@ -220,12 +220,12 @@ describe("Pin Routes", () => {
     });
 
     it("returns empty array when nothing is pinned", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
 
       const { status, body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       expect(status).toBe(200);
@@ -234,30 +234,30 @@ describe("Pin Routes", () => {
     });
 
     it("rejects pin listing from non-member", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const outsider = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
 
       const { status } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
-        token: bob.token,
+        token: outsider.token,
       });
 
       expect(status).toBe(403);
     });
 
     it("includes author info and pinnedAt/pinnedBy in pin responses", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pinned with details");
+      const message = await createTestMessage(channel.id, owner.id, "Pinned with details");
 
       await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
-        token: alice.token,
+        token: owner.token,
       });
       const pins = body.messages as Array<Record<string, unknown>>;
       expect(pins).toHaveLength(1);
@@ -266,48 +266,48 @@ describe("Pin Routes", () => {
       expect(pin.id).toBe(message.id);
       expect(pin.content).toBe("Pinned with details");
       expect(pin.pinnedAt).toBeDefined();
-      expect(pin.pinnedBy).toBe(alice.id);
+      expect(pin.pinnedBy).toBe(owner.id);
       expect(pin.author).toBeDefined();
       const author = pin.author as Record<string, unknown>;
-      expect(author.username).toBe("alice");
+      expect(author.id).toBe(owner.id);
     });
 
     it("pinnedAt and pinnedBy appear in GET messages response", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin visible in messages");
+      const message = await createTestMessage(channel.id, owner.id, "Pin visible in messages");
 
       await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: alice.token,
+        token: owner.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
       const msg = msgs.find((m) => m.id === message.id);
       expect(msg).toBeDefined();
       expect(msg!.pinnedAt).toBeDefined();
       expect(msg!.pinnedAt).not.toBeNull();
-      expect(msg!.pinnedBy).toBe(alice.id);
+      expect(msg!.pinnedBy).toBe(owner.id);
     });
 
     it("unpinned messages have null pinnedAt/pinnedBy in GET messages response", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const server = await createTestServer(alice.id);
+      const owner = await createTestUser();
+      const server = await createTestServer(owner.id);
       const channel = await createTestChannel(server.id);
-      const message = await createTestMessage(channel.id, alice.id, "Pin then unpin");
+      const message = await createTestMessage(channel.id, owner.id, "Pin then unpin");
 
       await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
       await apiRequest("DELETE", `/channels/${channel.id}/pins/${message.id}`, {
-        token: alice.token,
+        token: owner.token,
       });
 
       const { body } = await apiRequest("GET", `/channels/${channel.id}/messages`, {
-        token: alice.token,
+        token: owner.token,
       });
       const msgs = body.messages as Array<Record<string, unknown>>;
       const msg = msgs.find((m) => m.id === message.id);
