@@ -74,6 +74,8 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       replyToId: messages.replyToId,
       createdAt: messages.createdAt,
       editedAt: messages.editedAt,
+      pinnedAt: messages.pinnedAt,
+      pinnedBy: messages.pinnedBy,
       authorUsername: users.username,
       authorDisplayName: users.displayName,
       authorAvatarUrl: users.avatarUrl,
@@ -188,6 +190,8 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       content: m.content,
       createdAt: m.createdAt,
       editedAt: m.editedAt,
+      pinnedAt: m.pinnedAt ?? null,
+      pinnedBy: m.pinnedBy ? String(m.pinnedBy) : null,
       replyToId: m.replyToId ? String(m.replyToId) : null,
       referencedMessage: m.replyToId
         ? referencedMessages.get(String(m.replyToId)) ?? null

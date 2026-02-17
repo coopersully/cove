@@ -1,6 +1,6 @@
 import type { Message } from "@cove/api-client";
 import { ResponsiveConfirmModal, Textarea } from "@cove/ui";
-import { Pencil, Smile, Trash2 } from "lucide-react";
+import { Pencil, Pin, Smile, Trash2 } from "lucide-react";
 import type { JSX, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -249,6 +249,7 @@ export function MessageItem({ message, showAuthor }: MessageItemProps): JSX.Elem
             {formatTimestamp(message.createdAt)}
           </span>
           {message.editedAt && <span className="text-muted-foreground text-xs">(edited)</span>}
+          {message.pinnedAt && <Pin className="size-3 text-muted-foreground" />}
         </div>
         {contentOrEditor}
         {reactionBar}
