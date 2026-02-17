@@ -108,6 +108,7 @@ function AllFriends(): JSX.Element {
                 size="icon-xs"
                 className="text-muted-foreground hover:text-foreground"
                 title="Message"
+                disabled={createDm.isPending}
                 onClick={() => createDm.mutate({ recipientId: friend.id })}
               >
                 <MessageSquare className="size-3.5" />
@@ -117,6 +118,7 @@ function AllFriends(): JSX.Element {
                 size="icon-xs"
                 className="text-muted-foreground hover:text-destructive"
                 title="Remove Friend"
+                disabled={removeFriend.isPending}
                 onClick={() => removeFriend.mutate(friend.id)}
               >
                 <UserMinus className="size-3.5" />
@@ -177,6 +179,7 @@ function PendingRequests(): JSX.Element {
                     size="icon-xs"
                     className="text-muted-foreground hover:text-emerald-500"
                     title="Accept"
+                    disabled={acceptRequest.isPending}
                     onClick={() => acceptRequest.mutate(req.id)}
                   >
                     <Check className="size-3.5" />
@@ -186,6 +189,7 @@ function PendingRequests(): JSX.Element {
                     size="icon-xs"
                     className="text-muted-foreground hover:text-destructive"
                     title="Decline"
+                    disabled={declineRequest.isPending}
                     onClick={() => declineRequest.mutate(req.id)}
                   >
                     <X className="size-3.5" />
@@ -220,6 +224,7 @@ function PendingRequests(): JSX.Element {
                   size="icon-xs"
                   className="text-muted-foreground hover:text-destructive"
                   title="Cancel"
+                  disabled={declineRequest.isPending}
                   onClick={() => declineRequest.mutate(req.id)}
                 >
                   <X className="size-3.5" />

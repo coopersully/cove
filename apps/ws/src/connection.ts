@@ -51,13 +51,22 @@ export function handleConnection(ws: WebSocket, dispatcher: Dispatcher, redis: R
 
     switch (msg.op) {
       case GatewayOpcodes.Identify:
-        void handleIdentify(msg.d as { token: string });
+        if (msg.d && typeof msg.d === "object" && typeof (msg.d as Record<string, unknown>).token === "string") {
+          void handleIdentify(msg.d as { token: string });
+        }
         break;
       case GatewayOpcodes.Heartbeat:
         handleHeartbeat();
         break;
       case GatewayOpcodes.Resume:
-        void handleResume(msg.d as { token: string; sessionId: string; seq: number });
+        if (
+          msg.d && typeof msg.d === "object" &&
+          typeof (msg.d as Record<string, unknown>).token === "string" &&
+          typeof (msg.d as Record<string, unknown>).sessionId === "string" &&
+          typeof (msg.d as Record<string, unknown>).seq === "number"
+        ) {
+          void handleResume(msg.d as { token: string; sessionId: string; seq: number });
+        }
         break;
     }
   });
@@ -88,59 +97,63 @@ export function handleConnection(ws: WebSocket, dispatcher: Dispatcher, redis: R
       identifyTimeout = null;
     }
 
-    const userId = decoded.sub;
-    const username = decoded.username;
+    try {
+      const userId = decoded.sub;
+      const username = decoded.username;
 
-    // Query subscriptions
-    const memberRows = await db
-      .select({ serverId: serverMembers.serverId })
-      .from(serverMembers)
-      .where(eq(serverMembers.userId, BigInt(userId)));
+      // Query subscriptions
+      const memberRows = await db
+        .select({ serverId: serverMembers.serverId })
+        .from(serverMembers)
+        .where(eq(serverMembers.userId, BigInt(userId)));
 
-    const dmRows = await db
-      .select({ channelId: dmMembers.channelId })
-      .from(dmMembers)
-      .where(eq(dmMembers.userId, BigInt(userId)));
+      const dmRows = await db
+        .select({ channelId: dmMembers.channelId })
+        .from(dmMembers)
+        .where(eq(dmMembers.userId, BigInt(userId)));
 
-    const serverIds = memberRows.map((r) => String(r.serverId));
-    const dmChannelIds = dmRows.map((r) => String(r.channelId));
+      const serverIds = memberRows.map((r) => String(r.serverId));
+      const dmChannelIds = dmRows.map((r) => String(r.channelId));
 
-    const sessionId = crypto.randomUUID();
+      const sessionId = crypto.randomUUID();
 
-    client = {
-      ws,
-      sessionId,
-      userId,
-      seq: 0,
-      subscribedChannels: new Set(),
-      subscribedServers: new Set(),
-    };
+      client = {
+        ws,
+        sessionId,
+        userId,
+        seq: 0,
+        subscribedChannels: new Set(),
+        subscribedServers: new Set(),
+      };
 
-    // Store session in Redis
-    const session: SessionState = {
-      userId,
-      username,
-      sessionId,
-      subscribedChannels: dmChannelIds,
-      subscribedServers: serverIds,
-      lastSeq: 0,
-    };
-    await setSession(redis, session);
+      // Store session in Redis
+      const session: SessionState = {
+        userId,
+        username,
+        sessionId,
+        subscribedChannels: dmChannelIds,
+        subscribedServers: serverIds,
+        lastSeq: 0,
+      };
+      await setSession(redis, session);
 
-    // Register with dispatcher
-    dispatcher.register(client, dmChannelIds, serverIds);
+      // Register with dispatcher
+      dispatcher.register(client, dmChannelIds, serverIds);
 
-    // Send Ready
-    const readyData: GatewayReadyData = {
-      sessionId,
-      user: { id: userId, username },
-      serverIds,
-      dmChannelIds,
-    };
-    dispatcher.sendDispatch(client, "READY", readyData);
+      // Send Ready
+      const readyData: GatewayReadyData = {
+        sessionId,
+        user: { id: userId, username },
+        serverIds,
+        dmChannelIds,
+      };
+      dispatcher.sendDispatch(client, "READY", readyData);
 
-    // Start heartbeat monitor
-    startHeartbeat();
+      // Start heartbeat monitor
+      startHeartbeat();
+    } catch {
+      ws.close(4000, "Internal error");
+    }
   }
 
   async function handleResume(data: { token: string; sessionId: string; seq: number }) {
@@ -161,45 +174,49 @@ export function handleConnection(ws: WebSocket, dispatcher: Dispatcher, redis: R
       identifyTimeout = null;
     }
 
-    const session = await getSession(redis, data.sessionId);
-    if (!session || session.userId !== decoded.sub) {
-      sendInvalidSession(false);
-      return;
-    }
-
-    client = {
-      ws,
-      sessionId: data.sessionId,
-      userId: decoded.sub,
-      seq: Math.max(session.lastSeq, data.seq),
-      subscribedChannels: new Set(),
-      subscribedServers: new Set(),
-    };
-
-    // Re-register with dispatcher
-    dispatcher.register(client, session.subscribedChannels, session.subscribedServers);
-
-    // Replay missed events
-    let replaySeq = data.seq;
-    const missed = await getReplayEvents(redis, data.sessionId, data.seq);
-    for (const payload of missed) {
-      try {
-        ws.send(payload);
-        const parsed = JSON.parse(payload) as { s?: number };
-        if (typeof parsed.s === "number" && parsed.s > replaySeq) {
-          replaySeq = parsed.s;
-        }
-      } catch {
-        break;
+    try {
+      const session = await getSession(redis, data.sessionId);
+      if (!session || session.userId !== decoded.sub) {
+        sendInvalidSession(false);
+        return;
       }
+
+      client = {
+        ws,
+        sessionId: data.sessionId,
+        userId: decoded.sub,
+        seq: Math.max(session.lastSeq, data.seq),
+        subscribedChannels: new Set(),
+        subscribedServers: new Set(),
+      };
+
+      // Re-register with dispatcher
+      dispatcher.register(client, session.subscribedChannels, session.subscribedServers);
+
+      // Replay missed events
+      let replaySeq = data.seq;
+      const missed = await getReplayEvents(redis, data.sessionId, data.seq);
+      for (const payload of missed) {
+        try {
+          ws.send(payload);
+          const parsed = JSON.parse(payload) as { s?: number };
+          if (typeof parsed.s === "number" && parsed.s > replaySeq) {
+            replaySeq = parsed.s;
+          }
+        } catch {
+          break;
+        }
+      }
+      client.seq = replaySeq;
+
+      // Signal successful resume so clients can transition back to "connected".
+      dispatcher.sendDispatch(client, "RESUMED", { sessionId: data.sessionId });
+
+      // Start heartbeat monitor
+      startHeartbeat();
+    } catch {
+      ws.close(4000, "Internal error");
     }
-    client.seq = replaySeq;
-
-    // Signal successful resume so clients can transition back to "connected".
-    dispatcher.sendDispatch(client, "RESUMED", { sessionId: data.sessionId });
-
-    // Start heartbeat monitor
-    startHeartbeat();
   }
 
   function handleHeartbeat() {

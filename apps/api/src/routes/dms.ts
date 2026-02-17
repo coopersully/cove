@@ -177,6 +177,10 @@ dmRoutes.get("/dms", async (c) => {
 dmRoutes.get("/dms/:channelId", async (c) => {
   const user = getUser(c);
   const channelId = c.req.param("channelId");
+  const parsed = snowflakeSchema.safeParse(channelId);
+  if (!parsed.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid channel ID");
+  }
 
   // Verify user is a member of this DM
   const [membership] = await db

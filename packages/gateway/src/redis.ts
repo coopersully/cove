@@ -102,9 +102,13 @@ export async function getReplayEvents(
 
   const results: string[] = [];
   for (const raw of entries) {
-    const entry = JSON.parse(raw) as ReplayEntry;
-    if (entry.seq > afterSeq) {
-      results.push(entry.payload);
+    try {
+      const entry = JSON.parse(raw) as ReplayEntry;
+      if (entry.seq > afterSeq) {
+        results.push(entry.payload);
+      }
+    } catch {
+      continue;
     }
   }
   return results;
