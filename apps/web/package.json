@@ -14,6 +14,8 @@
     "@cove/api-client": "workspace:*",
     "@cove/shared": "workspace:*",
     "@cove/ui": "workspace:*",
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.90.20",
     "class-variance-authority": "^0.7.1",
