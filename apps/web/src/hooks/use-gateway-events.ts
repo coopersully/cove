@@ -32,6 +32,16 @@ export function useGatewayEventRouter(): void {
         case "CHANNEL_DELETE":
           handleChannelChange(data as { serverId?: string });
           break;
+        case "MESSAGE_REACTION_ADD":
+          handleReactionAdd(
+            data as { channelId: string; messageId: string; userId: string; emoji: string },
+          );
+          break;
+        case "MESSAGE_REACTION_REMOVE":
+          handleReactionRemove(
+            data as { channelId: string; messageId: string; userId: string; emoji: string },
+          );
+          break;
         case "TYPING_START":
           handleTypingStart(data as { channelId: string; userId: string; username: string });
           break;
@@ -145,6 +155,85 @@ export function useGatewayEventRouter(): void {
         return; // Don't show own typing
       }
       addTyping(data.channelId, data.userId, data.username);
+    }
+
+    function handleReactionAdd(data: {
+      channelId: string;
+      messageId: string;
+      userId: string;
+      emoji: string;
+    }) {
+      const currentUserId = useAuthStore.getState().user?.id;
+      queryClient.setQueryData<InfiniteData<MessageListResponse>>(
+        ["channels", data.channelId, "messages"],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              messages: page.messages.map((msg) => {
+                if (msg.id !== data.messageId) return msg;
+                const reactions = [...(msg.reactions ?? [])];
+                const existing = reactions.find((r) => r.emoji === data.emoji);
+                if (existing) {
+                  return {
+                    ...msg,
+                    reactions: reactions.map((r) =>
+                      r.emoji === data.emoji
+                        ? { ...r, count: r.count + 1, me: r.me || data.userId === currentUserId }
+                        : r,
+                    ),
+                  };
+                }
+                return {
+                  ...msg,
+                  reactions: [
+                    ...reactions,
+                    { emoji: data.emoji, count: 1, me: data.userId === currentUserId },
+                  ],
+                };
+              }),
+            })),
+          };
+        },
+      );
+    }
+
+    function handleReactionRemove(data: {
+      channelId: string;
+      messageId: string;
+      userId: string;
+      emoji: string;
+    }) {
+      const currentUserId = useAuthStore.getState().user?.id;
+      queryClient.setQueryData<InfiniteData<MessageListResponse>>(
+        ["channels", data.channelId, "messages"],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              messages: page.messages.map((msg) => {
+                if (msg.id !== data.messageId) return msg;
+                const reactions = (msg.reactions ?? [])
+                  .map((r) =>
+                    r.emoji === data.emoji
+                      ? {
+                          ...r,
+                          count: r.count - 1,
+                          me: data.userId === currentUserId ? false : r.me,
+                        }
+                      : r,
+                  )
+                  .filter((r) => r.count > 0);
+                return { ...msg, reactions };
+              }),
+            })),
+          };
+        },
+      );
     }
   }, [client, queryClient, addTyping]);
 }
