@@ -23,7 +23,7 @@ async function createTestMessage(channelId: string, authorId: string, content = 
 describe("Reply Routes", () => {
   describe("POST /channels/:channelId/messages (with replyToId)", () => {
     it("creates a reply to an existing message", async () => {
-      const alice = await createTestUser({ username: "alice" });
+      const alice = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
       const original = await createTestMessage(channel.id, alice.id, "Original message");
@@ -43,7 +43,7 @@ describe("Reply Routes", () => {
     });
 
     it("creates a message without replyToId (normal message)", async () => {
-      const alice = await createTestUser({ username: "alice" });
+      const alice = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
@@ -59,7 +59,7 @@ describe("Reply Routes", () => {
     });
 
     it("returns 404 for reply to nonexistent message", async () => {
-      const alice = await createTestUser({ username: "alice" });
+      const alice = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
@@ -72,7 +72,7 @@ describe("Reply Routes", () => {
     });
 
     it("shows null referencedMessage when original is deleted", async () => {
-      const alice = await createTestUser({ username: "alice" });
+      const alice = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
       const original = await createTestMessage(channel.id, alice.id, "Will be deleted");
@@ -103,7 +103,7 @@ describe("Reply Routes", () => {
 
   describe("GET /channels/:channelId/messages (with replies)", () => {
     it("includes referencedMessage in message list", async () => {
-      const alice = await createTestUser({ username: "alice" });
+      const alice = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 

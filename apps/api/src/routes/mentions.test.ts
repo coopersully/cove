@@ -11,8 +11,8 @@ import { apiRequest } from "../test-utils/request.js";
 describe("Mention Routes", () => {
   describe("POST /channels/:channelId/messages (with mentions)", () => {
     it("includes mentioned user IDs in response", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
+      const alice = await createTestUser();
+      const bob = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
@@ -33,7 +33,7 @@ describe("Mention Routes", () => {
     });
 
     it("returns empty mentions for message without mentions", async () => {
-      const alice = await createTestUser({ username: "alice" });
+      const alice = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
@@ -47,8 +47,8 @@ describe("Mention Routes", () => {
     });
 
     it("ignores mentions inside code blocks", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
+      const alice = await createTestUser();
+      const bob = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
@@ -67,8 +67,8 @@ describe("Mention Routes", () => {
     });
 
     it("deduplicates mentions in response", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
+      const alice = await createTestUser();
+      const bob = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
@@ -91,8 +91,8 @@ describe("Mention Routes", () => {
 
   describe("GET /channels/:channelId/messages (with mentions)", () => {
     it("includes mentions in message list", async () => {
-      const alice = await createTestUser({ username: "alice" });
-      const bob = await createTestUser({ username: "bob" });
+      const alice = await createTestUser();
+      const bob = await createTestUser();
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
