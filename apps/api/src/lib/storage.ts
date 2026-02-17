@@ -6,13 +6,21 @@ export interface StorageService {
 }
 
 function createS3Storage(): StorageService {
+  const hasStaticCredentials =
+    Boolean(process.env.S3_ACCESS_KEY) &&
+    Boolean(process.env.S3_SECRET_KEY);
+
   const client = new S3Client({
     region: process.env.S3_REGION ?? "us-east-1",
     ...(process.env.S3_ENDPOINT ? { endpoint: process.env.S3_ENDPOINT } : {}),
-    credentials: {
-      accessKeyId: process.env.S3_ACCESS_KEY ?? "",
-      secretAccessKey: process.env.S3_SECRET_KEY ?? "",
-    },
+    ...(hasStaticCredentials
+      ? {
+          credentials: {
+            accessKeyId: process.env.S3_ACCESS_KEY!,
+            secretAccessKey: process.env.S3_SECRET_KEY!,
+          },
+        }
+      : {}),
     forcePathStyle: true, // Required for MinIO
   });
 

@@ -1,4 +1,4 @@
-import { attachments, db } from "@cove/db";
+import { attachments, db, messages } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
@@ -77,6 +77,48 @@ describe("Attachment Routes", () => {
       expect(msgAttachments[0]!.contentType).toBe("image/jpeg");
       expect(msgAttachments[0]!.size).toBe(2048);
       expect(msgAttachments[0]!.url).toBe("/uploads/test/photo.jpg");
+    });
+
+    it("rejects message creation if any attachment ID is missing", async () => {
+      const alice = await createTestUser({ username: "att_alice_missing" });
+      const server = await createTestServer(alice.id);
+      const channel = await createTestChannel(server.id);
+
+      const { status } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+        token: alice.token,
+        body: { content: "Should fail", attachmentIds: [generateSnowflake()] },
+      });
+
+      expect(status).toBe(404);
+
+      const rows = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.channelId, BigInt(channel.id)));
+      expect(rows).toHaveLength(0);
+    });
+
+    it("rejects linking an attachment that is already linked to another message", async () => {
+      const alice = await createTestUser({ username: "att_alice_linked" });
+      const server = await createTestServer(alice.id);
+      const channel = await createTestChannel(server.id);
+
+      const { body: originalBody } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+        token: alice.token,
+        body: { content: "Original message" },
+      });
+      const originalMessageId = (originalBody.message as Record<string, unknown>).id as string;
+
+      const linkedAttachment = await createTestAttachment(originalMessageId, {
+        filename: "already-linked.png",
+      });
+
+      const { status } = await apiRequest("POST", `/channels/${channel.id}/messages`, {
+        token: alice.token,
+        body: { content: "Should fail", attachmentIds: [String(linkedAttachment.id)] },
+      });
+
+      expect(status).toBe(409);
     });
   });
 

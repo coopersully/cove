@@ -24,7 +24,7 @@ import {
 import { getMemberPermissions } from "../lib/index.js";
 import { validate } from "../middleware/index.js";
 import { getAttachmentsForMessages, linkAttachmentsToMessage } from "./attachments.js";
-import { getEmbedsForMessages } from "./embeds.js";
+import { generateEmbedsForMessage, getEmbedsForMessages } from "./embeds.js";
 
 const createMessageSchema = z.object({
   content: messageContentSchema,
@@ -50,6 +50,13 @@ function getEventTargets(channel: { id: string; type: string; serverId: string |
   }
 
   return { serverId: channel.serverId };
+}
+
+function shouldGenerateEmbeds(): boolean {
+  if (process.env.DISABLE_EMBED_FETCH === "true") {
+    return false;
+  }
+  return process.env.NODE_ENV !== "test";
 }
 
 // GET /channels/:channelId/messages
@@ -301,25 +308,28 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     };
   }
 
-  const [created] = await db
-    .insert(messages)
-    .values({
-      id: BigInt(messageId),
-      channelId: BigInt(channelId),
-      authorId: BigInt(user.id),
-      content: body.content,
-      replyToId: replyToId ? BigInt(replyToId) : null,
-    })
-    .returning();
+  const { created, linkedAttachments } = await db.transaction(async (tx) => {
+    const [inserted] = await tx
+      .insert(messages)
+      .values({
+        id: BigInt(messageId),
+        channelId: BigInt(channelId),
+        authorId: BigInt(user.id),
+        content: body.content,
+        replyToId: replyToId ? BigInt(replyToId) : null,
+      })
+      .returning();
 
-  if (!created) {
-    throw new AppError("INTERNAL_ERROR", "Failed to create message");
-  }
+    if (!inserted) {
+      throw new AppError("INTERNAL_ERROR", "Failed to create message");
+    }
 
-  // Link attachments if provided
-  const linkedAttachments = body.attachmentIds
-    ? await linkAttachmentsToMessage(body.attachmentIds, messageId)
-    : [];
+    const linked = body.attachmentIds
+      ? await linkAttachmentsToMessage(body.attachmentIds, messageId, tx)
+      : [];
+
+    return { created: inserted, linkedAttachments: linked };
+  });
 
   const messagePayload = {
     id: String(created.id),
@@ -343,6 +353,24 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
   };
 
   emitMessageCreate(eventTargets, messagePayload);
+
+  if (shouldGenerateEmbeds()) {
+    void generateEmbedsForMessage(messageId, body.content)
+      .then((generatedEmbeds) => {
+        if (generatedEmbeds.length === 0) {
+          return;
+        }
+
+        emitMessageUpdate(eventTargets, {
+          id: messageId,
+          channelId: channel.id,
+          embeds: generatedEmbeds,
+        });
+      })
+      .catch(() => {
+        // Embed generation should never block message delivery
+      });
+  }
 
   return c.json({ message: messagePayload }, 201);
 });

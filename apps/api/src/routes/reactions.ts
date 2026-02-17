@@ -42,22 +42,25 @@ reactionRoutes.put("/channels/:channelId/messages/:messageId/reactions/:emoji", 
   }
 
   // Upsert — ignore conflict for idempotency
-  await db
+  const inserted = await db
     .insert(reactions)
     .values({
       messageId: BigInt(messageId),
       userId: BigInt(user.id),
       emoji,
     })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ messageId: reactions.messageId });
 
-  const eventTargets = getEventTargets(channel);
-  emitReactionAdd(eventTargets, {
-    channelId: channel.id,
-    messageId,
-    userId: user.id,
-    emoji,
-  });
+  if (inserted.length > 0) {
+    const eventTargets = getEventTargets(channel);
+    emitReactionAdd(eventTargets, {
+      channelId: channel.id,
+      messageId,
+      userId: user.id,
+      emoji,
+    });
+  }
 
   return c.body(null, 204);
 });
@@ -71,7 +74,7 @@ reactionRoutes.delete("/channels/:channelId/messages/:messageId/reactions/:emoji
 
   await requireChannelMembership(channelId, user.id);
 
-  await db
+  const removed = await db
     .delete(reactions)
     .where(
       and(
@@ -79,26 +82,29 @@ reactionRoutes.delete("/channels/:channelId/messages/:messageId/reactions/:emoji
         eq(reactions.userId, BigInt(user.id)),
         eq(reactions.emoji, emoji),
       ),
-    );
+    )
+    .returning({ messageId: reactions.messageId });
 
-  const [channel] = await db
-    .select({ serverId: channels.serverId, type: channels.type })
-    .from(channels)
-    .where(eq(channels.id, BigInt(channelId)))
-    .limit(1);
+  if (removed.length > 0) {
+    const [channel] = await db
+      .select({ serverId: channels.serverId, type: channels.type })
+      .from(channels)
+      .where(eq(channels.id, BigInt(channelId)))
+      .limit(1);
 
-  if (channel) {
-    const eventTargets = getEventTargets({
-      id: channelId,
-      type: channel.type,
-      serverId: channel.serverId ? String(channel.serverId) : null,
-    });
-    emitReactionRemove(eventTargets, {
-      channelId,
-      messageId,
-      userId: user.id,
-      emoji,
-    });
+    if (channel) {
+      const eventTargets = getEventTargets({
+        id: channelId,
+        type: channel.type,
+        serverId: channel.serverId ? String(channel.serverId) : null,
+      });
+      emitReactionRemove(eventTargets, {
+        channelId,
+        messageId,
+        userId: user.id,
+        emoji,
+      });
+    }
   }
 
   return c.body(null, 204);

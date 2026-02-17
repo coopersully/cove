@@ -1,7 +1,7 @@
 import { getUser, requireAuth } from "@cove/auth";
 import { attachments, db } from "@cove/db";
 import { AppError, generateSnowflake, snowflakeSchema } from "@cove/shared";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { requireChannelMembership } from "../lib/channel-membership.js";
@@ -24,6 +24,18 @@ const ALLOWED_CONTENT_TYPES = new Set([
 export const attachmentRoutes = new Hono();
 
 attachmentRoutes.use(requireAuth());
+
+interface AttachmentResponse {
+  id: string;
+  filename: string;
+  contentType: string;
+  size: number;
+  url: string;
+  width: number | null;
+  height: number | null;
+}
+
+type AttachmentQueryDb = Pick<typeof db, "select" | "update">;
 
 // POST /channels/:channelId/attachments
 attachmentRoutes.post("/channels/:channelId/attachments", async (c) => {
@@ -105,7 +117,7 @@ attachmentRoutes.get("/attachments/:id", async (c) => {
   return c.json({
     attachment: {
       id: String(attachment.id),
-      messageId: String(attachment.messageId),
+      messageId: attachment.messageId ? String(attachment.messageId) : null,
       filename: attachment.filename,
       contentType: attachment.contentType,
       size: attachment.size,
@@ -120,28 +132,40 @@ attachmentRoutes.get("/attachments/:id", async (c) => {
 export async function linkAttachmentsToMessage(
   attachmentIds: string[],
   messageId: string,
-): Promise<
-  {
-    id: string;
-    filename: string;
-    contentType: string;
-    size: number;
-    url: string;
-    width: number | null;
-    height: number | null;
-  }[]
-> {
+  queryDb: AttachmentQueryDb = db,
+): Promise<AttachmentResponse[]> {
   if (attachmentIds.length === 0) return [];
 
-  await db
-    .update(attachments)
-    .set({ messageId: BigInt(messageId) })
-    .where(inArray(attachments.id, attachmentIds.map((id) => BigInt(id))));
+  const uniqueIds = [...new Set(attachmentIds)];
+  const attachmentBigInts = uniqueIds.map((id) => BigInt(id));
 
-  const linked = await db
+  const existing = await queryDb
     .select()
     .from(attachments)
-    .where(eq(attachments.messageId, BigInt(messageId)));
+    .where(inArray(attachments.id, attachmentBigInts));
+
+  if (existing.length !== attachmentBigInts.length) {
+    throw new AppError("NOT_FOUND", "One or more attachments were not found");
+  }
+
+  if (existing.some((attachment) => attachment.messageId !== null)) {
+    throw new AppError("CONFLICT", "One or more attachments are already linked");
+  }
+
+  const linked = await queryDb
+    .update(attachments)
+    .set({ messageId: BigInt(messageId) })
+    .where(
+      and(
+        inArray(attachments.id, attachmentBigInts),
+        isNull(attachments.messageId),
+      ),
+    )
+    .returning();
+
+  if (linked.length !== attachmentBigInts.length) {
+    throw new AppError("CONFLICT", "Failed to link one or more attachments");
+  }
 
   return linked.map((a) => ({
     id: String(a.id),
