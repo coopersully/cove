@@ -1,10 +1,6 @@
 import { getUser, requireAuth } from "@cove/auth";
 import { db, messages, servers, users } from "@cove/db";
-import {
-  AppError,
-  Permissions,
-  hasPermission,
-} from "@cove/shared";
+import { AppError, Permissions, hasPermission } from "@cove/shared";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 
@@ -26,7 +22,10 @@ function getEventTargets(channel: { id: string; type: string; serverId: string |
   return { serverId: channel.serverId };
 }
 
-async function requireManageMessages(channel: { type: string; serverId: string | null }, userId: string) {
+async function requireManageMessages(
+  channel: { type: string; serverId: string | null },
+  userId: string,
+) {
   if (channel.type === "dm") {
     // Anyone in a DM can pin
     return;
@@ -141,9 +140,7 @@ pinRoutes.get("/channels/:channelId/pins", async (c) => {
     })
     .from(messages)
     .innerJoin(users, eq(messages.authorId, users.id))
-    .where(
-      and(eq(messages.channelId, BigInt(channelId)), isNotNull(messages.pinnedAt)),
-    )
+    .where(and(eq(messages.channelId, BigInt(channelId)), isNotNull(messages.pinnedAt)))
     .orderBy(desc(messages.pinnedAt));
 
   return c.json({

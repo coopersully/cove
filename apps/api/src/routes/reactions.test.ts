@@ -2,11 +2,7 @@ import { db, messages, serverMembers } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
 import { describe, expect, it } from "vitest";
 
-import {
-  createTestChannel,
-  createTestServer,
-  createTestUser,
-} from "../test-utils/factories.js";
+import { createTestChannel, createTestServer, createTestUser } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
 
 async function createTestMessage(channelId: string, authorId: string, content = "test") {
@@ -143,12 +139,20 @@ describe("Reaction Routes", () => {
       // Both users react with 👍, alice also reacts with 🔥
       const thumbs = encodeURIComponent("👍");
       const fire = encodeURIComponent("🔥");
-      await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`, {
-        token: alice.token,
-      });
-      await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`, {
-        token: bob.token,
-      });
+      await apiRequest(
+        "PUT",
+        `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`,
+        {
+          token: alice.token,
+        },
+      );
+      await apiRequest(
+        "PUT",
+        `/channels/${channel.id}/messages/${message.id}/reactions/${thumbs}`,
+        {
+          token: bob.token,
+        },
+      );
       await apiRequest("PUT", `/channels/${channel.id}/messages/${message.id}/reactions/${fire}`, {
         token: alice.token,
       });

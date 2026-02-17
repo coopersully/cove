@@ -2,11 +2,7 @@ import { db, messages, serverMembers } from "@cove/db";
 import { generateSnowflake } from "@cove/shared";
 import { describe, expect, it } from "vitest";
 
-import {
-  createTestChannel,
-  createTestServer,
-  createTestUser,
-} from "../test-utils/factories.js";
+import { createTestChannel, createTestServer, createTestUser } from "../test-utils/factories.js";
 import { apiRequest } from "../test-utils/request.js";
 
 async function createTestMessage(channelId: string, authorId: string, content = "test") {
@@ -28,11 +24,9 @@ describe("Pin Routes", () => {
       const channel = await createTestChannel(server.id);
       const message = await createTestMessage(channel.id, alice.id, "Pin me!");
 
-      const { status } = await apiRequest(
-        "PUT",
-        `/channels/${channel.id}/pins/${message.id}`,
-        { token: alice.token },
-      );
+      const { status } = await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
+        token: alice.token,
+      });
 
       expect(status).toBe(204);
     });
@@ -50,11 +44,9 @@ describe("Pin Routes", () => {
         userId: BigInt(bob.id),
       });
 
-      const { status } = await apiRequest(
-        "PUT",
-        `/channels/${channel.id}/pins/${message.id}`,
-        { token: bob.token },
-      );
+      const { status } = await apiRequest("PUT", `/channels/${channel.id}/pins/${message.id}`, {
+        token: bob.token,
+      });
 
       expect(status).toBe(403);
     });
@@ -71,11 +63,9 @@ describe("Pin Routes", () => {
         token: alice.token,
       });
 
-      const { status } = await apiRequest(
-        "DELETE",
-        `/channels/${channel.id}/pins/${message.id}`,
-        { token: alice.token },
-      );
+      const { status } = await apiRequest("DELETE", `/channels/${channel.id}/pins/${message.id}`, {
+        token: alice.token,
+      });
 
       expect(status).toBe(204);
     });
@@ -97,11 +87,9 @@ describe("Pin Routes", () => {
         token: alice.token,
       });
 
-      const { status, body } = await apiRequest(
-        "GET",
-        `/channels/${channel.id}/pins`,
-        { token: alice.token },
-      );
+      const { status, body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
+        token: alice.token,
+      });
 
       expect(status).toBe(200);
       const pins = body.messages as Array<Record<string, unknown>>;
@@ -113,11 +101,9 @@ describe("Pin Routes", () => {
       const server = await createTestServer(alice.id);
       const channel = await createTestChannel(server.id);
 
-      const { status, body } = await apiRequest(
-        "GET",
-        `/channels/${channel.id}/pins`,
-        { token: alice.token },
-      );
+      const { status, body } = await apiRequest("GET", `/channels/${channel.id}/pins`, {
+        token: alice.token,
+      });
 
       expect(status).toBe(200);
       const pins = body.messages as Array<Record<string, unknown>>;

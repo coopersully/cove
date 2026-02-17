@@ -74,9 +74,10 @@ export const messages = pgTable(
       .notNull()
       .references(() => users.id),
     content: text().notNull(),
-    replyToId: bigint("reply_to_id", { mode: "bigint" }).references(() => messages.id, {
-      onDelete: "set null",
-    }),
+    replyToId: bigint("reply_to_id", { mode: "bigint" }).references(
+      (): import("drizzle-orm/pg-core").AnyPgColumn => messages.id,
+      { onDelete: "set null" },
+    ),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     pinnedAt: timestamp("pinned_at", { withTimezone: true }),
