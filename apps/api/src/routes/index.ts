@@ -3,6 +3,7 @@ export { channelRoutes } from "./channels.js";
 export { dmRoutes } from "./dms.js";
 export { friendRoutes } from "./friends.js";
 export { messageRoutes } from "./messages.js";
+export { pinRoutes } from "./pins.js";
 export { reactionRoutes } from "./reactions.js";
 export { readStateRoutes } from "./read-states.js";
 export { serverRoutes } from "./servers.js";
