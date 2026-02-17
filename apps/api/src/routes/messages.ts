@@ -9,7 +9,7 @@ import {
   paginationLimitSchema,
   snowflakeSchema,
 } from "@cove/shared";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, inArray, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -25,6 +25,7 @@ import { validate } from "../middleware/index.js";
 
 const createMessageSchema = z.object({
   content: messageContentSchema,
+  replyToId: snowflakeSchema.optional(),
 });
 
 const updateMessageSchema = z.object({
@@ -70,6 +71,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       channelId: messages.channelId,
       authorId: messages.authorId,
       content: messages.content,
+      replyToId: messages.replyToId,
       createdAt: messages.createdAt,
       editedAt: messages.editedAt,
       authorUsername: users.username,
@@ -98,6 +100,56 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
 
   const results = await query;
 
+  // Batch-fetch referenced messages for replies
+  const replyToIds = results
+    .map((m) => m.replyToId)
+    .filter((id): id is bigint => id !== null);
+
+  const referencedMessages = new Map<
+    string,
+    {
+      id: string;
+      content: string;
+      author: {
+        id: string;
+        username: string;
+        displayName: string | null;
+        avatarUrl: string | null;
+        statusEmoji: string | null;
+      };
+    }
+  >();
+
+  if (replyToIds.length > 0) {
+    const refs = await db
+      .select({
+        id: messages.id,
+        content: messages.content,
+        authorId: messages.authorId,
+        authorUsername: users.username,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
+        authorStatusEmoji: users.statusEmoji,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.authorId, users.id))
+      .where(inArray(messages.id, replyToIds));
+
+    for (const ref of refs) {
+      referencedMessages.set(String(ref.id), {
+        id: String(ref.id),
+        content: ref.content.slice(0, 200),
+        author: {
+          id: String(ref.authorId),
+          username: ref.authorUsername,
+          displayName: ref.authorDisplayName,
+          avatarUrl: ref.authorAvatarUrl,
+          statusEmoji: ref.authorStatusEmoji,
+        },
+      });
+    }
+  }
+
   return c.json({
     messages: results.map((m) => ({
       id: String(m.id),
@@ -105,6 +157,11 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       content: m.content,
       createdAt: m.createdAt,
       editedAt: m.editedAt,
+      replyToId: m.replyToId ? String(m.replyToId) : null,
+      referencedMessage: m.replyToId
+        ? referencedMessages.get(String(m.replyToId)) ?? null
+        : null,
+      mentions: [] as string[],
       author: {
         id: String(m.authorId),
         username: m.authorUsername,
@@ -145,6 +202,59 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
 
   const messageId = generateSnowflake();
 
+  let replyToId: string | null = null;
+  let referencedMessage: {
+    id: string;
+    content: string;
+    author: {
+      id: string;
+      username: string;
+      displayName: string | null;
+      avatarUrl: string | null;
+      statusEmoji: string | null;
+    };
+  } | null = null;
+
+  if (body.replyToId) {
+    const [repliedTo] = await db
+      .select({
+        id: messages.id,
+        channelId: messages.channelId,
+        content: messages.content,
+        authorId: messages.authorId,
+        authorUsername: users.username,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
+        authorStatusEmoji: users.statusEmoji,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.authorId, users.id))
+      .where(
+        and(
+          eq(messages.id, BigInt(body.replyToId)),
+          eq(messages.channelId, BigInt(channelId)),
+        ),
+      )
+      .limit(1);
+
+    if (!repliedTo) {
+      throw new AppError("NOT_FOUND", "Replied-to message not found in this channel");
+    }
+
+    replyToId = body.replyToId;
+    referencedMessage = {
+      id: String(repliedTo.id),
+      content: repliedTo.content.slice(0, 200),
+      author: {
+        id: String(repliedTo.authorId),
+        username: repliedTo.authorUsername,
+        displayName: repliedTo.authorDisplayName,
+        avatarUrl: repliedTo.authorAvatarUrl,
+        statusEmoji: repliedTo.authorStatusEmoji,
+      },
+    };
+  }
+
   const [created] = await db
     .insert(messages)
     .values({
@@ -152,6 +262,7 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
       channelId: BigInt(channelId),
       authorId: BigInt(user.id),
       content: body.content,
+      replyToId: replyToId ? BigInt(replyToId) : null,
     })
     .returning();
 
@@ -165,6 +276,9 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     content: created.content,
     createdAt: created.createdAt,
     editedAt: created.editedAt,
+    replyToId: replyToId,
+    referencedMessage: referencedMessage,
+    mentions: [] as string[],
     author: {
       id: user.id,
       username: user.username,
@@ -172,6 +286,7 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
       avatarUrl: user.avatarUrl,
       statusEmoji: user.statusEmoji,
     },
+    reactions: [],
   };
 
   emitMessageCreate(eventTargets, messagePayload);
