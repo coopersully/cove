@@ -1631,6 +1631,718 @@ describe("E2E: Read States", () => {
   });
 });
 
+// ── Replies & Mentions Journey ───────────────────────────────────────────────
+
+describe("E2E: Replies & Mentions", () => {
+  it("full reply flow: send → reply → view thread → delete original → reply shows null ref", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Reply Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Alice sends a message
+    const { body: origBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Has anyone tried the new feature?" },
+    });
+    const origMsg = origBody.message as Record<string, unknown>;
+    const origId = origMsg.id as string;
+    expect(origMsg.replyToId).toBeNull();
+    expect(origMsg.referencedMessage).toBeNull();
+
+    // Bob replies to Alice's message
+    const { status: replyStatus, body: replyBody } = await apiRequest(
+      "POST",
+      `/channels/${channelId}/messages`,
+      {
+        token: bob.token,
+        body: { content: "Yes, it works great!", replyToId: origId },
+      },
+    );
+    expect(replyStatus).toBe(201);
+    const replyMsg = replyBody.message as Record<string, unknown>;
+    expect(replyMsg.replyToId).toBe(origId);
+    const replyRef = replyMsg.referencedMessage as Record<string, unknown>;
+    expect(replyRef.id).toBe(origId);
+    expect(replyRef.content).toBe("Has anyone tried the new feature?");
+    expect((replyRef.author as Record<string, unknown>).username).toBe("alice");
+
+    // Both see the thread when listing messages
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: bob.token,
+    });
+    const msgs = listBody.messages as Record<string, unknown>[];
+    expect(msgs).toHaveLength(2);
+
+    const bobReply = msgs.find((m) => m.content === "Yes, it works great!");
+    expect(bobReply).toBeDefined();
+    expect(bobReply!.replyToId).toBe(origId);
+    const ref = bobReply!.referencedMessage as Record<string, unknown>;
+    expect(ref.content).toBe("Has anyone tried the new feature?");
+
+    // Alice deletes her original message
+    await apiRequest("DELETE", `/messages/${origId}`, { token: alice.token });
+
+    // Bob's reply now shows null referencedMessage (SET NULL on FK)
+    const { body: afterDeleteBody } = await apiRequest(
+      "GET",
+      `/channels/${channelId}/messages`,
+      { token: bob.token },
+    );
+    const afterMsgs = afterDeleteBody.messages as Record<string, unknown>[];
+    expect(afterMsgs).toHaveLength(1);
+    expect(afterMsgs[0]!.content).toBe("Yes, it works great!");
+    expect(afterMsgs[0]!.replyToId).toBeNull();
+    expect(afterMsgs[0]!.referencedMessage).toBeNull();
+  });
+
+  it("reply to message in different channel returns 404", async () => {
+    const alice = await registerUser("alice");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Multi Channel Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const generalId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Create a second channel
+    const { body: ch2Body } = await apiRequest("POST", `/servers/${serverId}/channels`, {
+      token: alice.token,
+      body: { name: "dev", type: "text" },
+    });
+    const devId = (ch2Body.channel as Record<string, unknown>).id as string;
+
+    // Send message in #general
+    const { body: msgBody } = await apiRequest("POST", `/channels/${generalId}/messages`, {
+      token: alice.token,
+      body: { content: "General message" },
+    });
+    const generalMsgId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Try to reply to #general message from #dev → 404
+    const { status } = await apiRequest("POST", `/channels/${devId}/messages`, {
+      token: alice.token,
+      body: { content: "Cross-channel reply", replyToId: generalMsgId },
+    });
+    expect(status).toBe(404);
+  });
+
+  it("mentions: send message with mentions → verify in POST response and GET list", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+    const charlie = await registerUser("charlie");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Mention Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: charlie.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Alice mentions both Bob and Charlie
+    const { status, body } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: `Hey <@${bob.id}> and <@${charlie.id}>, check this out!` },
+    });
+    expect(status).toBe(201);
+    const msg = body.message as Record<string, unknown>;
+    const mentions = msg.mentions as string[];
+    expect(mentions).toContain(bob.id);
+    expect(mentions).toContain(charlie.id);
+    expect(mentions).toHaveLength(2);
+
+    // Verify mentions persist in GET
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    const msgs = listBody.messages as Record<string, unknown>[];
+    expect(msgs).toHaveLength(1);
+    const listMentions = msgs[0]!.mentions as string[];
+    expect(listMentions).toContain(bob.id);
+    expect(listMentions).toContain(charlie.id);
+  });
+
+  it("mentions inside code blocks are ignored", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Code Mention Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    const { body } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: `Example: \`\`\`\n<@${bob.id}>\n\`\`\`` },
+    });
+
+    const msg = body.message as Record<string, unknown>;
+    expect(msg.mentions).toEqual([]);
+  });
+
+  it("reply with mention: combined flow", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Reply + Mention Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Alice sends a message
+    const { body: origBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "What do you think?" },
+    });
+    const origId = (origBody.message as Record<string, unknown>).id as string;
+
+    // Bob replies mentioning Alice
+    const { status, body } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: bob.token,
+      body: {
+        content: `<@${alice.id}> I think it's great!`,
+        replyToId: origId,
+      },
+    });
+    expect(status).toBe(201);
+    const msg = body.message as Record<string, unknown>;
+    expect(msg.replyToId).toBe(origId);
+    expect((msg.referencedMessage as Record<string, unknown>).content).toBe("What do you think?");
+    expect(msg.mentions).toEqual([alice.id]);
+  });
+
+  it("DM reply flow works", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    await makeFriends(alice, "bob", bob);
+
+    const { body: dmBody } = await apiRequest("POST", "/dms", {
+      token: alice.token,
+      body: { recipientId: bob.id },
+    });
+    const channelId = (dmBody.channel as Record<string, unknown>).id as string;
+
+    // Alice sends a message
+    const { body: origBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Hey, free for lunch?" },
+    });
+    const origId = (origBody.message as Record<string, unknown>).id as string;
+
+    // Bob replies
+    const { status, body } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: bob.token,
+      body: { content: "Sure, 12:30?", replyToId: origId },
+    });
+    expect(status).toBe(201);
+    const msg = body.message as Record<string, unknown>;
+    expect(msg.replyToId).toBe(origId);
+    expect((msg.referencedMessage as Record<string, unknown>).content).toBe("Hey, free for lunch?");
+
+    // Both see the reply in the DM
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    const msgs = listBody.messages as Record<string, unknown>[];
+    expect(msgs).toHaveLength(2);
+    const reply = msgs.find((m) => m.content === "Sure, 12:30?");
+    expect(reply!.replyToId).toBe(origId);
+  });
+});
+
+// ── Reactions Journey ────────────────────────────────────────────────────────
+
+describe("E2E: Reactions", () => {
+  it("send message → add reactions from multiple users → verify aggregation → remove → verify updated", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+    const charlie = await registerUser("charlie");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Reaction Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: charlie.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Alice sends a message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "React to this!" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // All three users react with 👍
+    const thumbs = encodeURIComponent("👍");
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: alice.token,
+    });
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: bob.token,
+    });
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: charlie.token,
+    });
+
+    // Alice also reacts with 🔥
+    const fire = encodeURIComponent("🔥");
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${fire}`, {
+      token: alice.token,
+    });
+
+    // Verify aggregation from bob's perspective
+    const { body: bobList } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: bob.token,
+    });
+    const bobMsgs = bobList.messages as Record<string, unknown>[];
+    const bobMsg = bobMsgs.find((m) => m.id === messageId);
+    const bobReactions = bobMsg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+    expect(bobReactions).toHaveLength(2);
+
+    const bobThumbs = bobReactions.find((r) => r.emoji === "👍");
+    expect(bobThumbs!.count).toBe(3);
+    expect(bobThumbs!.me).toBe(true);
+
+    const bobFire = bobReactions.find((r) => r.emoji === "🔥");
+    expect(bobFire!.count).toBe(1);
+    expect(bobFire!.me).toBe(false);
+
+    // Bob removes his 👍 reaction
+    await apiRequest(
+      "DELETE",
+      `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`,
+      { token: bob.token },
+    );
+
+    // Verify count decreased
+    const { body: afterRemove } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: bob.token,
+    });
+    const afterMsgs = afterRemove.messages as Record<string, unknown>[];
+    const afterMsg = afterMsgs.find((m) => m.id === messageId);
+    const afterReactions = afterMsg!.reactions as Array<{
+      emoji: string;
+      count: number;
+      me: boolean;
+    }>;
+    const afterThumbs = afterReactions.find((r) => r.emoji === "👍");
+    expect(afterThumbs!.count).toBe(2);
+    expect(afterThumbs!.me).toBe(false);
+  });
+
+  it("deleting a message cascades its reactions", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Cascade Reactions Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Alice sends a message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Will be deleted" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Both react
+    const thumbs = encodeURIComponent("👍");
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: alice.token,
+    });
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: bob.token,
+    });
+
+    // Delete the message
+    await apiRequest("DELETE", `/messages/${messageId}`, { token: alice.token });
+
+    // Verify message is gone
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    expect(listBody.messages).toEqual([]);
+  });
+
+  it("reactions work in DM channels", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    await makeFriends(alice, "bob", bob);
+
+    const { body: dmBody } = await apiRequest("POST", "/dms", {
+      token: alice.token,
+      body: { recipientId: bob.id },
+    });
+    const channelId = (dmBody.channel as Record<string, unknown>).id as string;
+
+    // Alice sends a message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "DM message" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Both react
+    const heart = encodeURIComponent("❤️");
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${heart}`, {
+      token: alice.token,
+    });
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${heart}`, {
+      token: bob.token,
+    });
+
+    // Verify reactions
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    const msgs = listBody.messages as Record<string, unknown>[];
+    const msg = msgs.find((m) => m.id === messageId);
+    const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+    expect(reactions).toHaveLength(1);
+    expect(reactions[0]!.count).toBe(2);
+    expect(reactions[0]!.me).toBe(true);
+  });
+
+  it("newly created messages have empty reactions array", async () => {
+    const alice = await registerUser("alice");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Empty Reactions Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Fresh message" },
+    });
+    const msg = msgBody.message as Record<string, unknown>;
+    expect(msg.reactions).toEqual([]);
+  });
+});
+
+// ── Pinning Journey ──────────────────────────────────────────────────────────
+
+describe("E2E: Pinning", () => {
+  it("send message → pin → verify in pins list and messages → unpin → verify removed", async () => {
+    const alice = await registerUser("alice");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Pinning Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Send a message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Important announcement" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Pin the message
+    const { status: pinStatus } = await apiRequest(
+      "PUT",
+      `/channels/${channelId}/pins/${messageId}`,
+      { token: alice.token },
+    );
+    expect(pinStatus).toBe(204);
+
+    // Verify message appears in pins list
+    const { body: pinsBody } = await apiRequest("GET", `/channels/${channelId}/pins`, {
+      token: alice.token,
+    });
+    const pins = pinsBody.messages as Record<string, unknown>[];
+    expect(pins).toHaveLength(1);
+    expect(pins[0]!.content).toBe("Important announcement");
+    expect(pins[0]!.pinnedAt).not.toBeNull();
+    expect(pins[0]!.pinnedBy).toBe(alice.id);
+
+    // Verify pinnedAt/pinnedBy appear in messages list
+    const { body: msgsBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    const msgs = msgsBody.messages as Record<string, unknown>[];
+    const msg = msgs.find((m) => m.id === messageId);
+    expect(msg!.pinnedAt).not.toBeNull();
+    expect(msg!.pinnedBy).toBe(alice.id);
+
+    // Unpin
+    const { status: unpinStatus } = await apiRequest(
+      "DELETE",
+      `/channels/${channelId}/pins/${messageId}`,
+      { token: alice.token },
+    );
+    expect(unpinStatus).toBe(204);
+
+    // Verify removed from pins list
+    const { body: emptyPins } = await apiRequest("GET", `/channels/${channelId}/pins`, {
+      token: alice.token,
+    });
+    expect((emptyPins.messages as unknown[]).length).toBe(0);
+
+    // Verify pinnedAt/pinnedBy are null in messages list
+    const { body: afterUnpin } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    const afterMsg = (afterUnpin.messages as Record<string, unknown>[]).find(
+      (m) => m.id === messageId,
+    );
+    expect(afterMsg!.pinnedAt).toBeNull();
+    expect(afterMsg!.pinnedBy).toBeNull();
+  });
+
+  it("non-privileged member cannot pin, owner can", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Pin Permissions Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Bob sends a message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: bob.token,
+      body: { content: "Bob's message" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Bob tries to pin — should fail
+    const { status: bobPinStatus } = await apiRequest(
+      "PUT",
+      `/channels/${channelId}/pins/${messageId}`,
+      { token: bob.token },
+    );
+    expect(bobPinStatus).toBe(403);
+
+    // Alice (owner) pins it — should succeed
+    const { status: alicePinStatus } = await apiRequest(
+      "PUT",
+      `/channels/${channelId}/pins/${messageId}`,
+      { token: alice.token },
+    );
+    expect(alicePinStatus).toBe(204);
+
+    // Bob can still see pinned messages
+    const { status: listStatus, body: pinsBody } = await apiRequest(
+      "GET",
+      `/channels/${channelId}/pins`,
+      { token: bob.token },
+    );
+    expect(listStatus).toBe(200);
+    expect((pinsBody.messages as unknown[]).length).toBe(1);
+  });
+
+  it("pinning in DMs works for both participants", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    await makeFriends(alice, "bob", bob);
+
+    const { body: dmBody } = await apiRequest("POST", "/dms", {
+      token: alice.token,
+      body: { recipientId: bob.id },
+    });
+    const channelId = (dmBody.channel as Record<string, unknown>).id as string;
+
+    // Alice sends message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Pin-worthy DM" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Bob pins it
+    const { status: pinStatus } = await apiRequest(
+      "PUT",
+      `/channels/${channelId}/pins/${messageId}`,
+      { token: bob.token },
+    );
+    expect(pinStatus).toBe(204);
+
+    // Both see it in pins
+    const { body: alicePins } = await apiRequest("GET", `/channels/${channelId}/pins`, {
+      token: alice.token,
+    });
+    expect((alicePins.messages as unknown[]).length).toBe(1);
+
+    const { body: bobPins } = await apiRequest("GET", `/channels/${channelId}/pins`, {
+      token: bob.token,
+    });
+    expect((bobPins.messages as unknown[]).length).toBe(1);
+  });
+
+  it("deleting a pinned message removes it from pins list", async () => {
+    const alice = await registerUser("alice");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Delete Pinned Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Send and pin a message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Pinned then deleted" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    await apiRequest("PUT", `/channels/${channelId}/pins/${messageId}`, {
+      token: alice.token,
+    });
+
+    // Verify pinned
+    const { body: beforeDelete } = await apiRequest("GET", `/channels/${channelId}/pins`, {
+      token: alice.token,
+    });
+    expect((beforeDelete.messages as unknown[]).length).toBe(1);
+
+    // Delete the message
+    await apiRequest("DELETE", `/messages/${messageId}`, { token: alice.token });
+
+    // Verify removed from pins
+    const { body: afterDelete } = await apiRequest("GET", `/channels/${channelId}/pins`, {
+      token: alice.token,
+    });
+    expect((afterDelete.messages as unknown[]).length).toBe(0);
+  });
+
+  it("reactions and pins work together on the same message", async () => {
+    const alice = await registerUser("alice");
+    const bob = await registerUser("bob");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Combined Features Server", isPublic: true },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    await apiRequest("POST", `/servers/${serverId}/join`, { token: bob.token, body: {} });
+
+    const { body: channelsBody } = await apiRequest("GET", `/servers/${serverId}/channels`, {
+      token: alice.token,
+    });
+    const channelId = (channelsBody.channels as Record<string, unknown>[])[0]?.id as string;
+
+    // Alice sends a message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Pin and react to this" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Pin it
+    await apiRequest("PUT", `/channels/${channelId}/pins/${messageId}`, {
+      token: alice.token,
+    });
+
+    // Both react
+    const thumbs = encodeURIComponent("👍");
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: alice.token,
+    });
+    await apiRequest("PUT", `/channels/${channelId}/messages/${messageId}/reactions/${thumbs}`, {
+      token: bob.token,
+    });
+
+    // Verify message shows both pin info and reactions
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: bob.token,
+    });
+    const msgs = listBody.messages as Record<string, unknown>[];
+    const msg = msgs.find((m) => m.id === messageId);
+    expect(msg!.pinnedAt).not.toBeNull();
+    expect(msg!.pinnedBy).toBe(alice.id);
+
+    const reactions = msg!.reactions as Array<{ emoji: string; count: number; me: boolean }>;
+    expect(reactions).toHaveLength(1);
+    expect(reactions[0]!.count).toBe(2);
+    expect(reactions[0]!.me).toBe(true); // bob reacted
+  });
+});
+
 // ── Cross-feature Edge Cases ────────────────────────────────────────────────
 
 describe("E2E: Cross-feature Edge Cases", () => {
@@ -1716,5 +2428,261 @@ describe("E2E: Cross-feature Edge Cases", () => {
       body: {},
     });
     expect(status).toBe(409);
+  });
+});
+
+// ── Rich Media E2E ──────────────────────────────────────────────────────────
+
+describe("E2E: Rich Media", () => {
+  it("message with attachments → list includes attachments → delete cascades", async () => {
+    const { attachments: attachmentsTable, db: database } = await import("@cove/db");
+    const { generateSnowflake } = await import("@cove/shared");
+
+    const alice = await registerUser("rich_alice1");
+
+    // Create server and channel
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Media Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    const { body: channelBody } = await apiRequest("POST", `/servers/${serverId}/channels`, {
+      token: alice.token,
+      body: { name: "media", type: "text" },
+    });
+    const channelId = (channelBody.channel as Record<string, unknown>).id as string;
+
+    // Create a message with attachment placeholder
+    const attachmentId = generateSnowflake();
+    await database.insert(attachmentsTable).values({
+      id: BigInt(attachmentId),
+      messageId: null,
+      filename: "screenshot.png",
+      contentType: "image/png",
+      size: 5000,
+      url: "/uploads/screenshot.png",
+    });
+
+    // Send message with attachment
+    const { status: createStatus, body: createBody } = await apiRequest(
+      "POST",
+      `/channels/${channelId}/messages`,
+      {
+        token: alice.token,
+        body: { content: "Here's a screenshot", attachmentIds: [attachmentId] },
+      },
+    );
+
+    expect(createStatus).toBe(201);
+    const createdMsg = createBody.message as Record<string, unknown>;
+    const createdAttachments = createdMsg.attachments as Array<Record<string, unknown>>;
+    expect(createdAttachments).toHaveLength(1);
+    expect(createdAttachments[0]!.filename).toBe("screenshot.png");
+
+    const messageId = createdMsg.id as string;
+
+    // Verify listing includes attachment
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    const messages = listBody.messages as Array<Record<string, unknown>>;
+    const found = messages.find((m) => m.id === messageId) as Record<string, unknown>;
+    expect((found.attachments as unknown[]).length).toBe(1);
+
+    // Delete message - attachments should cascade
+    await apiRequest("DELETE", `/messages/${messageId}`, { token: alice.token });
+
+    const { eq } = await import("drizzle-orm");
+    const rows = await database
+      .select()
+      .from(attachmentsTable)
+      .where(eq(attachmentsTable.id, BigInt(attachmentId)));
+    expect(rows).toHaveLength(0);
+  });
+
+  it("embeds are returned in message listing after creation", async () => {
+    const { embeds: embedsTable, db: database } = await import("@cove/db");
+    const { generateSnowflake } = await import("@cove/shared");
+
+    const alice = await registerUser("rich_alice2");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Embed Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    const { body: channelBody } = await apiRequest("POST", `/servers/${serverId}/channels`, {
+      token: alice.token,
+      body: { name: "links", type: "text" },
+    });
+    const channelId = (channelBody.channel as Record<string, unknown>).id as string;
+
+    // Send message
+    const { body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: { content: "Check out https://example.com" },
+    });
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Simulate async embed generation
+    const embedId = generateSnowflake();
+    await database.insert(embedsTable).values({
+      id: BigInt(embedId),
+      messageId: BigInt(messageId),
+      url: "https://example.com",
+      title: "Example Domain",
+      description: "This domain is for use in illustrative examples.",
+      siteName: "Example",
+    });
+
+    // Verify embeds show up in listing
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+    const messages = listBody.messages as Array<Record<string, unknown>>;
+    const found = messages.find((m) => m.id === messageId) as Record<string, unknown>;
+    const embedList = found.embeds as Array<Record<string, unknown>>;
+    expect(embedList).toHaveLength(1);
+    expect(embedList[0]!.title).toBe("Example Domain");
+    expect(embedList[0]!.url).toBe("https://example.com");
+  });
+
+  it("custom emojis: create → list → delete lifecycle", async () => {
+    const { customEmojis: emojisTable, db: database } = await import("@cove/db");
+    const { generateSnowflake } = await import("@cove/shared");
+
+    const alice = await registerUser("rich_alice3");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Emoji Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    // Insert emoji directly (upload would need multipart)
+    const emojiId = generateSnowflake();
+    await database.insert(emojisTable).values({
+      id: BigInt(emojiId),
+      serverId: BigInt(serverId),
+      name: "partyblob",
+      imageUrl: "/uploads/emojis/partyblob.gif",
+      creatorId: BigInt(alice.id),
+    });
+
+    // List emojis
+    const { status: listStatus, body: listBody } = await apiRequest(
+      "GET",
+      `/servers/${serverId}/emojis`,
+      { token: alice.token },
+    );
+    expect(listStatus).toBe(200);
+    const emojis = listBody.emojis as Array<Record<string, unknown>>;
+    expect(emojis).toHaveLength(1);
+    expect(emojis[0]!.name).toBe("partyblob");
+
+    // Delete emoji
+    const { status: deleteStatus } = await apiRequest(
+      "DELETE",
+      `/servers/${serverId}/emojis/${emojiId}`,
+      { token: alice.token },
+    );
+    expect(deleteStatus).toBe(200);
+
+    // Verify gone
+    const { body: afterDelete } = await apiRequest("GET", `/servers/${serverId}/emojis`, {
+      token: alice.token,
+    });
+    expect(afterDelete.emojis).toEqual([]);
+  });
+
+  it("full rich message flow: create message → add attachment + embed → list → verify all fields", async () => {
+    const { attachments: attachmentsTable, embeds: embedsTable, db: database } = await import("@cove/db");
+    const { generateSnowflake } = await import("@cove/shared");
+
+    const alice = await registerUser("rich_alice4");
+
+    const { body: serverBody } = await apiRequest("POST", "/servers", {
+      token: alice.token,
+      body: { name: "Full Rich Server" },
+    });
+    const serverId = (serverBody.server as Record<string, unknown>).id as string;
+
+    const { body: channelBody } = await apiRequest("POST", `/servers/${serverId}/channels`, {
+      token: alice.token,
+      body: { name: "rich-content", type: "text" },
+    });
+    const channelId = (channelBody.channel as Record<string, unknown>).id as string;
+
+    // Create attachment placeholder
+    const attachmentId = generateSnowflake();
+    await database.insert(attachmentsTable).values({
+      id: BigInt(attachmentId),
+      messageId: null,
+      filename: "design.pdf",
+      contentType: "application/pdf",
+      size: 102400,
+      url: "/uploads/design.pdf",
+    });
+
+    // Send message with attachment
+    const { status, body: msgBody } = await apiRequest("POST", `/channels/${channelId}/messages`, {
+      token: alice.token,
+      body: {
+        content: "New design spec https://figma.com/file/abc",
+        attachmentIds: [attachmentId],
+      },
+    });
+
+    expect(status).toBe(201);
+    const messageId = (msgBody.message as Record<string, unknown>).id as string;
+
+    // Simulate embed generation
+    await database.insert(embedsTable).values({
+      id: BigInt(generateSnowflake()),
+      messageId: BigInt(messageId),
+      url: "https://figma.com/file/abc",
+      title: "Design Spec - Figma",
+      description: "View the latest design spec",
+      siteName: "Figma",
+      thumbnailUrl: "https://figma.com/thumbnail.png",
+    });
+
+    // Fetch messages and verify everything is present
+    const { body: listBody } = await apiRequest("GET", `/channels/${channelId}/messages`, {
+      token: alice.token,
+    });
+
+    const messages = listBody.messages as Array<Record<string, unknown>>;
+    expect(messages).toHaveLength(1);
+    const msg = messages[0]!;
+
+    // Content
+    expect(msg.content).toBe("New design spec https://figma.com/file/abc");
+
+    // Author
+    const author = msg.author as Record<string, unknown>;
+    expect(author.id).toBe(alice.id);
+
+    // Attachments
+    const msgAttachments = msg.attachments as Array<Record<string, unknown>>;
+    expect(msgAttachments).toHaveLength(1);
+    expect(msgAttachments[0]!.filename).toBe("design.pdf");
+    expect(msgAttachments[0]!.contentType).toBe("application/pdf");
+    expect(msgAttachments[0]!.size).toBe(102400);
+
+    // Embeds
+    const msgEmbeds = msg.embeds as Array<Record<string, unknown>>;
+    expect(msgEmbeds).toHaveLength(1);
+    expect(msgEmbeds[0]!.title).toBe("Design Spec - Figma");
+    expect(msgEmbeds[0]!.url).toBe("https://figma.com/file/abc");
+    expect(msgEmbeds[0]!.siteName).toBe("Figma");
+    expect(msgEmbeds[0]!.thumbnailUrl).toBe("https://figma.com/thumbnail.png");
+
+    // Also verify the message has the standard fields
+    expect(msg.reactions).toEqual([]);
+    expect(msg.replyToId).toBe(null);
+    expect(msg.pinnedAt).toBe(null);
   });
 });

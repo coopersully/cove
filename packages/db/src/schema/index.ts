@@ -265,7 +265,6 @@ export const attachments = pgTable(
   {
     id: bigint({ mode: "bigint" }).primaryKey(),
     messageId: bigint("message_id", { mode: "bigint" })
-      .notNull()
       .references(() => messages.id, { onDelete: "cascade" }),
     filename: varchar({ length: 255 }).notNull(),
     contentType: varchar("content_type", { length: 127 }).notNull(),

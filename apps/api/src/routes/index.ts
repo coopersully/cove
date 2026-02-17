@@ -1,5 +1,7 @@
+export { attachmentRoutes } from "./attachments.js";
 export { authRoutes } from "./auth.js";
 export { channelRoutes } from "./channels.js";
+export { customEmojiRoutes } from "./custom-emojis.js";
 export { dmRoutes } from "./dms.js";
 export { friendRoutes } from "./friends.js";
 export { messageRoutes } from "./messages.js";

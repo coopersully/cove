@@ -3,8 +3,10 @@ import { cors } from "hono/cors";
 
 import { errorHandler } from "./middleware/index.js";
 import {
+  attachmentRoutes,
   authRoutes,
   channelRoutes,
+  customEmojiRoutes,
   dmRoutes,
   friendRoutes,
   messageRoutes,
@@ -38,3 +40,5 @@ app.route("/", messageRoutes);
 app.route("/", pinRoutes);
 app.route("/", reactionRoutes);
 app.route("/", readStateRoutes);
+app.route("/", attachmentRoutes);
+app.route("/", customEmojiRoutes);
