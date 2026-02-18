@@ -81,7 +81,9 @@ export const messages = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     pinnedAt: timestamp("pinned_at", { withTimezone: true }),
-    pinnedBy: bigint("pinned_by", { mode: "bigint" }).references(() => users.id),
+    pinnedBy: bigint("pinned_by", { mode: "bigint" }).references(() => users.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => [index("messages_channel_id_idx").on(t.channelId, t.id)],
 );

@@ -60,7 +60,7 @@ attachmentRoutes.post("/channels/:channelId/attachments", async (c) => {
   }
 
   const attachmentId = generateSnowflake();
-  const ext = file.name.split(".").pop() ?? "";
+  const ext = file.type.split("/")[1] ?? "";
   const key = `attachments/${channelId}/${attachmentId}${ext ? `.${ext}` : ""}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());

@@ -145,7 +145,7 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       })
       .from(messages)
       .innerJoin(users, eq(messages.authorId, users.id))
-      .where(inArray(messages.id, replyToIds));
+      .where(and(inArray(messages.id, replyToIds), eq(messages.channelId, BigInt(channelId))));
 
     for (const ref of refs) {
       referencedMessages.set(String(ref.id), {

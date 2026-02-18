@@ -37,10 +37,11 @@ function createS3Storage(): StorageService {
         }),
       );
 
+      const encodedKey = key.split("/").map(encodeURIComponent).join("/");
       if (process.env.S3_ENDPOINT) {
-        return `${process.env.S3_ENDPOINT}/${bucket}/${key}`;
+        return `${process.env.S3_ENDPOINT}/${bucket}/${encodedKey}`;
       }
-      return `https://${bucket}.s3.${process.env.S3_REGION ?? "us-east-1"}.amazonaws.com/${key}`;
+      return `https://${bucket}.s3.${process.env.S3_REGION ?? "us-east-1"}.amazonaws.com/${encodedKey}`;
     },
     async delete(key) {
       await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));

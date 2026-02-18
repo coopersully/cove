@@ -14,7 +14,7 @@ interface EmbedData {
   color: string | null;
 }
 
-const URL_REGEX = /https?:\/\/[^\s<>]+/g;
+const URL_REGEX = /https?:\/\/[^\s<>]+[^\s<>.,;:!?)\]}"']/g;
 const MAX_REDIRECTS = 3;
 const MAX_HTML_SIZE_BYTES = 2 * 1024 * 1024;
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
@@ -112,6 +112,9 @@ function isPrivateIpv4(address: string): boolean {
   if (a === 192 && b === 168) {
     return true;
   }
+  if (a === 100 && b >= 64 && b <= 127) {
+    return true; // CGNAT (RFC 6598)
+  }
   if (a === 0) {
     return true;
   }
@@ -207,6 +210,7 @@ async function fetchSafeHtml(url: string, signal: AbortSignal): Promise<string |
     });
 
     if (REDIRECT_STATUS_CODES.has(response.status)) {
+      await response.body?.cancel();
       const location = response.headers.get("location");
       if (!location) {
         return null;
@@ -234,11 +238,30 @@ async function fetchSafeHtml(url: string, signal: AbortSignal): Promise<string |
       return null;
     }
 
-    const html = await response.text();
-    if (html.length > MAX_HTML_SIZE_BYTES) {
+    const reader = response.body?.getReader();
+    if (!reader) {
       return null;
     }
-    return html;
+    const chunks: Uint8Array[] = [];
+    let totalBytes = 0;
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        totalBytes += value.byteLength;
+        if (totalBytes > MAX_HTML_SIZE_BYTES) {
+          await reader.cancel();
+          return null;
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    const decoder = new TextDecoder();
+    return (
+      chunks.map((chunk) => decoder.decode(chunk, { stream: true })).join("") + decoder.decode()
+    );
   }
 
   return null;

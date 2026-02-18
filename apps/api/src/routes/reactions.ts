@@ -1,6 +1,6 @@
 import { getUser, requireAuth } from "@cove/auth";
 import { db, messages, reactions } from "@cove/db";
-import { AppError } from "@cove/shared";
+import { AppError, snowflakeSchema } from "@cove/shared";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 
@@ -25,7 +25,12 @@ function getEventTargets(channel: { id: string; type: string; serverId: string |
 reactionRoutes.put("/channels/:channelId/messages/:messageId/reactions/:emoji", async (c) => {
   const user = getUser(c);
   const channelId = c.req.param("channelId");
-  const messageId = c.req.param("messageId");
+  const rawMessageId = c.req.param("messageId");
+  const parsedMessageId = snowflakeSchema.safeParse(rawMessageId);
+  if (!parsedMessageId.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid message ID");
+  }
+  const messageId = parsedMessageId.data;
   const emoji = decodeURIComponent(c.req.param("emoji"));
 
   const channel = await requireChannelMembership(channelId, user.id);
@@ -69,7 +74,12 @@ reactionRoutes.put("/channels/:channelId/messages/:messageId/reactions/:emoji", 
 reactionRoutes.delete("/channels/:channelId/messages/:messageId/reactions/:emoji", async (c) => {
   const user = getUser(c);
   const channelId = c.req.param("channelId");
-  const messageId = c.req.param("messageId");
+  const rawMessageId = c.req.param("messageId");
+  const parsedMessageId = snowflakeSchema.safeParse(rawMessageId);
+  if (!parsedMessageId.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid message ID");
+  }
+  const messageId = parsedMessageId.data;
   const emoji = decodeURIComponent(c.req.param("emoji"));
 
   const channel = await requireChannelMembership(channelId, user.id);

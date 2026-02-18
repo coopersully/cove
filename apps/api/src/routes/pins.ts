@@ -1,6 +1,6 @@
 import { getUser, requireAuth } from "@cove/auth";
 import { db, messages, servers, users } from "@cove/db";
-import { AppError, Permissions, hasPermission } from "@cove/shared";
+import { AppError, Permissions, hasPermission, snowflakeSchema } from "@cove/shared";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 
@@ -53,7 +53,12 @@ async function requireManageMessages(
 pinRoutes.put("/channels/:channelId/pins/:messageId", async (c) => {
   const user = getUser(c);
   const channelId = c.req.param("channelId");
-  const messageId = c.req.param("messageId");
+  const rawMessageId = c.req.param("messageId");
+  const parsedMessageId = snowflakeSchema.safeParse(rawMessageId);
+  if (!parsedMessageId.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid message ID");
+  }
+  const messageId = parsedMessageId.data;
 
   const channel = await requireChannelMembership(channelId, user.id);
   await requireManageMessages(channel, user.id);
@@ -92,7 +97,12 @@ pinRoutes.put("/channels/:channelId/pins/:messageId", async (c) => {
 pinRoutes.delete("/channels/:channelId/pins/:messageId", async (c) => {
   const user = getUser(c);
   const channelId = c.req.param("channelId");
-  const messageId = c.req.param("messageId");
+  const rawMessageId = c.req.param("messageId");
+  const parsedMessageId = snowflakeSchema.safeParse(rawMessageId);
+  if (!parsedMessageId.success) {
+    throw new AppError("VALIDATION_ERROR", "Invalid message ID");
+  }
+  const messageId = parsedMessageId.data;
 
   const channel = await requireChannelMembership(channelId, user.id);
   await requireManageMessages(channel, user.id);

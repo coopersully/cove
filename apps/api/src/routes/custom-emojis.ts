@@ -143,7 +143,7 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
   }
 
   const emojiId = generateSnowflake();
-  const ext = file.name.split(".").pop() ?? "png";
+  const ext = file.type.split("/")[1] ?? "png";
   const key = `emojis/${serverId}/${emojiId}.${ext}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
