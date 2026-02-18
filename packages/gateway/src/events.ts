@@ -4,6 +4,8 @@ export const GatewayEvents = {
   MessageCreate: "MESSAGE_CREATE",
   MessageUpdate: "MESSAGE_UPDATE",
   MessageDelete: "MESSAGE_DELETE",
+  MessageReactionAdd: "MESSAGE_REACTION_ADD",
+  MessageReactionRemove: "MESSAGE_REACTION_REMOVE",
   PresenceUpdate: "PRESENCE_UPDATE",
   ChannelCreate: "CHANNEL_CREATE",
   ChannelUpdate: "CHANNEL_UPDATE",
