@@ -225,16 +225,19 @@ async function fetchSafeHtml(url: string, signal: AbortSignal): Promise<string |
     }
 
     if (!response.ok) {
+      await response.body?.cancel();
       return null;
     }
 
     const contentType = response.headers.get("content-type") ?? "";
     if (!contentType.includes("text/html")) {
+      await response.body?.cancel();
       return null;
     }
 
     const contentLength = response.headers.get("content-length");
     if (contentLength && Number(contentLength) > MAX_HTML_SIZE_BYTES) {
+      await response.body?.cancel();
       return null;
     }
 

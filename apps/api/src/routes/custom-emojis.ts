@@ -181,6 +181,7 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
         creatorId: BigInt(user.id),
         storageKey: key,
       })
+      .onConflictDoNothing()
       .returning();
   } catch {
     await storage.delete(key).catch(() => {});
@@ -189,7 +190,7 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
 
   if (!created) {
     await storage.delete(key).catch(() => {});
-    throw new AppError("INTERNAL_ERROR", "Failed to create emoji");
+    throw new AppError("CONFLICT", "An emoji with this name already exists");
   }
 
   return c.json(
