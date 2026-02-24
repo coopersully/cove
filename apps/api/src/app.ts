@@ -1,3 +1,6 @@
+import { mkdirSync } from "node:fs";
+import { isAbsolute, relative } from "node:path";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
@@ -21,6 +24,22 @@ export const app = new Hono();
 
 app.onError(errorHandler);
 app.use(cors());
+
+if (process.env.STORAGE_BACKEND !== "s3") {
+  const uploadRoot = process.env.LOCAL_UPLOAD_DIR ?? "./uploads";
+  // @hono/node-server serveStatic expects a cwd-relative root path.
+  const staticRoot = isAbsolute(uploadRoot)
+    ? relative(process.cwd(), uploadRoot) || "."
+    : uploadRoot;
+  mkdirSync(staticRoot, { recursive: true });
+  app.use(
+    "/uploads/*",
+    serveStatic({
+      root: staticRoot,
+      rewriteRequestPath: (path) => path.replace(/^\/uploads\//, ""),
+    }),
+  );
+}
 
 app.get("/health", (c) => {
   return c.json({

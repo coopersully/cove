@@ -1,6 +1,12 @@
 import { getUser, requireAuth } from "@cove/auth";
 import { customEmojis, db, serverMembers, servers } from "@cove/db";
-import { AppError, Permissions, generateSnowflake, hasPermission } from "@cove/shared";
+import {
+  AppError,
+  Permissions,
+  generateSnowflake,
+  hasPermission,
+  snowflakeSchema,
+} from "@cove/shared";
 import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -21,6 +27,14 @@ export const customEmojiRoutes = new Hono();
 customEmojiRoutes.use(requireAuth());
 
 const MAX_CUSTOM_EMOJIS_PER_SERVER = 50;
+
+function parseSnowflakeParam(value: string, fieldName: string): string {
+  const parsed = snowflakeSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new AppError("VALIDATION_ERROR", `Invalid ${fieldName}`);
+  }
+  return parsed.data;
+}
 
 async function requireServerMembership(serverId: string, userId: string): Promise<void> {
   const [membership] = await db
@@ -63,7 +77,7 @@ async function requireManageServer(serverId: string, userId: string): Promise<vo
 // GET /servers/:serverId/emojis
 customEmojiRoutes.get("/servers/:serverId/emojis", async (c) => {
   const user = getUser(c);
-  const serverId = c.req.param("serverId");
+  const serverId = parseSnowflakeParam(c.req.param("serverId"), "server ID");
 
   await requireServerMembership(serverId, user.id);
 
@@ -86,7 +100,7 @@ customEmojiRoutes.get("/servers/:serverId/emojis", async (c) => {
 // POST /servers/:serverId/emojis
 customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
   const user = getUser(c);
-  const serverId = c.req.param("serverId");
+  const serverId = parseSnowflakeParam(c.req.param("serverId"), "server ID");
 
   await requireManageServer(serverId, user.id);
 
@@ -195,8 +209,8 @@ customEmojiRoutes.post("/servers/:serverId/emojis", async (c) => {
 // DELETE /servers/:serverId/emojis/:emojiId
 customEmojiRoutes.delete("/servers/:serverId/emojis/:emojiId", async (c) => {
   const user = getUser(c);
-  const serverId = c.req.param("serverId");
-  const emojiId = c.req.param("emojiId");
+  const serverId = parseSnowflakeParam(c.req.param("serverId"), "server ID");
+  const emojiId = parseSnowflakeParam(c.req.param("emojiId"), "emoji ID");
 
   await requireManageServer(serverId, user.id);
 

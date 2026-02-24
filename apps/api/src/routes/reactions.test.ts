@@ -102,6 +102,37 @@ describe("Reaction Routes", () => {
       expect(status).toBe(401);
     });
 
+    it("returns 400 for malformed emoji encoding", async () => {
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
+      const channel = await createTestChannel(server.id);
+      const message = await createTestMessage(channel.id, user.id);
+
+      const { status } = await apiRequest(
+        "PUT",
+        `/channels/${channel.id}/messages/${message.id}/reactions/%E0%A4%A`,
+        { token: user.token },
+      );
+
+      expect(status).toBe(400);
+    });
+
+    it("returns 400 for emoji longer than 32 chars", async () => {
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
+      const channel = await createTestChannel(server.id);
+      const message = await createTestMessage(channel.id, user.id);
+
+      const tooLongEmoji = encodeURIComponent("a".repeat(33));
+      const { status } = await apiRequest(
+        "PUT",
+        `/channels/${channel.id}/messages/${message.id}/reactions/${tooLongEmoji}`,
+        { token: user.token },
+      );
+
+      expect(status).toBe(400);
+    });
+
     it("allows multiple different emojis from the same user", async () => {
       const user = await createTestUser();
       const server = await createTestServer(user.id);
@@ -189,6 +220,21 @@ describe("Reaction Routes", () => {
       );
 
       expect(status).toBe(204);
+    });
+
+    it("returns 400 for malformed emoji encoding on delete", async () => {
+      const user = await createTestUser();
+      const server = await createTestServer(user.id);
+      const channel = await createTestChannel(server.id);
+      const message = await createTestMessage(channel.id, user.id);
+
+      const { status } = await apiRequest(
+        "DELETE",
+        `/channels/${channel.id}/messages/${message.id}/reactions/%E0%A4%A`,
+        { token: user.token },
+      );
+
+      expect(status).toBe(400);
     });
 
     it("returns 404 when message does not belong to the provided channel", async () => {

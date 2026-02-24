@@ -11,6 +11,8 @@ export const reactionRoutes = new Hono();
 
 reactionRoutes.use(requireAuth());
 
+const MAX_EMOJI_LENGTH = 32;
+
 function getEventTargets(channel: { id: string; type: string; serverId: string | null }) {
   if (channel.type === "dm") {
     return { channelId: channel.id };
@@ -19,6 +21,21 @@ function getEventTargets(channel: { id: string; type: string; serverId: string |
     throw new AppError("INTERNAL_ERROR", "Server channel has no server");
   }
   return { serverId: channel.serverId };
+}
+
+function parseEmojiParam(value: string): string {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    throw new AppError("VALIDATION_ERROR", "Invalid emoji encoding");
+  }
+
+  if (decoded.length === 0 || decoded.length > MAX_EMOJI_LENGTH) {
+    throw new AppError("VALIDATION_ERROR", "Invalid emoji");
+  }
+
+  return decoded;
 }
 
 // PUT /channels/:channelId/messages/:messageId/reactions/:emoji
@@ -31,7 +48,7 @@ reactionRoutes.put("/channels/:channelId/messages/:messageId/reactions/:emoji", 
     throw new AppError("VALIDATION_ERROR", "Invalid message ID");
   }
   const messageId = parsedMessageId.data;
-  const emoji = decodeURIComponent(c.req.param("emoji"));
+  const emoji = parseEmojiParam(c.req.param("emoji"));
 
   const channel = await requireChannelMembership(channelId, user.id);
 
@@ -80,7 +97,7 @@ reactionRoutes.delete("/channels/:channelId/messages/:messageId/reactions/:emoji
     throw new AppError("VALIDATION_ERROR", "Invalid message ID");
   }
   const messageId = parsedMessageId.data;
-  const emoji = decodeURIComponent(c.req.param("emoji"));
+  const emoji = parseEmojiParam(c.req.param("emoji"));
 
   const channel = await requireChannelMembership(channelId, user.id);
 

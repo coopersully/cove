@@ -16,6 +16,23 @@ export function useGatewayEventRouter(): void {
       return;
     }
 
+    const reactionSyncTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    const scheduleReactionSync = (channelId: string) => {
+      const existing = reactionSyncTimers.get(channelId);
+      if (existing) {
+        clearTimeout(existing);
+      }
+
+      const timer = setTimeout(() => {
+        reactionSyncTimers.delete(channelId);
+        void queryClient.invalidateQueries({
+          queryKey: ["channels", channelId, "messages"],
+        });
+      }, 300);
+
+      reactionSyncTimers.set(channelId, timer);
+    };
+
     const unsub = client.onEvent((event, data) => {
       switch (event) {
         case "MESSAGE_CREATE":
@@ -47,8 +64,6 @@ export function useGatewayEventRouter(): void {
           break;
       }
     });
-
-    return unsub;
 
     function handleMessageCreate(message: Message) {
       const currentUserId = useAuthStore.getState().user?.id;
@@ -204,6 +219,7 @@ export function useGatewayEventRouter(): void {
           };
         },
       );
+      scheduleReactionSync(data.channelId);
     }
 
     function handleReactionRemove(data: {
@@ -240,6 +256,15 @@ export function useGatewayEventRouter(): void {
           };
         },
       );
+      scheduleReactionSync(data.channelId);
     }
+
+    return () => {
+      unsub();
+      for (const timer of reactionSyncTimers.values()) {
+        clearTimeout(timer);
+      }
+      reactionSyncTimers.clear();
+    };
   }, [client, queryClient, addTyping]);
 }

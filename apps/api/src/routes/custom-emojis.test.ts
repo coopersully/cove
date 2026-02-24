@@ -92,6 +92,16 @@ describe("Custom Emoji Routes", () => {
       expect(emoji.creatorId).toBe(alice.id);
       expect(emoji.createdAt).toBeDefined();
     });
+
+    it("returns 400 for invalid server ID", async () => {
+      const alice = await createTestUser({ username: "emo_alice_invalid_server" });
+
+      const { status } = await apiRequest("GET", "/servers/not-a-snowflake/emojis", {
+        token: alice.token,
+      });
+
+      expect(status).toBe(400);
+    });
   });
 
   describe("DELETE /servers/:serverId/emojis/:emojiId", () => {
@@ -126,6 +136,21 @@ describe("Custom Emoji Routes", () => {
       );
 
       expect(status).toBe(404);
+    });
+
+    it("returns 400 for invalid emoji ID", async () => {
+      const alice = await createTestUser({ username: "emo_alice_invalid_emoji" });
+      const server = await createTestServer(alice.id);
+
+      const { status } = await apiRequest(
+        "DELETE",
+        `/servers/${server.id}/emojis/not-a-snowflake`,
+        {
+          token: alice.token,
+        },
+      );
+
+      expect(status).toBe(400);
     });
 
     it("rejects non-member deletion", async () => {
