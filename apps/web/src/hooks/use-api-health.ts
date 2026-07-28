@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const HEALTH_URL = `${import.meta.env.VITE_API_URL ?? "http://localhost:4100"}/health`;
+const HEALTH_URL = `${import.meta.env.VITE_API_URL ?? "http://localhost:25601"}/health`;
 const POLL_INTERVAL = 30_000;
 
 interface ApiHealth {

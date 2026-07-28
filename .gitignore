@@ -23,6 +23,9 @@ out/
 .env.*
 !.env.example
 
+# Local Codex lifecycle state
+.codex/runtime/
+
 # OS files
 .DS_Store
 Thumbs.db

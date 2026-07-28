@@ -1,5 +1,7 @@
 import type { ApiErrorResponse, TokenResponse } from "./types.js";
 
+const TRAILING_SLASH = /\/$/;
+
 export interface TokenProvider {
   getAccessToken(): string | null;
   getRefreshToken(): string | null;
@@ -38,16 +40,16 @@ export class HttpClient {
   private refreshPromise: Promise<void> | null = null;
 
   constructor(config: HttpClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/$/, "");
+    this.baseUrl = config.baseUrl.replace(TRAILING_SLASH, "");
     this.tokenProvider = config.tokenProvider;
   }
 
-  async get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+  get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
     const url = this.buildUrl(path, params);
     return this.request<T>(url, { method: "GET" });
   }
 
-  async post<T>(path: string, body?: unknown): Promise<T> {
+  post<T>(path: string, body?: unknown): Promise<T> {
     const url = this.buildUrl(path);
     const init: RequestInit = {
       method: "POST",
@@ -59,7 +61,7 @@ export class HttpClient {
     return this.request<T>(url, init);
   }
 
-  async put<T>(path: string, body: unknown): Promise<T> {
+  put<T>(path: string, body: unknown): Promise<T> {
     const url = this.buildUrl(path);
     return this.request<T>(url, {
       method: "PUT",
@@ -68,7 +70,7 @@ export class HttpClient {
     });
   }
 
-  async patch<T>(path: string, body: unknown): Promise<T> {
+  patch<T>(path: string, body: unknown): Promise<T> {
     const url = this.buildUrl(path);
     return this.request<T>(url, {
       method: "PATCH",
@@ -77,7 +79,7 @@ export class HttpClient {
     });
   }
 
-  async delete<T>(path: string): Promise<T> {
+  delete<T>(path: string): Promise<T> {
     const url = this.buildUrl(path);
     return this.request<T>(url, { method: "DELETE" });
   }
@@ -116,11 +118,26 @@ export class HttpClient {
     }
 
     if (!response.ok) {
-      const body = (await response.json()) as ApiErrorResponse;
-      throw new ApiError(body.error.code, body.error.message, response.status);
+      throw await this.createApiError(response);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return response.json() as Promise<T>;
+  }
+
+  private async createApiError(response: Response): Promise<ApiError> {
+    const body = await response.json().catch(() => null);
+    if (isApiErrorResponse(body)) {
+      return new ApiError(body.error.code, body.error.message, response.status);
+    }
+    return new ApiError(
+      "HTTP_ERROR",
+      `Request failed with status ${String(response.status)}`,
+      response.status,
+    );
   }
 
   private async tryRefresh(): Promise<boolean> {
@@ -169,4 +186,19 @@ export class HttpClient {
       throw error;
     }
   }
+}
+
+function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
+  if (!value || typeof value !== "object" || !("error" in value)) {
+    return false;
+  }
+  const error = value.error;
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    "message" in error &&
+    typeof error.message === "string"
+  );
 }

@@ -9,12 +9,14 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
+    "test": "vitest run src",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
     "@cove/shared": "workspace:*"
   },
   "devDependencies": {
-    "@cove/config": "workspace:*"
+    "@cove/config": "workspace:*",
+    "vitest": "^4.0.18"
   }
 }

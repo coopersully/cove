@@ -3,7 +3,7 @@ import { useAuthStore } from "../stores/auth.js";
 import { useGatewayStore } from "../stores/gateway.js";
 import { useGatewayEventRouter } from "./use-gateway-events.js";
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:4101";
+const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:25601";
 
 export function useGateway(): void {
   const accessToken = useAuthStore((s) => s.accessToken);

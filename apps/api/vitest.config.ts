@@ -9,7 +9,7 @@ export default defineConfig({
     testTimeout: 15_000,
     hookTimeout: 30_000,
     env: {
-      DATABASE_URL: "postgresql://cove:cove@localhost:5433/cove_test",
+      DATABASE_URL: "postgresql://cove:cove@localhost:25603/cove_test",
       JWT_SECRET: "test-secret-key-for-vitest",
       RESEND_API_KEY: "re_test_fake_key_for_vitest",
     },

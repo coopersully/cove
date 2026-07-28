@@ -14,7 +14,14 @@
     "lint:fix": "biome check --write .",
     "test": "turbo run test",
     "dev": "pnpm --filter @cove/api dev & pnpm --filter @cove/ws dev & pnpm --filter @cove/web dev & wait",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "local:setup": "node scripts/codex-lifecycle.mjs setup",
+    "start": "node scripts/codex-lifecycle.mjs start",
+    "stop": "node scripts/codex-lifecycle.mjs stop",
+    "restart": "node scripts/codex-lifecycle.mjs restart",
+    "status": "node scripts/codex-lifecycle.mjs status",
+    "logs": "node scripts/codex-lifecycle.mjs logs",
+    "verify": "node scripts/codex-lifecycle.mjs verify"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]

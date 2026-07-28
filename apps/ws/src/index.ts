@@ -5,7 +5,7 @@ import { createRedisClient, createRedisSubscriber, subscribeToEvents } from "@co
 import { handleConnection } from "./connection.js";
 import { Dispatcher } from "./dispatcher.js";
 
-const port = Number(process.env.WS_PORT) || 4101;
+const port = Number(process.env.WS_PORT) || 25602;
 
 const redis = createRedisClient();
 const subscriber = createRedisSubscriber();

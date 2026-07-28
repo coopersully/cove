@@ -9,7 +9,7 @@ const SESSION_TTL = 300; // 5 minutes
 const REPLAY_MAX_LENGTH = 500;
 
 function getRedisUrl(): string {
-  return process.env.REDIS_URL ?? "redis://localhost:6380";
+  return process.env.REDIS_URL ?? "redis://localhost:25604";
 }
 
 export function createRedisClient(): Redis {

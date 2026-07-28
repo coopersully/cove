@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 4200,
+    port: Number(process.env.WEB_PORT) || 25603,
+    strictPort: true,
   },
 });

@@ -1,0 +1,35 @@
+[[actions]]
+name = "Setup local environment"
+command = "pnpm local:setup"
+
+[[actions]]
+name = "Start Cove"
+command = "pnpm start"
+
+[[actions]]
+name = "Stop Cove"
+command = "pnpm stop"
+
+[[actions]]
+name = "Restart Cove"
+command = "pnpm restart"
+
+[[actions]]
+name = "Status"
+command = "pnpm status"
+
+[[actions]]
+name = "Verify local environment"
+command = "pnpm verify"
+
+[[actions]]
+name = "Run checks"
+command = "pnpm check"
+
+[[actions]]
+name = "Run lint"
+command = "pnpm lint"
+
+[[actions]]
+name = "Run tests"
+command = "pnpm test"

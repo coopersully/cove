@@ -3,10 +3,9 @@ name: cove
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: cove-postgres
     restart: unless-stopped
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:?POSTGRES_PORT must be set}:5432"
     environment:
       POSTGRES_USER: cove
       POSTGRES_PASSWORD: cove
@@ -22,10 +21,9 @@ services:
 
   redis:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.25.5
-    container_name: cove-redis
     restart: unless-stopped
     ports:
-      - "6380:6379"
+      - "${REDIS_PORT:?REDIS_PORT must be set}:6379"
     volumes:
       - redis-data:/data
     healthcheck:

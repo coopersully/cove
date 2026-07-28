@@ -80,20 +80,14 @@ cove/
 git clone https://github.com/coopersully/cove.git
 cd cove
 
-# Install dependencies
-pnpm install
-
-# Copy environment variables
+# Copy the secret-bearing base configuration and replace JWT_SECRET.
 cp .env.example .env
 
-# Start local services (PostgreSQL + Redis)
-docker compose up -d
+# Install dependencies and validate local configuration.
+pnpm local:setup
 
-# Run the full build
-pnpm build
-
-# Start development servers
-pnpm dev
+# Start PostgreSQL, Redis, migrations, and the API, gateway, and web app.
+pnpm start
 ```
 
 ### Available Scripts
@@ -101,6 +95,11 @@ pnpm dev
 | Command | Description |
 |---------|------------|
 | `pnpm dev` | Start all development servers |
+| `pnpm local:setup` | Validate tools/configuration and install from the lockfile |
+| `pnpm start` | Start the full local stack safely |
+| `pnpm stop` | Gracefully stop the stack while preserving data |
+| `pnpm status` / `pnpm logs` | Inspect local services and recent logs |
+| `pnpm verify` | Check infrastructure and application readiness |
 | `pnpm build` | Build all packages and apps |
 | `pnpm check` | Run TypeScript type checking |
 | `pnpm lint` | Run Biome linting and format checks |
@@ -108,9 +107,13 @@ pnpm dev
 | `pnpm test` | Run all tests |
 | `pnpm format` | Format all files with Biome |
 
+The primary checkout's ignored `.env` is the source of truth. A Codex worktree copies it during `pnpm local:setup` and receives an ignored `.env.codex.local` overlay with the smallest free whole-set port increment. The primary checkout uses API `25601`, gateway `25602`, web `25603`, PostgreSQL `25604`, and Redis `25605`.
+
 ## Contributing
 
 We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our development process, coding standards, and how to submit pull requests.
+
+For architecture, local operations, and code standards, start with the [knowledge base](docs/README.md).
 
 Please also review our [Code of Conduct](CODE_OF_CONDUCT.md).
 
