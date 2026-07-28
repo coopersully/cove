@@ -60,6 +60,7 @@ export function useSendMessage(channelId: string) {
               content: data.content,
               createdAt: new Date().toISOString(),
               editedAt: null,
+              reactions: [],
               author: {
                 id: user.id,
                 username: user.username,

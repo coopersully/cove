@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.991.0",
     "@cove/auth": "workspace:*",
     "@cove/db": "workspace:*",
     "@cove/gateway": "workspace:*",

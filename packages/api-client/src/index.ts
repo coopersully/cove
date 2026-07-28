@@ -16,6 +16,12 @@ export type { FriendsResource } from "./resources/friends.js";
 export { createMessageResource } from "./resources/messages.js";
 export type { MessageResource } from "./resources/messages.js";
 
+export { createPinResource } from "./resources/pins.js";
+export type { PinResource } from "./resources/pins.js";
+
+export { createReactionResource } from "./resources/reactions.js";
+export type { ReactionResource } from "./resources/reactions.js";
+
 export { createReadStateResource } from "./resources/read-states.js";
 export type { ReadStateResource } from "./resources/read-states.js";
 
@@ -34,6 +40,8 @@ import { createChannelResource } from "./resources/channels.js";
 import { createDmResource } from "./resources/dms.js";
 import { createFriendsResource } from "./resources/friends.js";
 import { createMessageResource } from "./resources/messages.js";
+import { createPinResource } from "./resources/pins.js";
+import { createReactionResource } from "./resources/reactions.js";
 import { createReadStateResource } from "./resources/read-states.js";
 import { createServerResource } from "./resources/servers.js";
 import { createUserResource } from "./resources/users.js";
@@ -46,6 +54,8 @@ export interface ApiClient {
   readonly dms: ReturnType<typeof createDmResource>;
   readonly friends: ReturnType<typeof createFriendsResource>;
   readonly messages: ReturnType<typeof createMessageResource>;
+  readonly pins: ReturnType<typeof createPinResource>;
+  readonly reactions: ReturnType<typeof createReactionResource>;
   readonly readStates: ReturnType<typeof createReadStateResource>;
 }
 
@@ -59,6 +69,8 @@ export function createApiClient(config: HttpClientConfig): ApiClient {
     dms: createDmResource(http),
     friends: createFriendsResource(http),
     messages: createMessageResource(http),
+    pins: createPinResource(http),
+    reactions: createReactionResource(http),
     readStates: createReadStateResource(http),
   };
 }

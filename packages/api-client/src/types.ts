@@ -44,6 +44,12 @@ export interface MessageAuthor {
   readonly statusEmoji: string | null;
 }
 
+export interface Reaction {
+  readonly emoji: string;
+  readonly count: number;
+  readonly me: boolean;
+}
+
 export interface Message {
   readonly id: Snowflake;
   readonly channelId: Snowflake;
@@ -51,6 +57,9 @@ export interface Message {
   readonly createdAt: string;
   readonly editedAt: string | null;
   readonly author: MessageAuthor;
+  readonly reactions: readonly Reaction[];
+  readonly pinnedAt?: string | null;
+  readonly pinnedBy?: Snowflake | null;
 }
 
 // ── Request types ─────────────────────────────────────

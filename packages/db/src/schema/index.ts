@@ -74,10 +74,38 @@ export const messages = pgTable(
       .notNull()
       .references(() => users.id),
     content: text().notNull(),
+    replyToId: bigint("reply_to_id", { mode: "bigint" }).references(
+      (): import("drizzle-orm/pg-core").AnyPgColumn => messages.id,
+      { onDelete: "set null" },
+    ),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     editedAt: timestamp("edited_at", { withTimezone: true }),
+    pinnedAt: timestamp("pinned_at", { withTimezone: true }),
+    pinnedBy: bigint("pinned_by", { mode: "bigint" }).references(() => users.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => [index("messages_channel_id_idx").on(t.channelId, t.id)],
+);
+
+// ── Reactions ─────────────────────────────────────────
+
+export const reactions = pgTable(
+  "reactions",
+  {
+    messageId: bigint("message_id", { mode: "bigint" })
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    userId: bigint("user_id", { mode: "bigint" })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    emoji: varchar({ length: 32 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.messageId, t.userId, t.emoji] }),
+    index("reactions_message_id_idx").on(t.messageId),
+  ],
 );
 
 // ── Server Members ─────────────────────────────────────
@@ -230,4 +258,81 @@ export const inviteCodes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("invite_codes_server_id_idx").on(t.serverId)],
+);
+
+// ── Attachments ───────────────────────────────────────
+
+export const attachments = pgTable(
+  "attachments",
+  {
+    id: bigint({ mode: "bigint" }).primaryKey(),
+    messageId: bigint("message_id", { mode: "bigint" }).references(() => messages.id, {
+      onDelete: "cascade",
+    }),
+    channelId: bigint("channel_id", { mode: "bigint" }).references(() => channels.id, {
+      onDelete: "cascade",
+    }),
+    uploaderId: bigint("uploader_id", { mode: "bigint" }).references(() => users.id, {
+      onDelete: "set null",
+    }),
+    filename: varchar({ length: 255 }).notNull(),
+    contentType: varchar("content_type", { length: 127 }).notNull(),
+    size: integer().notNull(),
+    url: text().notNull(),
+    storageKey: text("storage_key"),
+    width: integer(),
+    height: integer(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("attachments_message_id_idx").on(t.messageId),
+    index("attachments_channel_id_idx").on(t.channelId),
+    index("attachments_uploader_id_idx").on(t.uploaderId),
+  ],
+);
+
+// ── Embeds ────────────────────────────────────────────
+
+export const embeds = pgTable(
+  "embeds",
+  {
+    id: bigint({ mode: "bigint" }).primaryKey(),
+    messageId: bigint("message_id", { mode: "bigint" })
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    url: text().notNull(),
+    title: varchar({ length: 256 }),
+    description: varchar({ length: 4096 }),
+    thumbnailUrl: text("thumbnail_url"),
+    siteName: varchar("site_name", { length: 256 }),
+    color: varchar({ length: 7 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("embeds_message_id_idx").on(t.messageId),
+    uniqueIndex("embeds_message_url_idx").on(t.messageId, t.url),
+  ],
+);
+
+// ── Custom Emoji ──────────────────────────────────────
+
+export const customEmojis = pgTable(
+  "custom_emojis",
+  {
+    id: bigint({ mode: "bigint" }).primaryKey(),
+    serverId: bigint("server_id", { mode: "bigint" })
+      .notNull()
+      .references(() => servers.id, { onDelete: "cascade" }),
+    name: varchar({ length: 32 }).notNull(),
+    imageUrl: text("image_url").notNull(),
+    storageKey: text("storage_key"),
+    creatorId: bigint("creator_id", { mode: "bigint" })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("custom_emojis_server_name_idx").on(t.serverId, t.name),
+    index("custom_emojis_server_id_idx").on(t.serverId),
+  ],
 );

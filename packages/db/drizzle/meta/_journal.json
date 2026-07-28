@@ -43,6 +43,48 @@
       "when": 1771280051282,
       "tag": "0005_yellow_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771305348006,
+      "tag": "0006_careless_grim_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771305365757,
+      "tag": "0007_simple_gladiator",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771305390870,
+      "tag": "0008_uneven_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1771309260151,
+      "tag": "0009_wet_siren",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1771364252878,
+      "tag": "0010_massive_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1771429360779,
+      "tag": "0011_huge_mattie_franklin",
+      "breakpoints": true
     }
   ]
 }

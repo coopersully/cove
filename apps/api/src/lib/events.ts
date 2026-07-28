@@ -46,6 +46,28 @@ export function emitMessageDelete(
   });
 }
 
+export function emitReactionAdd(
+  targets: EventTargets,
+  data: { channelId: string; messageId: string; userId: string; emoji: string },
+): void {
+  emit({
+    event: GatewayEvents.MessageReactionAdd,
+    data,
+    targets,
+  });
+}
+
+export function emitReactionRemove(
+  targets: EventTargets,
+  data: { channelId: string; messageId: string; userId: string; emoji: string },
+): void {
+  emit({
+    event: GatewayEvents.MessageReactionRemove,
+    data,
+    targets,
+  });
+}
+
 export function emitChannelCreate(serverId: string, channel: unknown): void {
   emit({
     event: GatewayEvents.ChannelCreate,

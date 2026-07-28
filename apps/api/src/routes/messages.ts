@@ -1,5 +1,5 @@
 import { getUser, requireAuth } from "@cove/auth";
-import { channels, db, messages, servers, users } from "@cove/db";
+import { attachments, channels, db, messages, reactions, servers, users } from "@cove/db";
 import {
   AppError,
   Permissions,
@@ -7,9 +7,10 @@ import {
   hasPermission,
   messageContentSchema,
   paginationLimitSchema,
+  parseMentions,
   snowflakeSchema,
 } from "@cove/shared";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -21,10 +22,15 @@ import {
   emitTypingStart,
 } from "../lib/events.js";
 import { getMemberPermissions } from "../lib/index.js";
+import { getStorage } from "../lib/storage.js";
 import { validate } from "../middleware/index.js";
+import { getAttachmentsForMessages, linkAttachmentsToMessage } from "./attachments.js";
+import { generateEmbedsForMessage, getEmbedsForMessages } from "./embeds.js";
 
 const createMessageSchema = z.object({
   content: messageContentSchema,
+  replyToId: snowflakeSchema.optional(),
+  attachmentIds: z.array(snowflakeSchema).max(10).optional(),
 });
 
 const updateMessageSchema = z.object({
@@ -45,6 +51,13 @@ function getEventTargets(channel: { id: string; type: string; serverId: string |
   }
 
   return { serverId: channel.serverId };
+}
+
+function shouldGenerateEmbeds(): boolean {
+  if (process.env.DISABLE_EMBED_FETCH === "true") {
+    return false;
+  }
+  return process.env.NODE_ENV !== "test";
 }
 
 // GET /channels/:channelId/messages
@@ -70,8 +83,11 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       channelId: messages.channelId,
       authorId: messages.authorId,
       content: messages.content,
+      replyToId: messages.replyToId,
       createdAt: messages.createdAt,
       editedAt: messages.editedAt,
+      pinnedAt: messages.pinnedAt,
+      pinnedBy: messages.pinnedBy,
       authorUsername: users.username,
       authorDisplayName: users.displayName,
       authorAvatarUrl: users.avatarUrl,
@@ -98,6 +114,89 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
 
   const results = await query;
 
+  // Batch-fetch referenced messages for replies
+  const replyToIds = results.map((m) => m.replyToId).filter((id): id is bigint => id !== null);
+
+  const referencedMessages = new Map<
+    string,
+    {
+      id: string;
+      content: string;
+      author: {
+        id: string;
+        username: string;
+        displayName: string | null;
+        avatarUrl: string | null;
+        statusEmoji: string | null;
+      };
+    }
+  >();
+
+  if (replyToIds.length > 0) {
+    const refs = await db
+      .select({
+        id: messages.id,
+        content: messages.content,
+        authorId: messages.authorId,
+        authorUsername: users.username,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
+        authorStatusEmoji: users.statusEmoji,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.authorId, users.id))
+      .where(and(inArray(messages.id, replyToIds), eq(messages.channelId, BigInt(channelId))));
+
+    for (const ref of refs) {
+      referencedMessages.set(String(ref.id), {
+        id: String(ref.id),
+        content: ref.content.slice(0, 200),
+        author: {
+          id: String(ref.authorId),
+          username: ref.authorUsername,
+          displayName: ref.authorDisplayName,
+          avatarUrl: ref.authorAvatarUrl,
+          statusEmoji: ref.authorStatusEmoji,
+        },
+      });
+    }
+  }
+
+  // Batch-fetch reactions for this page
+  const messageIds = results.map((m) => m.id);
+  let reactionRows: { messageId: bigint; emoji: string; count: number; me: boolean }[] = [];
+
+  if (messageIds.length > 0) {
+    reactionRows = await db
+      .select({
+        messageId: reactions.messageId,
+        emoji: reactions.emoji,
+        count: sql<number>`count(*)::int`.as("count"),
+        me: sql<boolean>`bool_or(${reactions.userId} = ${BigInt(user.id)})`.as("me"),
+      })
+      .from(reactions)
+      .where(inArray(reactions.messageId, messageIds))
+      .groupBy(reactions.messageId, reactions.emoji);
+  }
+
+  // Group reactions by messageId
+  const reactionsByMessage = new Map<string, { emoji: string; count: number; me: boolean }[]>();
+  for (const row of reactionRows) {
+    const key = String(row.messageId);
+    if (!reactionsByMessage.has(key)) {
+      reactionsByMessage.set(key, []);
+    }
+    reactionsByMessage.get(key)?.push({
+      emoji: row.emoji,
+      count: row.count,
+      me: row.me,
+    });
+  }
+
+  // Batch-fetch attachments and embeds
+  const attachmentsByMessage = await getAttachmentsForMessages(messageIds);
+  const embedsByMessage = await getEmbedsForMessages(messageIds);
+
   return c.json({
     messages: results.map((m) => ({
       id: String(m.id),
@@ -105,6 +204,11 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
       content: m.content,
       createdAt: m.createdAt,
       editedAt: m.editedAt,
+      pinnedAt: m.pinnedAt ?? null,
+      pinnedBy: m.pinnedBy ? String(m.pinnedBy) : null,
+      replyToId: m.replyToId ? String(m.replyToId) : null,
+      referencedMessage: m.replyToId ? (referencedMessages.get(String(m.replyToId)) ?? null) : null,
+      mentions: parseMentions(m.content).userIds,
       author: {
         id: String(m.authorId),
         username: m.authorUsername,
@@ -112,6 +216,9 @@ messageRoutes.get("/channels/:channelId/messages", async (c) => {
         avatarUrl: m.authorAvatarUrl,
         statusEmoji: m.authorStatusEmoji,
       },
+      reactions: reactionsByMessage.get(String(m.id)) ?? [],
+      attachments: attachmentsByMessage.get(String(m.id)) ?? [],
+      embeds: embedsByMessage.get(String(m.id)) ?? [],
     })),
   });
 });
@@ -145,19 +252,78 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
 
   const messageId = generateSnowflake();
 
-  const [created] = await db
-    .insert(messages)
-    .values({
-      id: BigInt(messageId),
-      channelId: BigInt(channelId),
-      authorId: BigInt(user.id),
-      content: body.content,
-    })
-    .returning();
+  let replyToId: string | null = null;
+  let referencedMessage: {
+    id: string;
+    content: string;
+    author: {
+      id: string;
+      username: string;
+      displayName: string | null;
+      avatarUrl: string | null;
+      statusEmoji: string | null;
+    };
+  } | null = null;
 
-  if (!created) {
-    throw new AppError("INTERNAL_ERROR", "Failed to create message");
+  if (body.replyToId) {
+    const [repliedTo] = await db
+      .select({
+        id: messages.id,
+        channelId: messages.channelId,
+        content: messages.content,
+        authorId: messages.authorId,
+        authorUsername: users.username,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
+        authorStatusEmoji: users.statusEmoji,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.authorId, users.id))
+      .where(
+        and(eq(messages.id, BigInt(body.replyToId)), eq(messages.channelId, BigInt(channelId))),
+      )
+      .limit(1);
+
+    if (!repliedTo) {
+      throw new AppError("NOT_FOUND", "Replied-to message not found in this channel");
+    }
+
+    replyToId = body.replyToId;
+    referencedMessage = {
+      id: String(repliedTo.id),
+      content: repliedTo.content.slice(0, 200),
+      author: {
+        id: String(repliedTo.authorId),
+        username: repliedTo.authorUsername,
+        displayName: repliedTo.authorDisplayName,
+        avatarUrl: repliedTo.authorAvatarUrl,
+        statusEmoji: repliedTo.authorStatusEmoji,
+      },
+    };
   }
+
+  const { created, linkedAttachments } = await db.transaction(async (tx) => {
+    const [inserted] = await tx
+      .insert(messages)
+      .values({
+        id: BigInt(messageId),
+        channelId: BigInt(channelId),
+        authorId: BigInt(user.id),
+        content: body.content,
+        replyToId: replyToId ? BigInt(replyToId) : null,
+      })
+      .returning();
+
+    if (!inserted) {
+      throw new AppError("INTERNAL_ERROR", "Failed to create message");
+    }
+
+    const linked = body.attachmentIds
+      ? await linkAttachmentsToMessage(body.attachmentIds, messageId, channelId, user.id, tx)
+      : [];
+
+    return { created: inserted, linkedAttachments: linked };
+  });
 
   const messagePayload = {
     id: String(created.id),
@@ -165,6 +331,9 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
     content: created.content,
     createdAt: created.createdAt,
     editedAt: created.editedAt,
+    replyToId: replyToId,
+    referencedMessage: referencedMessage,
+    mentions: parseMentions(body.content).userIds,
     author: {
       id: user.id,
       username: user.username,
@@ -172,9 +341,30 @@ messageRoutes.post("/channels/:channelId/messages", validate(createMessageSchema
       avatarUrl: user.avatarUrl,
       statusEmoji: user.statusEmoji,
     },
+    reactions: [],
+    attachments: linkedAttachments,
+    embeds: [],
   };
 
   emitMessageCreate(eventTargets, messagePayload);
+
+  if (shouldGenerateEmbeds()) {
+    void generateEmbedsForMessage(messageId, body.content)
+      .then((generatedEmbeds) => {
+        if (generatedEmbeds.length === 0) {
+          return;
+        }
+
+        emitMessageUpdate(eventTargets, {
+          id: messageId,
+          channelId: channel.id,
+          embeds: generatedEmbeds,
+        });
+      })
+      .catch(() => {
+        // Embed generation should never block message delivery
+      });
+  }
 
   return c.json({ message: messagePayload }, 201);
 });
@@ -225,6 +415,16 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
     throw new AppError("NOT_FOUND", "Message not found");
   }
 
+  const messageReactions = await db
+    .select({
+      emoji: reactions.emoji,
+      count: sql<number>`count(*)::int`.as("count"),
+      me: sql<boolean>`bool_or(${reactions.userId} = ${BigInt(user.id)})`.as("me"),
+    })
+    .from(reactions)
+    .where(eq(reactions.messageId, BigInt(messageId)))
+    .groupBy(reactions.emoji);
+
   const updatePayload = {
     id: String(updated.id),
     channelId: String(updated.channelId),
@@ -238,6 +438,7 @@ messageRoutes.patch("/messages/:id", validate(updateMessageSchema), async (c) =>
       avatarUrl: user.avatarUrl,
       statusEmoji: user.statusEmoji,
     },
+    reactions: messageReactions,
   };
 
   emitMessageUpdate(eventTargets, updatePayload);
@@ -306,7 +507,32 @@ messageRoutes.delete("/messages/:id", async (c) => {
     }
   }
 
+  const messageAttachmentRows = await db
+    .select({ storageKey: attachments.storageKey })
+    .from(attachments)
+    .where(eq(attachments.messageId, BigInt(messageId)));
+
   await db.delete(messages).where(eq(messages.id, BigInt(messageId)));
+
+  const storageKeys = [
+    ...new Set(
+      messageAttachmentRows
+        .map((row) => row.storageKey)
+        .filter((key): key is string => typeof key === "string" && key.length > 0),
+    ),
+  ];
+  if (storageKeys.length > 0) {
+    const storage = getStorage();
+    await Promise.allSettled(
+      storageKeys.map(async (key) => {
+        try {
+          await storage.delete(key);
+        } catch (err) {
+          console.error("[messages] Failed to delete attachment from storage:", err);
+        }
+      }),
+    );
+  }
 
   emitMessageDelete(eventTargets, channelInfo.id, messageId);
 

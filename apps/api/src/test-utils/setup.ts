@@ -3,6 +3,9 @@ import { sql } from "drizzle-orm";
 import { afterEach, beforeAll } from "vitest";
 
 const tableNames = [
+  "embeds",
+  "attachments",
+  "reactions",
   "friendships",
   "dm_members",
   "messages",
@@ -10,6 +13,7 @@ const tableNames = [
   "password_reset_tokens",
   "refresh_tokens",
   "roles",
+  "custom_emojis",
   "server_members",
   "channels",
   "servers",
